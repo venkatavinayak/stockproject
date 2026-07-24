@@ -1,0 +1,29 @@
+# Environments
+.venv/
+venv/
+ENV/
+env/
+backend/.venv/
+
+# Python caching
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Node/JS dependencies & build outputs
+node_modules/
+frontend/node_modules/
+frontend/dist/
+dist/
+
+# Local databases & uploads
+smartstock.db
+backups/
+reports/
+uploads/
+*.db
+
+# Operating System files
+.DS_Store
+Thumbs.db

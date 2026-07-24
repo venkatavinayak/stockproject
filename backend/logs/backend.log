@@ -1,0 +1,106 @@
+2026-07-15 22:00:44,219 - backend.app.database.mongodb - INFO - Connecting to MongoDB at mongodb://127.0.0.1:27017/smartstock...
+2026-07-15 22:00:44,253 - backend.app.database.mongodb - ERROR - Failed to initialize MongoDB connection: MotorDatabase object is not callable. If you meant to call the 'append_metadata' method on a AsyncIOMotorClient object it is failing because no such method exists.
+2026-07-15 22:04:20,735 - backend.app.database.mongodb - INFO - Connecting to MongoDB at mongodb://127.0.0.1:27017/smartstock...
+2026-07-15 22:04:50,843 - backend.app.database.mongodb - ERROR - Failed to initialize MongoDB connection: 127.0.0.1:27017: [WinError 10061] No connection could be made because the target machine actively refused it (configured timeouts: socketTimeoutMS: 20000.0ms, connectTimeoutMS: 20000.0ms), Timeout: 30s, Topology Description: <TopologyDescription id: 6a57b68cbe518e0258d8feaa, topology_type: Unknown, servers: [<ServerDescription ('127.0.0.1', 27017) server_type: Unknown, rtt: None, error=AutoReconnect('127.0.0.1:27017: [WinError 10061] No connection could be made because the target machine actively refused it (configured timeouts: socketTimeoutMS: 20000.0ms, connectTimeoutMS: 20000.0ms)')>]>
+2026-07-16 15:00:40,992 - backend.app.database.mongodb - INFO - Connecting to MongoDB at mongodb://127.0.0.1:27017/smartstock...
+2026-07-16 15:00:42,122 - backend.app.database.mongodb - INFO - MongoDB connection and Beanie initialization complete.
+2026-07-16 15:00:42,719 - scheduler - INFO - APScheduler initialized background jobs successfully.
+2026-07-16 15:00:47,717 - scheduler - INFO - Scheduler triggered low stock and expiry check.
+2026-07-16 15:13:03,972 - backend.app.database.mongodb - INFO - Connecting to MongoDB at mongodb://127.0.0.1:27017/smartstock...
+2026-07-16 15:13:04,169 - backend.app.database.mongodb - INFO - MongoDB connection and Beanie initialization complete.
+2026-07-16 15:13:04,202 - scheduler - INFO - APScheduler initialized background jobs successfully.
+2026-07-16 15:13:09,214 - scheduler - INFO - Scheduler triggered low stock and expiry check.
+2026-07-16 15:14:02,407 - backend.app.database.mongodb - INFO - Connecting to MongoDB at mongodb://127.0.0.1:27017/smartstock...
+2026-07-16 15:14:02,573 - backend.app.database.mongodb - INFO - MongoDB connection and Beanie initialization complete.
+2026-07-16 15:14:02,597 - scheduler - INFO - APScheduler initialized background jobs successfully.
+2026-07-16 15:14:07,597 - scheduler - INFO - Scheduler triggered low stock and expiry check.
+2026-07-16 15:38:59,259 - backend.app.database.mongodb - INFO - Connecting to MongoDB at mongodb://127.0.0.1:27017/smartstock...
+2026-07-16 15:38:59,504 - backend.app.database.mongodb - INFO - MongoDB connection and Beanie initialization complete.
+2026-07-16 15:38:59,544 - scheduler - INFO - APScheduler initialized background jobs successfully.
+2026-07-16 15:39:04,546 - scheduler - INFO - Scheduler triggered low stock and expiry check.
+2026-07-22 11:30:30,325 - backend.app.database.mongodb - INFO - Connecting to MongoDB at mongodb://127.0.0.1:27017/smartstock...
+2026-07-22 11:31:01,348 - backend.app.database.mongodb - ERROR - Failed to initialize MongoDB connection: 127.0.0.1:27017: [WinError 10061] No connection could be made because the target machine actively refused it (configured timeouts: socketTimeoutMS: 20000.0ms, connectTimeoutMS: 20000.0ms), Timeout: 30s, Topology Description: <TopologyDescription id: 6a605c7e82c4e142bd4ac65e, topology_type: Unknown, servers: [<ServerDescription ('127.0.0.1', 27017) server_type: Unknown, rtt: None, error=AutoReconnect('127.0.0.1:27017: [WinError 10061] No connection could be made because the target machine actively refused it (configured timeouts: socketTimeoutMS: 20000.0ms, connectTimeoutMS: 20000.0ms)')>]>
+2026-07-22 11:41:43,583 - backend.app.database.mongodb - INFO - Connecting to MongoDB at mongodb://127.0.0.1:27017/smartstock...
+2026-07-22 11:41:43,772 - backend.app.database.mongodb - INFO - MongoDB connection and Beanie initialization complete.
+2026-07-22 11:41:43,810 - scheduler - INFO - APScheduler initialized background jobs successfully.
+2026-07-22 11:41:48,818 - scheduler - INFO - Scheduler triggered low stock and expiry check.
+2026-07-22 11:44:16,211 - backend.app.database.mongodb - INFO - Connecting to MongoDB at mongodb://127.0.0.1:27017/smartstock...
+2026-07-22 11:44:16,603 - backend.app.database.mongodb - INFO - MongoDB connection and Beanie initialization complete.
+2026-07-22 11:44:16,646 - scheduler - INFO - APScheduler initialized background jobs successfully.
+2026-07-22 11:44:21,650 - scheduler - INFO - Scheduler triggered low stock and expiry check.
+2026-07-22 12:03:13,915 - backend.app.database.mongodb - INFO - MongoDB client connection closed.
+2026-07-22 12:03:18,156 - backend.app.database.mongodb - INFO - Connecting to MongoDB at mongodb://127.0.0.1:27017/smartstock...
+2026-07-22 12:13:22,742 - backend.app.database.mongodb - INFO - Connecting to MongoDB at mongodb://127.0.0.1:27017/smartstock...
+2026-07-22 12:13:22,875 - backend.app.database.mongodb - INFO - MongoDB connection and Beanie initialization complete.
+2026-07-22 12:13:22,893 - scheduler - INFO - APScheduler initialized background jobs successfully.
+2026-07-22 12:13:27,903 - scheduler - INFO - Scheduler triggered low stock and expiry check.
+2026-07-22 12:14:34,952 - backend.app.database.mongodb - INFO - MongoDB client connection closed.
+2026-07-22 12:14:39,469 - backend.app.database.mongodb - INFO - Connecting to MongoDB at mongodb://127.0.0.1:27017/smartstock...
+2026-07-22 12:16:50,648 - backend.app.database.mongodb - INFO - Connecting to MongoDB at mongodb://127.0.0.1:27017/smartstock...
+2026-07-22 12:16:50,769 - backend.app.database.mongodb - INFO - MongoDB connection and Beanie initialization complete.
+2026-07-22 12:16:50,786 - scheduler - INFO - APScheduler initialized background jobs successfully.
+2026-07-22 12:16:55,786 - scheduler - INFO - Scheduler triggered low stock and expiry check.
+2026-07-22 12:22:03,308 - backend.app.database.mongodb - INFO - Connecting to MongoDB at mongodb://127.0.0.1:27017/smartstock...
+2026-07-22 12:22:03,341 - backend.app.database.mongodb - INFO - MongoDB connection and Beanie initialization complete.
+2026-07-22 12:22:17,823 - backend.app.database.mongodb - INFO - Connecting to MongoDB at mongodb://127.0.0.1:27017/smartstock...
+2026-07-22 12:22:17,856 - backend.app.database.mongodb - INFO - MongoDB connection and Beanie initialization complete.
+2026-07-23 09:49:38,825 - backend.app.database.mongodb - INFO - Connecting to MongoDB at mongodb://127.0.0.1:27017/smartstock...
+2026-07-23 09:49:39,652 - backend.app.database.mongodb - INFO - MongoDB connection and Beanie initialization complete.
+2026-07-23 09:49:39,688 - scheduler - INFO - APScheduler initialized background jobs successfully.
+2026-07-23 09:49:44,698 - scheduler - INFO - Scheduler triggered low stock and expiry check.
+2026-07-23 10:12:48,495 - backend.app.database.mongodb - INFO - MongoDB client connection closed.
+2026-07-23 10:14:38,027 - backend.app.database.mongodb - INFO - Connecting to MongoDB at mongodb://127.0.0.1:27017/smartstock...
+2026-07-23 10:14:38,243 - backend.app.database.mongodb - INFO - MongoDB connection and Beanie initialization complete.
+2026-07-23 10:14:38,273 - scheduler - INFO - APScheduler initialized background jobs successfully.
+2026-07-23 10:14:43,273 - scheduler - INFO - Scheduler triggered low stock and expiry check.
+2026-07-23 10:15:24,866 - backend.app.database.mongodb - INFO - MongoDB client connection closed.
+2026-07-23 10:16:19,659 - backend.app.database.mongodb - INFO - Connecting to MongoDB at mongodb://127.0.0.1:27017/smartstock...
+2026-07-23 10:16:19,853 - backend.app.database.mongodb - INFO - MongoDB connection and Beanie initialization complete.
+2026-07-23 10:16:19,892 - scheduler - INFO - APScheduler initialized background jobs successfully.
+2026-07-23 10:16:24,895 - scheduler - INFO - Scheduler triggered low stock and expiry check.
+2026-07-23 10:18:02,589 - backend.app.database.mongodb - INFO - MongoDB client connection closed.
+2026-07-23 10:18:52,062 - backend.app.database.mongodb - INFO - Connecting to MongoDB at mongodb://127.0.0.1:27017/smartstock...
+2026-07-23 10:18:52,308 - backend.app.database.mongodb - INFO - MongoDB connection and Beanie initialization complete.
+2026-07-23 10:18:52,345 - scheduler - INFO - APScheduler initialized background jobs successfully.
+2026-07-23 10:18:57,341 - scheduler - INFO - Scheduler triggered low stock and expiry check.
+2026-07-23 10:24:42,666 - backend.app.database.mongodb - INFO - MongoDB client connection closed.
+2026-07-23 10:26:20,540 - backend.app.database.mongodb - INFO - Connecting to MongoDB at mongodb://127.0.0.1:27017/smartstock...
+2026-07-23 10:26:20,750 - backend.app.database.mongodb - INFO - MongoDB connection and Beanie initialization complete.
+2026-07-23 10:26:20,775 - scheduler - INFO - APScheduler initialized background jobs successfully.
+2026-07-23 10:26:25,784 - scheduler - INFO - Scheduler triggered low stock and expiry check.
+2026-07-23 10:30:39,232 - backend.app.database.mongodb - INFO - MongoDB client connection closed.
+2026-07-23 10:32:13,611 - backend.app.database.mongodb - INFO - Connecting to MongoDB at mongodb://127.0.0.1:27017/smartstock...
+2026-07-23 10:32:13,792 - backend.app.database.mongodb - INFO - MongoDB connection and Beanie initialization complete.
+2026-07-23 10:32:13,824 - scheduler - INFO - APScheduler initialized background jobs successfully.
+2026-07-23 10:32:18,832 - scheduler - INFO - Scheduler triggered low stock and expiry check.
+2026-07-23 11:45:24,328 - backend.app.database.mongodb - INFO - Connecting to MongoDB at mongodb://127.0.0.1:27017/smartstock...
+2026-07-23 11:45:24,509 - backend.app.database.mongodb - INFO - MongoDB connection and Beanie initialization complete.
+2026-07-23 11:45:24,532 - scheduler - INFO - APScheduler initialized background jobs successfully.
+2026-07-23 11:45:29,533 - scheduler - INFO - Scheduler triggered low stock and expiry check.
+2026-07-23 12:02:59,623 - backend.app.database.mongodb - INFO - Connecting to MongoDB at mongodb://127.0.0.1:27017/smartstock...
+2026-07-23 12:03:00,425 - backend.app.database.mongodb - INFO - MongoDB connection and Beanie initialization complete.
+2026-07-23 12:03:00,447 - scheduler - INFO - APScheduler initialized background jobs successfully.
+2026-07-23 12:03:24,682 - backend.app.database.mongodb - INFO - Connecting to MongoDB at mongodb://127.0.0.1:27017/smartstock...
+2026-07-23 12:03:24,804 - backend.app.database.mongodb - INFO - MongoDB connection and Beanie initialization complete.
+2026-07-23 12:04:07,485 - backend.app.database.mongodb - INFO - Connecting to MongoDB at mongodb://127.0.0.1:27017/smartstock...
+2026-07-23 12:04:07,571 - backend.app.database.mongodb - INFO - MongoDB connection and Beanie initialization complete.
+2026-07-24 18:27:39,934 - backend.app.database.mongodb - INFO - Connecting to MongoDB at mongodb://127.0.0.1:27017/smartstock...
+2026-07-24 18:27:40,746 - backend.app.database.mongodb - INFO - MongoDB connection and Beanie initialization complete.
+2026-07-24 18:27:40,808 - scheduler - INFO - APScheduler initialized background jobs successfully.
+2026-07-24 18:36:27,171 - backend.app.database.mongodb - INFO - MongoDB client connection closed.
+2026-07-24 18:38:50,002 - backend.app.database.mongodb - INFO - Connecting to MongoDB at mongodb://127.0.0.1:27017/smartstock...
+2026-07-24 18:38:50,285 - backend.app.database.mongodb - INFO - MongoDB connection and Beanie initialization complete.
+2026-07-24 18:38:50,332 - scheduler - INFO - APScheduler initialized background jobs successfully.
+2026-07-24 18:51:04,342 - backend.app.database.mongodb - INFO - MongoDB client connection closed.
+2026-07-24 18:54:49,286 - backend.app.database.mongodb - INFO - Connecting to MongoDB at mongodb://127.0.0.1:27017/smartstock...
+2026-07-24 18:54:49,451 - backend.app.database.mongodb - INFO - MongoDB connection and Beanie initialization complete.
+2026-07-24 18:54:49,480 - scheduler - INFO - APScheduler initialized background jobs successfully.
+2026-07-24 22:26:17,271 - backend.app.database.mongodb - INFO - MongoDB client connection closed.
+2026-07-24 22:31:13,770 - backend.app.database.mongodb - INFO - Connecting to MongoDB at mongodb://127.0.0.1:27017/smartstock...
+2026-07-24 22:31:14,546 - backend.app.database.mongodb - INFO - MongoDB connection and Beanie initialization complete.
+2026-07-24 22:31:14,696 - scheduler - INFO - APScheduler initialized background jobs successfully.
+2026-07-24 22:44:30,478 - backend.app.database.mongodb - INFO - MongoDB client connection closed.
+2026-07-24 23:06:10,308 - backend.app.database.mongodb - INFO - Connecting to MongoDB at mongodb://127.0.0.1:27017/smartstock...
+2026-07-24 23:06:41,367 - backend.app.database.mongodb - ERROR - Failed to initialize MongoDB connection: 127.0.0.1:27017: [WinError 10061] No connection could be made because the target machine actively refused it (configured timeouts: socketTimeoutMS: 20000.0ms, connectTimeoutMS: 20000.0ms), Timeout: 30s, Topology Description: <TopologyDescription id: 6a63a28aae4d62082e9df827, topology_type: Unknown, servers: [<ServerDescription ('127.0.0.1', 27017) server_type: Unknown, rtt: None, error=AutoReconnect('127.0.0.1:27017: [WinError 10061] No connection could be made because the target machine actively refused it (configured timeouts: socketTimeoutMS: 20000.0ms, connectTimeoutMS: 20000.0ms)')>]>
+2026-07-24 23:12:39,979 - backend.app.database.mongodb - INFO - Connecting to MongoDB at mongodb://127.0.0.1:27017/smartstock...
+2026-07-24 23:12:40,100 - backend.app.database.mongodb - INFO - MongoDB connection and Beanie initialization complete.

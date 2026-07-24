@@ -1,0 +1,226 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap');
+@import "tailwindcss";
+
+/* Configure Tailwind v4 selector-based dark mode */
+@variant dark (&:where(.dark, .dark *));
+
+:root {
+  --font-sans: 'Inter', sans-serif;
+  --font-title: 'Outfit', sans-serif;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: #f8fafc;
+  color: #0f172a;
+  overflow-x: hidden;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.dark body {
+  background-color: #090d16;
+  color: #f8fafc;
+}
+
+/* Glassmorphic card boundary controls */
+.glass-panel {
+  background-color: #ffffff;
+  border-width: 1px;
+  border-color: #e2e8f0;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.02);
+}
+
+.dark .glass-panel {
+  background-color: rgba(15, 23, 42, 0.75);
+  border-color: rgba(51, 65, 85, 0.55);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.35), 0 4px 6px -2px rgba(0, 0, 0, 0.15);
+}
+
+/* Scrollbar customization */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+.dark ::-webkit-scrollbar-thumb {
+  background: #334155;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Smooth transition utility */
+.animate-fade-in {
+  animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Glowing effects for premium dashboard cards */
+.glow-card-indigo {
+  position: relative;
+}
+.glow-card-indigo::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: 0 0 15px rgba(99, 102, 241, 0.15);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+.glow-card-indigo:hover::after {
+  opacity: 1;
+}
+
+/* Thermal printer receipt styles */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  #thermal-receipt-print-area, #thermal-receipt-print-area * {
+    visibility: visible;
+  }
+  #thermal-receipt-print-area {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 80mm;
+    margin: 0;
+    padding: 0;
+    border: none;
+    box-shadow: none;
+    background: white;
+    color: black;
+  }
+  @page {
+    size: auto;
+    margin: 0mm;
+  }
+}
+
+/* Keyboard Shortcut key indicator */
+.kbd-key {
+  font-family: monospace;
+  font-size: 0.75rem;
+  padding: 1px 4px;
+  border: 1px solid #cbd5e1;
+  background-color: #f1f5f9;
+  border-radius: 4px;
+  box-shadow: 0 1px 0 rgba(0,0,0,0.15);
+  color: #334155;
+}
+.dark .kbd-key {
+  border-color: #475569;
+  background-color: #1e293b;
+  color: #94a3b8;
+}
+
+/* Hide scrollbar for Chrome, Safari, and Opera */
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+/* Hide scrollbar for IE, Edge, and Firefox */
+.scrollbar-none {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+/* Print Overrides for thermal printer receipts */
+@media print {
+  /* Hide all non-printable elements */
+  .no-print,
+  aside,
+  nav,
+  header,
+  footer,
+  .sidebar,
+  .navbar,
+  button {
+    display: none !important;
+  }
+  
+  /* Reset document layout for print page size */
+  html, body, #root, main, .main-layout {
+    background: white !important;
+    color: black !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: auto !important;
+    position: static !important;
+    overflow: visible !important;
+  }
+
+  /* Reset layout spacing */
+  div[class*="pl-64"], div[class*="pl-20"] {
+    padding-left: 0 !important;
+  }
+
+  /* Set printable wrapper properties */
+  .print-only-container {
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 80mm !important;
+    height: auto !important;
+    min-height: auto !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    border: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    display: block !important;
+  }
+
+  .no-print-card {
+    max-width: 80mm !important;
+    width: 80mm !important;
+    height: auto !important;
+    max-height: none !important;
+    background: white !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    display: block !important;
+  }
+
+  #thermal-receipt-print-area {
+    border: none !important;
+    background: white !important;
+    color: black !important;
+    padding: 4mm !important;
+    width: 80mm !important;
+    max-width: 80mm !important;
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+    display: block !important;
+    margin: 0 !important;
+    box-shadow: none !important;
+    font-family: monospace !important;
+  }
+
+  @page {
+    size: 80mm auto;
+    margin: 0;
+  }
+}
