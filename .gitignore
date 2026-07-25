@@ -19,9 +19,9 @@ dist/
 
 # Local databases & uploads
 smartstock.db
-backups/
-reports/
-uploads/
+/backups/
+/reports/
+/uploads/
 *.db
 
 # Operating System files
