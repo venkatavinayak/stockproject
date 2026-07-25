@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 import os
+from datetime import datetime
 
 from backend.app.database.mongodb import init_db, close_db
 from backend.app.models import all_document_models, User, StoreSettings
@@ -35,6 +36,7 @@ app = FastAPI(
 origins = [
     "http://localhost:5173",
     "http://127.0.0.1:5173",
+    "https://stockproject-vvk.netlify.app",
 ]
 app.add_middleware(
     CORSMiddleware,
