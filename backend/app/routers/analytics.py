@@ -450,8 +450,8 @@ async def export_pdf_report(
     average_bill = today_revenue / bills_today if bills_today > 0 else 0.0
     
     products_list = await Product.find_all().to_list()
-    inventory_value = sum((p.current_stock or 0) * (p.unit_selling_price or 0.0) for p in products_list)
-    current_stock_value = sum((p.current_stock or 0) * (p.unit_buying_price or 0.0) for p in products_list)
+    inventory_value = sum((p.current_stock or 0) * (p.selling_price or 0.0) for p in products_list)
+    current_stock_value = sum((p.current_stock or 0) * (p.buying_price or 0.0) for p in products_list)
     potential_profit = inventory_value - current_stock_value
     
     kpis_dict = {
