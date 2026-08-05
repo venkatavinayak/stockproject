@@ -110,9 +110,9 @@ def generate_thermal_receipt(transaction: Transaction, settings: StoreSettings, 
     def draw_dashed_line(y_pos):
         c.setLineWidth(0.5)
         c.setStrokeColorRGB(0.5, 0.5, 0.5)
-        c.setDashPattern([1.5, 1.5])
+        c.setDash([1.5, 1.5])
         c.line(margin, y_pos, width - margin, y_pos)
-        c.setDashPattern([]) # Reset
+        c.setDash() # Reset
         
     # 1. Store Header & Company Info
     c.setFont("Helvetica-Bold", 14)
