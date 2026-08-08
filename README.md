@@ -4,6 +4,8 @@ SmartStock AI is a comprehensive, production-ready Enterprise Resource Planning 
 
 ---
 
+Deployment Link:  https://stockproject-vvk.netlify.app
+
 ## 🚀 Key Features
 
 * **Point of Sale (POS) Billing**: Interactive billing terminal with support for scanning barcodes, selecting custom payment methods (Cash, Card, UPI), instant tax split calculations, and PDF invoice receipt generations.
