@@ -5,7 +5,7 @@ import { authAPI } from '../services/api';
 import { KeyRound, User, AlertCircle, ShoppingBag, Shield, Users } from 'lucide-react';
 
 const AuthSetup = () => {
-  const { syncProfile } = useAuth();
+  const { syncProfile, logout } = useAuth();
   const navigate = useNavigate();
 
   const [activeTab, setActiveTab] = useState('link'); // 'link' or 'create'
@@ -164,6 +164,17 @@ const AuthSetup = () => {
             {loading ? 'Processing setup...' : activeTab === 'create' ? 'Initialize Store Admin' : 'Verify & Link Profile'}
           </button>
         </form>
+
+        {/* Cancel / Sign Out Option */}
+        <div className="mt-6 text-center border-t border-white/5 pt-4">
+          <button
+            type="button"
+            onClick={logout}
+            className="text-xs text-slate-400 hover:text-white transition-all duration-150"
+          >
+            Cancel & Sign out of Gmail account
+          </button>
+        </div>
       </div>
     </div>
   );
