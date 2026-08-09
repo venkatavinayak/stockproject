@@ -270,3 +270,108 @@ async def reset_user_password(
     await audit.insert()
     
     return {"message": f"Password for user {username} updated successfully"}
+
+class AuthSetupRequest(BaseModel):
+    action: str  # "create_admin" or "link_user"
+    username: str
+    password: str
+
+@router.post("/setup")
+async def auth_setup(
+    data: AuthSetupRequest,
+    token: str = Depends(oauth2_scheme)
+):
+    from jose import jwt
+    from backend.app.auth.deps import get_jwks_keys
+    from backend.app.auth.security import get_password_hash, verify_password
+    
+    try:
+        unverified_header = jwt.get_unverified_header(token)
+        kid = unverified_header.get("kid")
+        if not kid:
+            raise HTTPException(status_code=401, detail="Invalid token")
+            
+        jwks = await get_jwks_keys()
+        public_key = None
+        for key in jwks.get("keys", []):
+            if key.get("kid") == kid:
+                public_key = key
+                break
+                
+        if not public_key:
+            raise HTTPException(status_code=401, detail="Invalid token")
+            
+        payload = jwt.decode(
+            token,
+            public_key,
+            algorithms=["RS256"],
+            options={"verify_aud": False}
+        )
+        
+        clerk_id = payload.get("sub")
+        email = payload.get("email") or payload.get("emails", [None])[0]
+        
+        if not clerk_id:
+            raise HTTPException(status_code=401, detail="Invalid token payload")
+            
+    except Exception as e:
+        raise HTTPException(status_code=401, detail=f"Token verification failed: {str(e)}")
+        
+    username = data.username.strip()
+    password = data.password
+    
+    if len(username) < 3:
+        raise HTTPException(status_code=400, detail="Username must be at least 3 characters long")
+    if len(password) < 4:
+        raise HTTPException(status_code=400, detail="Password must be at least 4 characters long")
+        
+    if data.action == "create_admin":
+        existing_user = await User.find_one(User.username == username)
+        if existing_user:
+            raise HTTPException(status_code=400, detail="Username already exists")
+            
+        # Create new admin user
+        user = User(
+            username=username,
+            hashed_password=get_password_hash(password),
+            role="admin",
+            clerk_id=clerk_id,
+            email=email,
+            is_active=True
+        )
+        await user.insert()
+        
+        # Log audit trail
+        audit = AuditLog(
+            username=username,
+            action="INITIALIZE_ADMIN",
+            details=f"Initialized new store admin profile via Gmail ({email})"
+        )
+        await audit.insert()
+        
+    elif data.action == "link_user":
+        user = await User.find_one(User.username == username)
+        if not user or not verify_password(password, user.hashed_password):
+            raise HTTPException(status_code=400, detail="Invalid shop username or password")
+            
+        if user.clerk_id:
+            raise HTTPException(status_code=400, detail="This profile is already linked to a Gmail account")
+            
+        # Link Clerk ID
+        user.clerk_id = clerk_id
+        if email and not user.email:
+            user.email = email
+        await user.save()
+        
+        # Log audit trail
+        audit = AuditLog(
+            username=username,
+            action="LINK_CLERK_ACCOUNT",
+            details=f"Linked store account '{username}' to Gmail ({email})"
+        )
+        await audit.insert()
+        
+    else:
+        raise HTTPException(status_code=400, detail="Invalid setup action")
+        
+    return {"message": "Store profile linked successfully"}

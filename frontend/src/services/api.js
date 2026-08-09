@@ -8,11 +8,10 @@ const api = axios.create({
   baseURL: API_BASE_URL,
 });
 
-// Auto-inject JWT token header
-api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('smartstock_token');
+// Auto-inject Clerk JWT token header
+api.interceptors.request.use(async (config) => {
+  const token = await window.Clerk?.session?.getToken();
   if (token) {
-    // Standard OAuth2 form or Bearer token header
     config.headers.Authorization = `Bearer ${token}`;
   }
   return config;
@@ -25,6 +24,10 @@ api.interceptors.response.use((response) => {
   return response;
 }, (error) => {
   if (error.response && error.response.status === 401) {
+    const detail = error.response.data?.detail;
+    if (detail === 'UNLINKED_ACCOUNT') {
+      return Promise.reject(error);
+    }
     // Clear storage and redirect
     localStorage.removeItem('smartstock_token');
     localStorage.removeItem('smartstock_user');
@@ -57,6 +60,10 @@ export const authAPI = {
   },
   getMe: async () => {
     const response = await api.get('/auth/me');
+    return response.data;
+  },
+  setup: async (action, username, password) => {
+    const response = await api.post('/auth/setup', { action, username, password });
     return response.data;
   },
   listUsers: async () => {

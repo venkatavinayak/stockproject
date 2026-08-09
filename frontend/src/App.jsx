@@ -17,10 +17,11 @@ import Expenses from './pages/Expenses';
 import Analytics from './pages/Analytics';
 import Settings from './pages/Settings';
 import Users from './pages/Users';
+import AuthSetup from './pages/AuthSetup';
 
-// Private Route Helper
+// Private Route Helper (Requires signed in with Clerk AND linked profile)
 const PrivateRoute = () => {
-  const { isAuthenticated, loading } = useAuth();
+  const { isAuthenticated, isSignedIn, isLinked, loading } = useAuth();
   
   if (loading) {
     return (
@@ -30,7 +31,60 @@ const PrivateRoute = () => {
     );
   }
   
-  return isAuthenticated ? <Outlet /> : <Navigate to="/login" replace />;
+  if (!isSignedIn) {
+    return <Navigate to="/login" replace />;
+  }
+  
+  if (!isLinked) {
+    return <Navigate to="/auth/setup" replace />;
+  }
+  
+  return <Outlet />;
+};
+
+// Setup Route Helper (Requires signed in with Clerk but NOT linked profile)
+const SetupRoute = () => {
+  const { isSignedIn, isLinked, loading } = useAuth();
+  
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-slate-50 dark:bg-slate-950">
+        <div className="w-12 h-12 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
+  
+  if (!isSignedIn) {
+    return <Navigate to="/login" replace />;
+  }
+  
+  if (isLinked) {
+    return <Navigate to="/" replace />;
+  }
+  
+  return <Outlet />;
+};
+
+// Public Route Helper (Bypasses login and setup if already authenticated)
+const PublicRoute = () => {
+  const { isSignedIn, isLinked, loading } = useAuth();
+  
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-slate-50 dark:bg-slate-950">
+        <div className="w-12 h-12 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
+  
+  if (isSignedIn) {
+    if (!isLinked) {
+      return <Navigate to="/auth/setup" replace />;
+    }
+    return <Navigate to="/" replace />;
+  }
+  
+  return <Outlet />;
 };
 
 // Admin Route Helper
@@ -72,7 +126,14 @@ function App() {
         <ThemeProvider>
           <Routes>
             {/* Public Login Route */}
-            <Route path="/login" element={<Login />} />
+            <Route element={<PublicRoute />}>
+              <Route path="/login" element={<Login />} />
+            </Route>
+
+            {/* Account Setup / Linking Route */}
+            <Route element={<SetupRoute />}>
+              <Route path="/auth/setup" element={<AuthSetup />} />
+            </Route>
 
             {/* Protected Store ERP Pages */}
             <Route element={<PrivateRoute />}>
