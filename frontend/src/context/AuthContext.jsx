@@ -1,15 +1,21 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
 import { useAuth as useClerkAuth, useUser as useClerkUser } from '@clerk/clerk-react';
-import { authAPI } from '../services/api';
+import { authAPI, setTokenResolver } from '../services/api';
 
 const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
-  const { isSignedIn, isLoaded, signOut } = useClerkAuth();
+  const { isSignedIn, isLoaded, signOut, getToken } = useClerkAuth();
   const { user: clerkUser } = useClerkUser();
   const [user, setUser] = useState(null);
   const [isLinked, setIsLinked] = useState(false);
   const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (isLoaded) {
+      setTokenResolver(getToken);
+    }
+  }, [isLoaded, getToken]);
 
   const syncProfile = async () => {
     if (isSignedIn) {

@@ -8,11 +8,23 @@ const api = axios.create({
   baseURL: API_BASE_URL,
 });
 
+let tokenResolver = null;
+
+export const setTokenResolver = (resolver) => {
+  tokenResolver = resolver;
+};
+
 // Auto-inject Clerk JWT token header
 api.interceptors.request.use(async (config) => {
-  const token = await window.Clerk?.session?.getToken();
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
+  if (tokenResolver) {
+    try {
+      const token = await tokenResolver();
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
+    } catch (err) {
+      console.error("Error resolving Clerk token in interceptor:", err);
+    }
   }
   return config;
 }, (error) => {
