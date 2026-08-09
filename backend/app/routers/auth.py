@@ -5,7 +5,7 @@ from datetime import datetime
 from backend.app.models.user import User
 from backend.app.models.audit_logs import AuditLog
 from backend.app.auth.security import verify_password, create_access_token, get_password_hash
-from backend.app.auth.deps import get_current_user
+from backend.app.auth.deps import get_current_user, oauth2_scheme
 from backend.app.schemas.auth import Token, PasswordChangeRequest
 from backend.app.utils.logger import get_logger
 
