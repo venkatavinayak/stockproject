@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE_URL = import.meta.env.PROD 
+export const API_BASE_URL = import.meta.env.PROD 
   ? 'https://stockproject-backend.onrender.com/api' 
   : 'http://localhost:8000/api';
 

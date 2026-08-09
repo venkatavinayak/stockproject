@@ -305,3 +305,64 @@ async def get_my_summary(current_user: User = Depends(get_current_user)):
         "invoice_count": invoice_count,
         "total_items": total_items
     }
+
+@router.get("/{transaction_id}/pdf")
+async def get_transaction_pdf(
+    transaction_id: PydanticObjectId,
+    token: Optional[str] = None
+):
+    if not token:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Authentication token missing"
+        )
+        
+    from jose import JWTError, jwt
+    from backend.app.auth.security import SECRET_KEY, ALGORITHM
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        username: str = payload.get("sub")
+        if username is None:
+            raise HTTPException(status_code=401, detail="Invalid token")
+    except JWTError:
+        raise HTTPException(status_code=401, detail="Invalid token")
+        
+    current_user = await User.find_one(User.username == username)
+    if not current_user:
+        raise HTTPException(status_code=401, detail="User not found")
+        
+    tx = await Transaction.get(transaction_id)
+    if not tx:
+        raise HTTPException(status_code=404, detail="Transaction not found")
+        
+    # Check permissions
+    if getattr(current_user, "role", "admin") != "admin" and tx.cashier_username != current_user.username:
+        raise HTTPException(status_code=403, detail="Access denied to this transaction receipt")
+        
+    import os
+    from fastapi.responses import FileResponse
+    from backend.app.models.settings import StoreSettings
+    from backend.app.reports.receipt import generate_thermal_receipt
+    
+    settings = await StoreSettings.find_one()
+    if not settings:
+        settings = StoreSettings()
+        await settings.insert()
+        
+    if not tx.pdf_path or not os.path.exists(tx.pdf_path):
+        try:
+            tx.pdf_path = generate_thermal_receipt(tx, settings)
+            await tx.save()
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Failed to generate PDF invoice: {str(e)}")
+            
+    # Ensure correct absolute path
+    abs_path = os.path.abspath(tx.pdf_path)
+    if not os.path.exists(abs_path):
+        raise HTTPException(status_code=404, detail="PDF invoice file not found on disk")
+        
+    return FileResponse(
+        path=abs_path,
+        filename=os.path.basename(tx.pdf_path),
+        media_type="application/pdf"
+    )

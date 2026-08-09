@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { transactionsAPI, settingsAPI, authAPI } from '../services/api';
+import { transactionsAPI, settingsAPI, authAPI, API_BASE_URL } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { 
   History, Search, Calendar, CreditCard, 
@@ -124,12 +124,9 @@ const Transactions = () => {
   };
 
   const handleDownloadPDF = (tx) => {
-    if (tx.pdf_path) {
-      // Open in new window
-      window.open(`http://localhost:8000/${tx.pdf_path}`, '_blank');
-    } else {
-      alert("Invoice PDF path is empty. Try printing receipt directly.");
-    }
+    const token = localStorage.getItem('smartstock_token');
+    const url = `${API_BASE_URL}/transactions/${tx.id}/pdf?token=${encodeURIComponent(token || '')}`;
+    window.open(url, '_blank');
   };
 
   return (
