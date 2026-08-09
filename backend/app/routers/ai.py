@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from typing import List
 from datetime import date, datetime, timedelta
 import pandas as pd
-from sklearn.linear_model import LinearRegression
+from sklearn.ensemble import RandomForestRegressor
 from beanie import PydanticObjectId
 
 from backend.app.models.ai_recommendations import AIRecommendations
@@ -60,11 +60,9 @@ async def get_product_forecast(
                     "timestamp": tx.timestamp
                 })
                 
-    # 7 Days Forecast output list
-    forecast = []
     today_dt = date.today()
     
-    # If we don't have enough data, return a baseline average with slight weekday randomness
+    # If we don't have enough data, return a baseline average with weekday seasonality
     if len(items) < 8:
         total_qty = sum(item["quantity"] for item in items)
         if items:
@@ -74,21 +72,30 @@ async def get_product_forecast(
         else:
             base_sales = 0.0
             
-        for i in range(1, 8):
+        forecast_30 = []
+        for i in range(1, 31):
             target_date = today_dt + timedelta(days=i)
             day_mult = 1.3 if target_date.weekday() in [5, 6] else 0.9
             if items:
                 pred_qty = max(1, int(round(base_sales * day_mult)))
             else:
                 pred_qty = 0
-            forecast.append({
+            forecast_30.append({
                 "date": str(target_date),
                 "day_name": target_date.strftime("%A"),
                 "quantity": pred_qty
             })
-        return {"product_id": str(product_id), "name": product.name, "forecast": forecast, "method": "Baseline Moving Average"}
+            
+        return {
+            "product_id": str(product_id),
+            "name": product.name,
+            "forecast": forecast_30[:7],
+            "next_week_prediction": sum(day["quantity"] for day in forecast_30[:7]),
+            "next_month_prediction": sum(day["quantity"] for day in forecast_30),
+            "method": "Baseline Moving Average"
+        }
         
-    # ML model prediction
+    # Random Forest Model prediction
     try:
         sales_by_date = {}
         for item in items:
@@ -119,16 +126,18 @@ async def get_product_forecast(
         X = df[["day_of_week", "day_of_month", "month", "lag_1", "lag_7"]]
         y = df["sales"]
         
-        model = LinearRegression()
+        # Initialize and fit Random Forest
+        model = RandomForestRegressor(n_estimators=50, random_state=42)
         model.fit(X, y)
         
-        # Roll forward for 7 days
+        # Roll forward for 30 days
         current_history = list(df["sales"])
-        for i in range(1, 8):
+        forecast_30 = []
+        for i in range(1, 31):
             target_date = today_dt + timedelta(days=i)
             target_dt = pd.to_datetime(target_date)
             
-            # Extract features dynamically using shifting history
+            # Extract features dynamically using rolling history
             lag_1_val = current_history[-1] if len(current_history) >= 1 else 0
             lag_7_val = current_history[-7] if len(current_history) >= 7 else 0
             
@@ -141,25 +150,38 @@ async def get_product_forecast(
             }])
             
             pred_val = float(model.predict(pred_row)[0])
-            pred_qty = int(round(pred_val))
-            if pred_qty < 0:
-                pred_qty = 0
-                
-            forecast.append({
+            pred_qty = max(0, int(round(pred_val)))
+            
+            forecast_30.append({
                 "date": str(target_date),
                 "day_name": target_date.strftime("%A"),
                 "quantity": pred_qty
             })
             current_history.append(pred_val)
             
-        return {"product_id": str(product_id), "name": product.name, "forecast": forecast, "method": "Linear Regression Forecast"}
-    except Exception:
+        return {
+            "product_id": str(product_id),
+            "name": product.name,
+            "forecast": forecast_30[:7],
+            "next_week_prediction": sum(day["quantity"] for day in forecast_30[:7]),
+            "next_month_prediction": sum(day["quantity"] for day in forecast_30),
+            "method": "Random Forest Forecast"
+        }
+    except Exception as e:
         base_sales = 1 if items else 0
-        for i in range(1, 8):
+        forecast_30 = []
+        for i in range(1, 31):
             target_date = today_dt + timedelta(days=i)
-            forecast.append({
+            forecast_30.append({
                 "date": str(target_date),
                 "day_name": target_date.strftime("%A"),
                 "quantity": base_sales
             })
-        return {"product_id": str(product_id), "name": product.name, "forecast": forecast, "method": "Fallback"}
+        return {
+            "product_id": str(product_id),
+            "name": product.name,
+            "forecast": forecast_30[:7],
+            "next_week_prediction": sum(day["quantity"] for day in forecast_30[:7]),
+            "next_month_prediction": sum(day["quantity"] for day in forecast_30),
+            "method": f"Fallback ({str(e)})"
+        }

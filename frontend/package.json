@@ -10,10 +10,12 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@clerk/clerk-react": "^5.61.9",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.1",
     "@mui/icons-material": "^9.2.0",
     "@mui/material": "^9.2.0",
+    "@react-oauth/google": "^0.13.5",
     "@tailwindcss/vite": "^4.3.2",
     "axios": "^1.18.1",
     "lucide-react": "^1.24.0",
