@@ -354,12 +354,9 @@ async def auth_setup(
         if not user or not verify_password(password, user.hashed_password):
             raise HTTPException(status_code=400, detail="Invalid shop username or password")
             
-        if user.clerk_id:
-            raise HTTPException(status_code=400, detail="This profile is already linked to a Gmail account")
-            
-        # Link Clerk ID
+        # Link / update Clerk ID
         user.clerk_id = clerk_id
-        if email and not user.email:
+        if email:
             user.email = email
         await user.save()
         
