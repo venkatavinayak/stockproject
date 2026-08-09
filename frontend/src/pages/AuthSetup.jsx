@@ -39,7 +39,13 @@ const AuthSetup = () => {
       navigate('/');
     } catch (err) {
       console.error(err);
-      setError(err.response?.data?.detail || 'Setup failed. Please check credentials or try again.');
+      const rawDetail = err.response?.data?.detail;
+      const errMsg = Array.isArray(rawDetail)
+        ? rawDetail.map(d => d.msg).join(', ')
+        : typeof rawDetail === 'string'
+          ? rawDetail
+          : err.message || 'Setup failed';
+      setError(errMsg);
     } finally {
       setLoading(false);
     }
