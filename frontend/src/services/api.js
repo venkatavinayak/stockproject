@@ -31,20 +31,10 @@ api.interceptors.request.use(async (config) => {
   return Promise.reject(error);
 });
 
-// Response interceptor to catch token expiration
+// Response interceptor
 api.interceptors.response.use((response) => {
   return response;
 }, (error) => {
-  if (error.response && error.response.status === 401) {
-    const detail = error.response.data?.detail;
-    if (detail === 'UNLINKED_ACCOUNT') {
-      return Promise.reject(error);
-    }
-    // Clear storage and redirect
-    localStorage.removeItem('smartstock_token');
-    localStorage.removeItem('smartstock_user');
-    window.location.href = '/login';
-  }
   return Promise.reject(error);
 });
 
