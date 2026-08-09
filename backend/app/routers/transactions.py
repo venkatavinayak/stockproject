@@ -25,6 +25,7 @@ async def get_transactions(
     min_profit: Optional[float] = None,
     max_profit: Optional[float] = None,
     cashier_username: Optional[str] = None,
+    limit: Optional[int] = 100,
     current_user: User = Depends(get_current_user)
 ):
     filters = {}
@@ -50,32 +51,69 @@ async def get_transactions(
     elif cashier_username:
         filters["cashier_username"] = cashier_username
         
-    import os
-    from backend.app.models.settings import StoreSettings
-    from backend.app.reports.receipt import generate_thermal_receipt
+    query = Transaction.find(filters).sort(-Transaction.timestamp)
+    if limit:
+        query = query.limit(limit)
+    txs = await query.to_list()
     
-    settings = await StoreSettings.find_one()
-    if not settings:
-        settings = StoreSettings()
-        await settings.insert()
-        
-    txs = await Transaction.find(filters).sort(-Transaction.timestamp).to_list()
-    
-    # Populate items products and check PDF paths
+    # Batch query all unique product IDs to optimize DB hits
+    product_ids = set()
     for tx in txs:
-        if not tx.pdf_path or not os.path.exists(tx.pdf_path):
-            try:
-                tx.pdf_path = generate_thermal_receipt(tx, settings)
-                await tx.save()
-            except Exception as e:
-                print(f"Failed to auto-generate PDF for invoice {tx.invoice_number}: {e}")
-                
         for item in tx.items:
             if item.product_id:
-                p = await Product.get(item.product_id)
-                if p:
-                    item.product = await populate_product_relations(p)
-                    
+                product_ids.add(item.product_id)
+                
+    products_map = {}
+    if product_ids:
+        from backend.app.models.category import Category
+        from backend.app.models.supplier import Supplier
+        from backend.app.schemas.product import ProductResponse
+        
+        products = await Product.find({"_id": {"$in": list(product_ids)}}).to_list()
+        
+        # Batch query related categories and suppliers
+        category_ids = {p.category_id for p in products if p.category_id}
+        supplier_ids = {p.supplier_id for p in products if p.supplier_id}
+        
+        categories_map = {}
+        if category_ids:
+            categories = await Category.find({"_id": {"$in": list(category_ids)}}).to_list()
+            categories_map = {c.id: c for c in categories}
+            
+        suppliers_map = {}
+        if supplier_ids:
+            suppliers = await Supplier.find({"_id": {"$in": list(supplier_ids)}}).to_list()
+            suppliers_map = {s.id: s for s in suppliers}
+            
+        for p in products:
+            products_map[p.id] = ProductResponse(
+                id=p.id,
+                barcode=p.barcode,
+                name=p.name,
+                brand=p.brand,
+                category_id=p.category_id,
+                supplier_id=p.supplier_id,
+                buying_price=p.buying_price,
+                selling_price=p.selling_price,
+                gst=p.gst,
+                discount=p.discount,
+                current_stock=p.current_stock,
+                minimum_stock=p.minimum_stock,
+                expiry_date=p.expiry_date,
+                manufacturing_date=p.manufacturing_date,
+                batch_number=p.batch_number,
+                status=p.status,
+                image_path=p.image_path,
+                category=categories_map.get(p.category_id),
+                supplier=suppliers_map.get(p.supplier_id)
+            )
+            
+    # Assign populated products to transactions in-memory
+    for tx in txs:
+        for item in tx.items:
+            if item.product_id and item.product_id in products_map:
+                item.product = products_map[item.product_id]
+                
     return txs
 
 @router.get("/{transaction_id}", response_model=TransactionResponse)
