@@ -219,7 +219,12 @@ def generate_full_report_pdf(
         ]
         from datetime import timezone as dt_timezone
         for tx in transactions:
-            cust_info = f" ({tx.customer_name})" if tx.customer_name else ""
+            cust_details = []
+            if tx.customer_name: cust_details.append(tx.customer_name)
+            if tx.customer_phone: cust_details.append(tx.customer_phone)
+            if tx.customer_email: cust_details.append(tx.customer_email)
+            
+            cust_info = f" - Customer: {', '.join(cust_details)}" if cust_details else ""
             utc_ts = tx.timestamp.replace(tzinfo=dt_timezone.utc) if tx.timestamp.tzinfo is None else tx.timestamp
             local_ts = utc_ts.astimezone()
             formatted_time = local_ts.strftime('%d-%m-%Y %I:%M %p')
@@ -276,13 +281,14 @@ def generate_full_report_pdf(
     else:
         ret_data = [
             [
-                Paragraph("Invoice Ref", cell_header_style),
+                Paragraph("Refund Details", cell_header_style),
                 Paragraph("Product Name", cell_header_style),
                 Paragraph("Quantity", cell_header_style),
                 Paragraph("Refund Paid", cell_header_style),
                 Paragraph("Return Reason", cell_header_style)
             ]
         ]
+        from datetime import timezone as dt_timezone
         for r in returns:
             details = r.get("details", "INV-REF") if isinstance(r, dict) else getattr(r, "details", "INV-REF")
             prod = r.get("product") if isinstance(r, dict) else getattr(r, "product", None)
@@ -291,14 +297,36 @@ def generate_full_report_pdf(
             refund_amount = r.get("refund_amount", 0.0) if isinstance(r, dict) else getattr(r, "refund_amount", 0.0)
             reason = r.get("reason", "") if isinstance(r, dict) else getattr(r, "reason", "")
             
+            # Format return timestamp
+            r_ts = r.get("timestamp") if isinstance(r, dict) else getattr(r, "timestamp", None)
+            formatted_time = ""
+            if r_ts:
+                utc_ts = r_ts.replace(tzinfo=dt_timezone.utc) if r_ts.tzinfo is None else r_ts
+                local_ts = utc_ts.astimezone()
+                formatted_time = local_ts.strftime('%d-%m-%Y %I:%M %p')
+                
+            cust_name = r.get("customer_name") if isinstance(r, dict) else getattr(r, "customer_name", None)
+            cust_phone = r.get("customer_phone") if isinstance(r, dict) else getattr(r, "customer_phone", None)
+            cust_email = r.get("customer_email") if isinstance(r, dict) else getattr(r, "customer_email", None)
+            
+            cust_details = []
+            if cust_name: cust_details.append(cust_name)
+            if cust_phone: cust_details.append(cust_phone)
+            if cust_email: cust_details.append(cust_email)
+            
+            cust_str = f"<br/><font color='#4b5563'>Cust: {', '.join(cust_details)}</font>" if cust_details else ""
+            time_str = f"<br/><font color='#4b5563'>Date: {formatted_time}</font>" if formatted_time else ""
+            
+            refund_details_html = f"<b>{details}</b>{time_str}{cust_str}"
+            
             ret_data.append([
-                Paragraph(clean_text(details), cell_style),
+                Paragraph(refund_details_html, cell_style),
                 Paragraph(clean_text(prod_name), cell_style),
                 Paragraph(str(quantity), cell_style),
                 Paragraph(f"Rs. {refund_amount:,.2f}", cell_bold_style),
                 Paragraph(clean_text(reason), cell_style)
             ])
-        ret_table = Table(ret_data, colWidths=[90, 150, 45, 80, 115])
+        ret_table = Table(ret_data, colWidths=[150, 110, 35, 75, 110])
         ret_table.setStyle(TableStyle([
             ('BACKGROUND', (0,0), (-1,0), colors.HexColor('#b91c1c')),
             ('ALIGN', (0,0), (-1,-1), 'LEFT'),

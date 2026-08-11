@@ -421,7 +421,11 @@ async def export_pdf_report(
             "product": prod_info,
             "quantity": r.quantity,
             "refund_amount": r.refund_amount,
-            "reason": r.reason
+            "reason": r.reason,
+            "timestamp": r.timestamp,
+            "customer_name": tx_obj.customer_name if tx_obj else None,
+            "customer_phone": tx_obj.customer_phone if tx_obj else None,
+            "customer_email": tx_obj.customer_email if tx_obj else None,
         })
             
     # 3. Fetch Expenses
