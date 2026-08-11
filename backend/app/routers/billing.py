@@ -185,13 +185,22 @@ async def checkout(
         await transaction.save()
         
         if tx_in.customer_email and settings.email_enable:
-            background_tasks.add_task(
-                send_invoice_email,
-                email_to=tx_in.customer_email,
-                invoice_no=invoice_no,
-                pdf_path=pdf_path,
-                settings=settings
-            )
+            if not settings.smtp_host or not settings.smtp_user or not settings.smtp_password:
+                from backend.app.models.notification import Notification
+                notif = Notification(
+                    type="System",
+                    message=f"Invoice {invoice_no} email skipped: SMTP configuration is incomplete in Store Settings.",
+                    timestamp=datetime.utcnow()
+                )
+                await notif.insert()
+            else:
+                background_tasks.add_task(
+                    send_invoice_email,
+                    email_to=tx_in.customer_email,
+                    invoice_no=invoice_no,
+                    pdf_path=pdf_path,
+                    settings=settings
+                )
     except Exception as e:
         import traceback
         traceback.print_exc()

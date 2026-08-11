@@ -27,6 +27,17 @@ async def get_top_products_qty(days: int, limit: int = 1, reverse: bool = False)
     res = await Transaction.get_pymongo_collection().aggregate(pipeline).to_list(length=None)
     return res
 
+async def get_top_products_qty_sorted(days: int):
+    cutoff = datetime.utcnow() - timedelta(days=days)
+    pipeline = [
+        {"$match": {"timestamp": {"$gte": cutoff}}},
+        {"$unwind": "$items"},
+        {"$group": {"_id": "$items.product_name", "total_qty": {"$sum": "$items.quantity"}}},
+        {"$sort": {"total_qty": -1}}
+    ]
+    res = await Transaction.get_pymongo_collection().aggregate(pipeline).to_list(length=None)
+    return res
+
 @router.get("/dashboard/kpis", response_model=DashboardKPIs)
 async def get_dashboard_kpis(
     period: str = "today",  # today, week, month, all, custom
@@ -106,15 +117,16 @@ async def get_dashboard_kpis(
     # 6. Top product counts based on period
     days_range = 1 if period == "today" else 7 if period == "week" else 30 if period == "month" else 365
     
-    best_res = await get_top_products_qty(days_range, 1)
-    best_seller = best_res[0]["_id"] if best_res else "N/A"
+    prod_sales = await get_top_products_qty_sorted(days_range)
+    best_seller = prod_sales[0]["_id"] if prod_sales else "N/A"
+    slow_moving = prod_sales[-1]["_id"] if prod_sales and len(prod_sales) > 1 else "N/A"
     
-    fast_res = await get_top_products_qty(7 if period != "today" else 1, 1)
-    fast_moving = fast_res[0]["_id"] if fast_res else "N/A"
-    
-    slow_res = await get_top_products_qty(days_range, 1, reverse=True)
-    slow_moving = slow_res[0]["_id"] if slow_res else "N/A"
-    
+    if period == "today" or period == "week":
+        fast_moving = best_seller
+    else:
+        fast_sales = await get_top_products_qty_sorted(7)
+        fast_moving = fast_sales[0]["_id"] if fast_sales else "N/A"
+        
     # 9. Dead Stock Count
     thirty_days_ago = datetime.utcnow() - timedelta(days=30)
     sold_pipeline = [
@@ -123,10 +135,12 @@ async def get_dashboard_kpis(
         {"$group": {"_id": "$items.product_id"}}
     ]
     sold_res = await Transaction.get_pymongo_collection().aggregate(sold_pipeline).to_list(length=None)
-    sold_ids = {r["_id"] for r in sold_res if r["_id"] is not None}
+    sold_ids = [r["_id"] for r in sold_res if r["_id"] is not None]
     
-    all_in_stock = await Product.find(Product.current_stock > 0).to_list()
-    dead_stock_count = sum(1 for p in all_in_stock if p.id not in sold_ids)
+    dead_stock_count = await Product.find({
+        "current_stock": {"$gt": 0},
+        "_id": {"$nin": sold_ids}
+    }).count()
     
     return DashboardKPIs(
         today_revenue=revenue,

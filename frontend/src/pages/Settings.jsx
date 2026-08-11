@@ -63,6 +63,15 @@ const SettingsPage = () => {
     e.preventDefault();
     setSaveSuccess(false);
     setSaving(true);
+
+    if (formData.email_enable) {
+      if (!formData.smtp_host?.trim() || !formData.smtp_user?.trim() || !formData.smtp_password?.trim()) {
+        alert("Please enter your SMTP Host, User Email, and App Password before saving with Active Dispatch enabled.");
+        setSaving(false);
+        return;
+      }
+    }
+
     try {
       const data = await settingsAPI.update(formData);
       setFormData(data);
