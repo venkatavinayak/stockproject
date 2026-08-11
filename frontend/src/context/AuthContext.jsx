@@ -1,79 +1,75 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
-import { useAuth as useClerkAuth, useUser as useClerkUser } from '@clerk/clerk-react';
-import { authAPI, setTokenResolver } from '../services/api';
+import { authAPI } from '../services/api';
 
 const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
-  const { isSignedIn, isLoaded, signOut, getToken } = useClerkAuth();
-  const { user: clerkUser } = useClerkUser();
-  const [user, setUser] = useState(null);
-  const [isLinked, setIsLinked] = useState(false);
+  const [token, setToken] = useState(() => localStorage.getItem('smartstock_token'));
+  const [user, setUser] = useState(() => {
+    const cached = localStorage.getItem('smartstock_user');
+    return cached ? JSON.parse(cached) : null;
+  });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (isLoaded) {
-      setTokenResolver(getToken);
-    }
-  }, [isLoaded, getToken]);
-
-  const syncProfile = async () => {
-    if (isSignedIn) {
-      try {
-        const profile = await authAPI.getMe();
-        const userData = {
-          username: profile.username,
-          role: profile.role,
-          can_manage_stock: profile.can_manage_stock,
-          can_view_expenses: profile.can_view_expenses,
-          can_view_analytics: profile.can_view_analytics
-        };
-        setUser(userData);
-        setIsLinked(true);
-      } catch (err) {
-        console.error("AuthContext syncProfile error:", err);
-        setUser(null);
-        setIsLinked(false);
-      } finally {
-        setLoading(false);
+    const syncProfile = async () => {
+      if (token) {
+        try {
+          const profile = await authAPI.getMe();
+          const userData = {
+            username: profile.username,
+            role: profile.role,
+            can_manage_stock: profile.can_manage_stock,
+            can_view_expenses: profile.can_view_expenses,
+            can_view_analytics: profile.can_view_analytics
+          };
+          localStorage.setItem('smartstock_user', JSON.stringify(userData));
+          setUser(userData);
+        } catch (err) {
+          // Token expired or invalid
+          localStorage.removeItem('smartstock_token');
+          localStorage.removeItem('smartstock_user');
+          setToken(null);
+          setUser(null);
+        }
       }
-    } else {
-      setUser(null);
-      setIsLinked(false);
       setLoading(false);
+    };
+    syncProfile();
+  }, [token]);
+
+  const login = async (username, password) => {
+    try {
+      const data = await authAPI.login(username, password);
+      localStorage.setItem('smartstock_token', data.access_token);
+      setToken(data.access_token);
+      
+      // Fetch user profile to retrieve role and permissions info
+      const profile = await authAPI.getMe();
+      const userData = { 
+        username: profile.username, 
+        role: profile.role,
+        can_manage_stock: profile.can_manage_stock,
+        can_view_expenses: profile.can_view_expenses,
+        can_view_analytics: profile.can_view_analytics
+      };
+      localStorage.setItem('smartstock_user', JSON.stringify(userData));
+      setUser(userData);
+      return true;
+    } catch (err) {
+      throw new Error(err.response?.data?.detail || 'Incorrect credentials');
     }
   };
 
-  useEffect(() => {
-    if (isLoaded) {
-      syncProfile();
-    }
-  }, [isSignedIn, isLoaded, clerkUser]);
-
-  const login = async () => {
-    // Dummy login method for backwards compatibility, login is managed by Clerk UI components
-    return true;
-  };
-
-  const logout = async () => {
-    setLoading(true);
-    await signOut();
+  const logout = () => {
+    localStorage.removeItem('smartstock_token');
+    localStorage.removeItem('smartstock_user');
+    setToken(null);
     setUser(null);
-    setIsLinked(false);
-    setLoading(false);
   };
 
   return (
-    <AuthContext.Provider value={{ 
-      user, 
-      login, 
-      logout, 
-      isAuthenticated: isSignedIn && isLinked, 
-      isLinked,
-      isSignedIn: !!isSignedIn,
-      loading: !isLoaded || loading,
-      syncProfile
-    }}>
+    <AuthContext.Provider value={{ token, user, login, logout, isAuthenticated: !!token, loading }}>
       {children}
     </AuthContext.Provider>
   );

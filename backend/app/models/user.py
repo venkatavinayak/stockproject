@@ -6,7 +6,6 @@ from datetime import datetime
 class User(Document):
     username: str
     hashed_password: str
-    clerk_id: Optional[str] = None
     last_login: Optional[datetime] = None
     is_active: bool = True
     role: str = "admin"  # "admin" or "worker"

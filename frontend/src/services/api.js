@@ -8,33 +8,28 @@ const api = axios.create({
   baseURL: API_BASE_URL,
 });
 
-let tokenResolver = null;
-
-export const setTokenResolver = (resolver) => {
-  tokenResolver = resolver;
-};
-
-// Auto-inject Clerk JWT token header
-api.interceptors.request.use(async (config) => {
-  if (tokenResolver) {
-    try {
-      const token = await tokenResolver();
-      if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
-      }
-    } catch (err) {
-      console.error("Error resolving Clerk token in interceptor:", err);
-    }
+// Auto-inject JWT token header
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem('smartstock_token');
+  if (token) {
+    // Standard OAuth2 form or Bearer token header
+    config.headers.Authorization = `Bearer ${token}`;
   }
   return config;
 }, (error) => {
   return Promise.reject(error);
 });
 
-// Response interceptor
+// Response interceptor to catch token expiration
 api.interceptors.response.use((response) => {
   return response;
 }, (error) => {
+  if (error.response && error.response.status === 401) {
+    // Clear storage and redirect
+    localStorage.removeItem('smartstock_token');
+    localStorage.removeItem('smartstock_user');
+    window.location.href = '/login';
+  }
   return Promise.reject(error);
 });
 
@@ -62,10 +57,6 @@ export const authAPI = {
   },
   getMe: async () => {
     const response = await api.get('/auth/me');
-    return response.data;
-  },
-  setup: async (action, username, password) => {
-    const response = await api.post('/auth/setup', { action, username, password });
     return response.data;
   },
   listUsers: async () => {

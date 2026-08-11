@@ -283,24 +283,11 @@ const Analytics = () => {
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
-                
-                {/* Predicted totals cards */}
-                <div className="grid grid-cols-2 gap-4 my-3">
-                  <div className="p-3.5 rounded-2xl bg-indigo-50/20 border border-indigo-100/10 dark:bg-indigo-950/10 dark:border-indigo-950/20 flex flex-col items-center justify-center text-center">
-                    <span className="text-[9px] uppercase font-extrabold tracking-wider text-slate-400">Next Week Predicted Demand</span>
-                    <span className="text-md font-black text-indigo-600 dark:text-indigo-400 mt-1">{forecastResult.next_week_prediction || 0} units</span>
-                  </div>
-                  <div className="p-3.5 rounded-2xl bg-indigo-50/20 border border-indigo-100/10 dark:bg-indigo-950/10 dark:border-indigo-950/20 flex flex-col items-center justify-center text-center">
-                    <span className="text-[9px] uppercase font-extrabold tracking-wider text-slate-400">Next Month Predicted Demand</span>
-                    <span className="text-md font-black text-indigo-600 dark:text-indigo-400 mt-1">{forecastResult.next_month_prediction || 0} units</span>
-                  </div>
-                </div>
-
                 <div className="flex items-center gap-2 p-3.5 rounded-2xl bg-indigo-50/40 border border-indigo-100/30 dark:bg-indigo-950/10 dark:border-indigo-950/30 text-[10px]">
                   <Sparkles size={14} className="text-indigo-500 shrink-0" />
                   <span className="text-slate-500">
                     Engine: <strong className="text-indigo-600 dark:text-indigo-400">{forecastResult.method}</strong>. 
-                    Calculates predicted quantities for the upcoming week and month based on daily lags, weekday indicators, and month seasonality factors.
+                    Calculates predicted quantities for the upcoming week based on daily lags, weekday indicators, and month seasonality factors.
                   </span>
                 </div>
               </>
