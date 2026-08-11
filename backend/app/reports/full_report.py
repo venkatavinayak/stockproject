@@ -224,7 +224,8 @@ def generate_full_report_pdf(
             if tx.customer_phone: cust_details.append(tx.customer_phone)
             if tx.customer_email: cust_details.append(tx.customer_email)
             
-            cust_info = f" - Customer: {', '.join(cust_details)}" if cust_details else ""
+            cust_str_val = ", ".join(cust_details) if cust_details else "Walk-in Customer"
+            cust_info = f" - Customer: {cust_str_val}"
             utc_ts = tx.timestamp.replace(tzinfo=dt_timezone.utc) if tx.timestamp.tzinfo is None else tx.timestamp
             local_ts = utc_ts.astimezone()
             formatted_time = local_ts.strftime('%d-%m-%Y %I:%M %p')
@@ -314,10 +315,11 @@ def generate_full_report_pdf(
             if cust_phone: cust_details.append(cust_phone)
             if cust_email: cust_details.append(cust_email)
             
-            cust_str = f"<br/><font color='#4b5563'>Cust: {', '.join(cust_details)}</font>" if cust_details else ""
-            time_str = f"<br/><font color='#4b5563'>Date: {formatted_time}</font>" if formatted_time else ""
+            cust_str_val = ", ".join(cust_details) if cust_details else "Walk-in Customer"
+            cust_str = f"<br/><font color='#4b5563'>Customer: {cust_str_val}</font>"
+            time_str = f"<br/><font color='#4b5563'>Refund Date: {formatted_time}</font>" if formatted_time else ""
             
-            refund_details_html = f"<b>{details}</b>{time_str}{cust_str}"
+            refund_details_html = f"<b>Bill No: {details}</b>{time_str}{cust_str}"
             
             ret_data.append([
                 Paragraph(refund_details_html, cell_style),
