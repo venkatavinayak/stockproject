@@ -58,7 +58,7 @@ def send_invoice_email(
                 <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 30px 0;" />
                 <p style="font-size: 11px; color: #94a3b8; text-align: center; margin: 0;">
                     {settings.store_name} • {settings.address or ''}<br/>
-                    Powered by SmartStock AI POS
+                    Powered by Smart Store Ai POS
                 </p>
             </div>
         </body>

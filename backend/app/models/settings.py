@@ -2,7 +2,7 @@ from beanie import Document
 from typing import Optional
 
 class StoreSettings(Document):
-    store_name: str = "SmartStock AI Store"
+    store_name: str = "Smart Store Ai Store"
     logo_path: Optional[str] = None  # Uploaded store logo path
     gst_number: Optional[str] = None
     address: Optional[str] = None

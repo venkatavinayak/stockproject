@@ -267,7 +267,7 @@ def generate_thermal_receipt(transaction: Transaction, settings: StoreSettings, 
     c.setFont("Helvetica-Oblique", 7)
     c.drawCentredString(width / 2, y, clean_text(settings.invoice_footer))
     y -= 8
-    c.drawCentredString(width / 2, y, "Thank you! Powered by SmartStock AI")
+    c.drawCentredString(width / 2, y, "Thank you! Powered by Smart Store Ai")
     
     c.showPage()
     c.save()

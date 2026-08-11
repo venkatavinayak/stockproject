@@ -782,7 +782,7 @@ const Billing = () => {
                 <div className="text-[8px] font-bold text-slate-900 uppercase tracking-wide">THANK YOU FOR YOUR SHOPPING!</div>
                 <div className="text-[7px] text-slate-500">Goods once sold can be returned within 7 days.</div>
                 <div className="text-[7px] text-slate-500">Please present this slip for refund/exchange.</div>
-                <div className="text-[8px] font-bold text-indigo-600/80 pt-1 tracking-wider uppercase">*** SMARTSTOCK AI POWERED ***</div>
+                <div className="text-[8px] font-bold text-indigo-600/80 pt-1 tracking-wider uppercase">*** SMART STORE AI POWERED ***</div>
               </div>
             </div>
 

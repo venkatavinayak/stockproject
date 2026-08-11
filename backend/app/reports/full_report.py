@@ -44,7 +44,7 @@ class NumberedCanvas(canvas.Canvas):
         self.setFillColor(colors.HexColor('#64748b'))
         
         # Header text
-        self.drawString(54, 800, "SmartStock AI - Detailed Sales & Inventory Operations Report")
+        self.drawString(54, 800, "Smart Store Ai - Detailed Sales & Inventory Operations Report")
         self.setStrokeColor(colors.HexColor('#e2e8f0'))
         self.setLineWidth(0.5)
         self.line(54, 792, 541, 792)

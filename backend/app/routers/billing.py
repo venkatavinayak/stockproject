@@ -175,7 +175,7 @@ async def checkout(
     # Get store settings for PDF print
     settings = await StoreSettings.find_one()
     if not settings:
-        settings = StoreSettings(store_name="SmartStock AI")
+        settings = StoreSettings(store_name="Smart Store Ai")
         await settings.insert()
         
     # 5. Generate receipt PDF & Dispatch Email

@@ -27,7 +27,7 @@ from backend.app.routers.analytics import router as analytics_router
 # Beanie document collections are initialized asynchronously in the startup event
 
 app = FastAPI(
-    title="SmartStock AI - Retail ERP & POS API",
+    title="Smart Store Ai - Retail ERP & POS API",
     description="Backend API for Smart Departmental Store Inventory, Billing, and Business Analytics",
     version="1.0.0"
 )
@@ -91,7 +91,7 @@ async def on_startup():
         store_settings = await StoreSettings.find_one()
         if not store_settings:
             store_settings = StoreSettings(
-                store_name="SmartStock AI Store",
+                store_name="Smart Store Ai Store",
                 gst_number="27AAAAA1111A1Z1",
                 address="123 Shopping Arcade, Central Market Road, Sector 5",
                 contact_info="+91 98765 43210",
@@ -119,4 +119,4 @@ async def on_shutdown():
 
 @app.get("/")
 def read_root():
-    return {"status": "running", "system": "SmartStock AI Retail ERP", "timestamp": str(datetime.now())}
+    return {"status": "running", "system": "Smart Store Ai Retail ERP", "timestamp": str(datetime.now())}

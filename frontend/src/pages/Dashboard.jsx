@@ -566,7 +566,7 @@ const Dashboard = () => {
             <div className="p-1.5 bg-indigo-50 text-indigo-600 rounded-lg dark:bg-indigo-950/40 dark:text-indigo-400 animate-pulse">
               <Sparkles size={16} />
             </div>
-            <h3 className="text-md font-bold font-title text-slate-950 dark:text-white">SmartStock AI Insights</h3>
+            <h3 className="text-md font-bold font-title text-slate-950 dark:text-white">Smart Store Ai Insights</h3>
           </div>
           
           <div className="flex-1 space-y-4">

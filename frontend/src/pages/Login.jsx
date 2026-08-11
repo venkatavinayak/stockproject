@@ -41,7 +41,7 @@ const Login = () => {
             </div>
             <div>
               <h1 className="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white font-title">
-                SmartStock AI
+                Smart Store Ai
               </h1>
               <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
                 Store Owner Portal & Business ERP

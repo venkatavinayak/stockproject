@@ -40,7 +40,7 @@ const Sidebar = ({ isCollapsed, toggleCollapse }) => {
             </div>
             {!isCollapsed && (
               <span className="font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-violet-500 font-title text-md">
-                SmartStock AI
+                Smart Store Ai
               </span>
             )}
           </div>

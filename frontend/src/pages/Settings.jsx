@@ -9,7 +9,7 @@ import {
 const SettingsPage = () => {
   // Store Settings (Admin Only)
   const [formData, setFormData] = useState({
-    store_name: 'SmartStock AI Store',
+    store_name: 'Smart Store Ai Store',
     gst_number: '',
     address: '',
     contact_info: '',
