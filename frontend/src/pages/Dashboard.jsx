@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useAuth } from '../context/AuthContext';
 import { analyticsAPI, aiAPI, productsAPI, transactionsAPI, expensesAPI } from '../services/api';
 import { 
   TrendingUp, TrendingDown, Coins, Receipt, 
@@ -15,6 +16,7 @@ import {
 const COLORS = ['#6366f1', '#10b981', '#f59e0b', '#ec4899', '#3b82f6'];
 
 const Dashboard = () => {
+  const { user } = useAuth();
   const [kpis, setKpis] = useState(null);
   const [activity, setActivity] = useState([]);
   const [recommendations, setRecommendations] = useState([]);
@@ -391,6 +393,35 @@ const Dashboard = () => {
             <span>Fetching details...</span>
           </div>
         )}
+      </div>
+
+      {/* Welcome Hero Banner */}
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-indigo-600 via-indigo-700 to-violet-700 text-white p-6 md:p-8 shadow-xl shadow-indigo-600/10">
+        {/* Decorative background glows */}
+        <div className="absolute -top-24 -right-24 w-80 h-80 bg-white/10 rounded-full blur-3xl pointer-events-none"></div>
+        <div className="absolute -bottom-24 -left-24 w-80 h-80 bg-indigo-500/20 rounded-full blur-3xl pointer-events-none"></div>
+        
+        <div className="flex flex-col md:flex-row items-center justify-between gap-6 relative z-10">
+          <div className="space-y-3 max-w-xl text-center md:text-left">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 text-white text-xs font-semibold backdrop-blur-md">
+              <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse"></span>
+              Live store system operational
+            </span>
+            <h2 className="text-3xl font-extrabold tracking-tight font-title md:text-4xl">
+              Welcome back, {user?.role === 'admin' ? 'Owner' : user?.username || 'Owner'}!
+            </h2>
+            <p className="text-indigo-100 text-sm leading-relaxed max-w-md">
+              Here is your departmental store status overview. Check inventory alerts, review transaction ledgers, or browse recent AI insights.
+            </p>
+          </div>
+          <div className="shrink-0 hidden md:block">
+            <img 
+              src="/assets/dashboard_welcome.jpg" 
+              alt="Welcome Illustration" 
+              className="h-32 lg:h-36 object-contain rounded-2xl shadow-lg border border-white/10 aspect-[3/2] object-cover"
+            />
+          </div>
+        </div>
       </div>
 
       {/* KPI Cards Grid */}

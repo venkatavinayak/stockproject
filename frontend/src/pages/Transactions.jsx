@@ -317,10 +317,9 @@ const Transactions = () => {
                           <div className="flex items-center justify-center gap-1">
                             <button 
                               onClick={() => handleDownloadPDF(tx)}
-                              title="Download Invoice PDF"
-                              className="p-2 border border-slate-200 hover:border-indigo-400 dark:border-slate-800 rounded-xl hover:bg-indigo-50/50 dark:hover:bg-indigo-950/25 text-slate-500 hover:text-indigo-600 dark:hover:text-indigo-400 active:scale-95 transition-all"
+                              className="p-1.5 border dark:border-slate-800 rounded-lg hover:bg-slate-100 text-[10px] font-bold flex items-center gap-1"
                             >
-                              <FileDown size={14} />
+                              <FileDown size={12} /> Invoice PDF
                             </button>
                             <button 
                               onClick={() => {
@@ -333,10 +332,9 @@ const Transactions = () => {
                                 setRefundQuantities(q);
                                 setShowRefundModal(true);
                               }}
-                              title="Refund / Return Items"
-                              className="p-2 border border-slate-200 hover:border-rose-400 dark:border-slate-800 rounded-xl hover:bg-rose-50 dark:hover:bg-rose-950/25 text-slate-500 hover:text-rose-600 dark:hover:text-rose-450 active:scale-95 transition-all"
+                              className="p-1.5 border border-rose-200 dark:border-rose-950 text-rose-500 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-950/20 text-[10px] font-bold flex items-center gap-1"
                             >
-                              <RefreshCcw size={14} />
+                              <RefreshCcw size={12} /> Refund Item
                             </button>
                           </div>
                         </td>
