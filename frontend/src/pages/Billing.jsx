@@ -188,11 +188,8 @@ const Billing = () => {
     }
   }, [cashReceived, cart]);
 
-  // Validation: Customer name is mandatory AND at least one contact channel (phone or email) is mandatory
-  const isCheckoutDisabled = 
-    cart.length === 0 || 
-    !customerName.trim() || 
-    (!customerPhone.trim() && !customerEmail.trim());
+  // Validation: Only a non-empty cart is required to enable checkout
+  const isCheckoutDisabled = cart.length === 0;
 
   const handleCheckoutDirect = async (method) => {
     try {
@@ -541,10 +538,10 @@ const Billing = () => {
               </button>
             </div>
 
-            {/* Validation Notice Banner */}
-            {isCheckoutDisabled && cart.length > 0 && (
-              <div className="p-3 rounded-2xl bg-amber-50 dark:bg-amber-950/20 border border-amber-200/20 text-[10px] text-amber-700 dark:text-amber-400 font-extrabold flex items-center gap-1.5 animate-pulse mt-2">
-                <span>⚠️ Required: Customer Name + (Mobile or Email) to complete checkout.</span>
+            {/* Helper Tip */}
+            {cart.length > 0 && !customerName.trim() && (
+              <div className="p-3 rounded-2xl bg-indigo-50/50 dark:bg-indigo-950/10 border border-indigo-150/10 text-[10px] text-indigo-700 dark:text-indigo-400 font-bold flex items-center gap-1.5 mt-2">
+                <span>💡 Tip: Customer details are optional. Leave blank for walk-in checkout.</span>
               </div>
             )}
           </div>
@@ -556,22 +553,21 @@ const Billing = () => {
             <div className="p-4 rounded-2xl border border-slate-100 dark:border-slate-850/80 bg-slate-50/50 dark:bg-slate-955/20 space-y-3.5">
               <div className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400">
                 <UserCheck size={14} className="text-indigo-600" />
-                <span className="text-[10px] font-black uppercase tracking-wider">Customer Contact (Mandatory)</span>
+                <span className="text-[10px] font-black uppercase tracking-wider">Customer Info (Optional)</span>
               </div>
               <div>
-                <label className="block text-[9px] font-bold text-slate-400 mb-1 uppercase tracking-wider">Customer Name *</label>
+                <label className="block text-[9px] font-bold text-slate-400 mb-1 uppercase tracking-wider">Customer Name</label>
                 <input
                   type="text"
                   value={customerName}
                   onChange={(e) => setCustomerName(e.target.value)}
                   placeholder="Enter customer name..."
                   className="w-full px-3 py-2 text-xs font-semibold rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 dark:border-slate-800 dark:bg-slate-950 transition-all"
-                  required
                 />
               </div>
               <div className="grid grid-cols-2 gap-2.5">
                 <div>
-                  <label className="block text-[9px] font-bold text-slate-400 mb-1 uppercase tracking-wider">Mobile Number *</label>
+                  <label className="block text-[9px] font-bold text-slate-400 mb-1 uppercase tracking-wider">Mobile Number</label>
                   <input
                     type="text"
                     value={customerPhone}
@@ -581,7 +577,7 @@ const Billing = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-[9px] font-bold text-slate-400 mb-1 uppercase tracking-wider">Email Address *</label>
+                  <label className="block text-[9px] font-bold text-slate-400 mb-1 uppercase tracking-wider">Email Address</label>
                   <input
                     type="email"
                     value={customerEmail}
@@ -591,9 +587,6 @@ const Billing = () => {
                   />
                 </div>
               </div>
-              <span className="block text-[8px] text-slate-400 font-semibold italic text-center">
-                * Note: Either Mobile Number or Email is required.
-              </span>
             </div>
 
           </div>
