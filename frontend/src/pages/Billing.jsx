@@ -153,6 +153,28 @@ const Billing = () => {
     });
   };
 
+  const handleManualQtyChange = (productId, val, maxStock) => {
+    setCart((prev) => {
+      return prev.map(item => {
+        if (item.product.id === productId) {
+          if (val < 0) return { ...item, quantity: 0 };
+          if (val > maxStock) {
+            alert(`Cannot exceed stock limit: ${maxStock} units.`);
+            return { ...item, quantity: maxStock };
+          }
+          return { ...item, quantity: val };
+        }
+        return item;
+      });
+    });
+  };
+
+  const handleManualQtyBlur = (productId, val) => {
+    if (val <= 0) {
+      setCart((prev) => prev.filter(item => item.product.id !== productId));
+    }
+  };
+
   const removeFromCart = (productId) => {
     setCart(prev => prev.filter(item => item.product.id !== productId));
   };
@@ -366,7 +388,19 @@ const Billing = () => {
                           >
                             <Minus size={11} />
                           </button>
-                          <span className="font-mono text-xs font-black w-6 text-center text-slate-850 dark:text-slate-150">{item.quantity}</span>
+                          <input
+                            type="number"
+                            value={item.quantity === 0 ? '' : item.quantity}
+                            onChange={(e) => {
+                              const val = e.target.value === '' ? 0 : parseInt(e.target.value) || 0;
+                              handleManualQtyChange(item.product.id, val, item.product.current_stock);
+                            }}
+                            onBlur={(e) => {
+                              const val = e.target.value === '' ? 0 : parseInt(e.target.value) || 0;
+                              handleManualQtyBlur(item.product.id, val);
+                            }}
+                            className="font-mono text-xs font-black w-10 text-center text-slate-850 dark:text-slate-150 bg-transparent border-none p-0 focus:ring-0 focus:outline-none focus:bg-slate-100 dark:focus:bg-slate-800 rounded-lg [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                          />
                           <button 
                             onClick={() => updateQuantity(item.product.id, 1, item.product.current_stock)}
                             className="p-1 rounded-lg text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-850 transition-colors"

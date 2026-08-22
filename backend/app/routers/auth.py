@@ -270,3 +270,44 @@ async def reset_user_password(
     await audit.insert()
     
     return {"message": f"Password for user {username} updated successfully"}
+
+class ShopRegister(BaseModel):
+    shop_name: str
+    owner_email: str
+    password: str
+
+@router.post("/register-shop")
+async def register_shop(data: ShopRegister):
+    # Check if a user with this email or username already exists
+    existing = await User.find_one(User.username == data.owner_email)
+    if existing:
+        raise HTTPException(status_code=400, detail="Owner email is already registered")
+        
+    # Create the owner user (admin role)
+    new_user = User(
+        username=data.owner_email,
+        hashed_password=get_password_hash(data.password),
+        role="admin",
+        is_active=True,
+        email=data.owner_email,
+        full_name=data.shop_name
+    )
+    await new_user.insert()
+    
+    # Update store settings with shop name
+    from backend.app.models.settings import StoreSettings
+    settings = await StoreSettings.find_one()
+    if not settings:
+        settings = StoreSettings()
+    settings.store_name = data.shop_name
+    await settings.save()
+    
+    # Audit log
+    audit = AuditLog(
+        username=data.owner_email,
+        action="REGISTER_SHOP",
+        details=f"Registered shop: {data.shop_name} for owner: {data.owner_email}"
+    )
+    await audit.insert()
+    
+    return {"message": "Shop registered successfully! You can now log in."}

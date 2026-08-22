@@ -34,6 +34,10 @@ api.interceptors.response.use((response) => {
 });
 
 export const authAPI = {
+  registerShop: async (shop_name, owner_email, password) => {
+    const response = await api.post('/auth/register-shop', { shop_name, owner_email, password });
+    return response.data;
+  },
   login: async (username, password) => {
     // OAuth2PasswordRequestForm expects urlencoded payload
     const params = new URLSearchParams();
