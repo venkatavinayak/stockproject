@@ -38,8 +38,8 @@ export const authAPI = {
     const response = await api.get('/auth/check-shop', { params: { email } });
     return response.data;
   },
-  clerkLogin: async (email, clerk_id, shop_name = null, role = 'admin') => {
-    const response = await api.post('/auth/clerk-login', { email, clerk_id, shop_name, role });
+  clerkLogin: async (email, clerk_id, shop_name = null, role = 'admin', password = null) => {
+    const response = await api.post('/auth/clerk-login', { email, clerk_id, shop_name, role, password });
     return response.data;
   },
   registerShop: async (shop_name, owner_email, password) => {

@@ -317,14 +317,16 @@ class ClerkLoginPayload(BaseModel):
     clerk_id: str
     shop_name: Optional[str] = None
     role: str = "admin"
+    password: Optional[str] = None
 
 @router.post("/clerk-login")
 async def clerk_login(data: ClerkLoginPayload):
     user = await User.find_one(User.username == data.email)
     if not user:
+        hashed = get_password_hash(data.password) if data.password else get_password_hash(data.clerk_id)
         user = User(
             username=data.email,
-            hashed_password=get_password_hash(data.clerk_id),
+            hashed_password=hashed,
             role=data.role,
             is_active=True,
             email=data.email,

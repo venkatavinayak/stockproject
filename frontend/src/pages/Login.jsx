@@ -116,9 +116,7 @@ const Login = () => {
       if (mode === 'register') {
         // Step 2: Register shop for authenticated Clerk user
         try {
-          const localAuth = await authAPI.clerkLogin(email, user.id, shopName, 'admin');
-          // Also set the password for the owner just in case
-          await authAPI.resetUserPassword(email, createPassword); 
+          const localAuth = await authAPI.clerkLogin(email, user.id, shopName, 'admin', createPassword); 
           localStorage.setItem('smartstock_token', localAuth.access_token);
           localStorage.setItem('smartstock_user', JSON.stringify({ username: email, role: 'admin' }));
           navigate('/');
