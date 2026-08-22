@@ -579,7 +579,7 @@ const Dashboard = () => {
               recommendations.slice(0, 3).map((rec) => (
                 <div 
                   key={rec.id} 
-                  className="flex gap-3 p-4 rounded-2xl bg-indigo-50/50 dark:bg-indigo-950/20 border border-indigo-100/20 dark:border-indigo-950/30"
+                  className="flex gap-3 p-4 rounded-2xl bg-indigo-50/50 dark:bg-indigo-950/20 border border-indigo-100/20 dark:border-indigo-950/30 interactive-card cursor-pointer hover:border-indigo-400"
                 >
                   <div className="text-indigo-600 dark:text-indigo-400 shrink-0 mt-0.5">
                     {rec.type === 'Stockout Warning' ? <ShieldAlert size={16} /> : <AlertTriangle size={16} />}

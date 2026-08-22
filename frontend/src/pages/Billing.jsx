@@ -286,7 +286,7 @@ const Billing = () => {
 
             {/* Quick search suggestions popup */}
             {searchResults.length > 0 && (
-              <div className="absolute left-0 right-0 z-50 mt-2 mx-6 rounded-2xl border border-slate-100 bg-white shadow-2xl max-h-60 overflow-y-auto dark:bg-slate-950 dark:border-slate-800">
+              <div className="absolute left-0 right-0 z-50 mt-2 mx-6 rounded-2xl border border-slate-100 bg-white shadow-2xl max-h-60 overflow-y-auto dark:bg-slate-955 dark:border-slate-800 animate-fade-in">
                 {searchResults.map((prod) => (
                   <button
                     key={prod.id}
@@ -294,7 +294,7 @@ const Billing = () => {
                       addToCart(prod);
                       setSearchQuery('');
                     }}
-                    className="flex items-center justify-between w-full p-3.5 text-left hover:bg-slate-50/80 border-b last:border-0 dark:border-slate-900 dark:hover:bg-slate-900/50 transition-colors"
+                    className="flex items-center justify-between w-full p-3.5 text-left hover:bg-indigo-50/30 hover:pl-5 border-b last:border-0 dark:border-slate-900 dark:hover:bg-slate-900/50 transition-all duration-250"
                   >
                     <div>
                       <span className="block text-sm font-bold text-slate-800 dark:text-slate-100">{prod.name}</span>

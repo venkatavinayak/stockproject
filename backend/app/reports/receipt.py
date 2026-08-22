@@ -149,11 +149,6 @@ def generate_thermal_receipt(transaction: Transaction, settings: StoreSettings, 
         c.drawRightString(width - margin, y, clean_text(f"Phone: {transaction.customer_phone}"))
         y -= 8
         
-        # Calculate points
-        points_earned = int(transaction.grand_total // 100)
-        c.drawString(margin, y, clean_text(f"Loyalty Points Gained: +{points_earned}"))
-        y -= 8
-        
     # Table headers
     y -= 3
     c.line(margin, y, width - margin, y)

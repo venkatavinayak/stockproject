@@ -55,10 +55,10 @@ const Sidebar = ({ isCollapsed, toggleCollapse }) => {
                 key={item.path}
                 to={item.path}
                 className={({ isActive }) => `
-                  flex items-center gap-3 px-3 py-3 rounded-xl font-medium text-sm transition-all duration-200
+                  flex items-center gap-3 px-3 py-3 rounded-xl font-semibold text-sm transition-all duration-300 transform active:scale-[0.98]
                   ${isActive 
-                    ? 'bg-indigo-50 text-indigo-600 dark:bg-indigo-950/40 dark:text-indigo-400' 
-                    : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-900/60 dark:hover:text-slate-100'}
+                    ? 'bg-gradient-to-r from-indigo-50 to-indigo-100/30 text-indigo-600 dark:from-indigo-950/40 dark:to-indigo-900/10 dark:text-indigo-400 shadow-sm' 
+                    : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900 hover:translate-x-1 dark:text-slate-400 dark:hover:bg-slate-900/50 dark:hover:text-slate-100'}
                 `}
               >
                 <Icon size={18} className="shrink-0" />

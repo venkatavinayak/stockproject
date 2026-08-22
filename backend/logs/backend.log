@@ -248,3 +248,4 @@
 2026-08-23 00:26:09,954 - backend.app.database.mongodb - INFO - Connecting to MongoDB at mongodb://127.0.0.1:27017/smartstock...
 2026-08-23 00:26:10,848 - backend.app.database.mongodb - INFO - MongoDB connection and Beanie initialization complete.
 2026-08-23 00:26:10,887 - scheduler - INFO - APScheduler initialized background jobs successfully.
+2026-08-23 01:01:55,768 - backend.app.database.mongodb - INFO - MongoDB client connection closed.
