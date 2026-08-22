@@ -34,6 +34,10 @@ api.interceptors.response.use((response) => {
 });
 
 export const authAPI = {
+  clerkLogin: async (email, clerk_id, shop_name = null, role = 'admin') => {
+    const response = await api.post('/auth/clerk-login', { email, clerk_id, shop_name, role });
+    return response.data;
+  },
   registerShop: async (shop_name, owner_email, password) => {
     const response = await api.post('/auth/register-shop', { shop_name, owner_email, password });
     return response.data;

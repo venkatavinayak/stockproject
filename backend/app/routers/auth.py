@@ -311,3 +311,44 @@ async def register_shop(data: ShopRegister):
     await audit.insert()
     
     return {"message": "Shop registered successfully! You can now log in."}
+
+class ClerkLoginPayload(BaseModel):
+    email: str
+    clerk_id: str
+    shop_name: Optional[str] = None
+    role: str = "admin"
+
+@router.post("/clerk-login")
+async def clerk_login(data: ClerkLoginPayload):
+    user = await User.find_one(User.username == data.email)
+    if not user:
+        user = User(
+            username=data.email,
+            hashed_password=get_password_hash(data.clerk_id),
+            role=data.role,
+            is_active=True,
+            email=data.email,
+            full_name=data.shop_name or "Store Owner"
+        )
+        await user.insert()
+        
+        if data.role == "admin" and data.shop_name:
+            from backend.app.models.settings import StoreSettings
+            settings = await StoreSettings.find_one()
+            if not settings:
+                settings = StoreSettings()
+            settings.store_name = data.shop_name
+            await settings.save()
+            
+        audit = AuditLog(
+            username=data.email,
+            action="CLERK_AUTO_REGISTER",
+            details=f"Auto-registered via Clerk. Shop: {data.shop_name or 'Default'}"
+        )
+        await audit.insert()
+    else:
+        user.last_login = datetime.utcnow()
+        await user.save()
+        
+    access_token = create_access_token(data={"sub": user.username})
+    return {"access_token": access_token, "token_type": "bearer"}
