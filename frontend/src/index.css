@@ -5,35 +5,36 @@
   --font-sans: 'Plus Jakarta Sans', sans-serif;
   --font-title: 'Outfit', sans-serif;
 
-  /* Premium Iris Violet brand primary */
-  --color-indigo-50: #f5f3ff;
-  --color-indigo-100: #ede9fe;
-  --color-indigo-200: #ddd6fe;
-  --color-indigo-300: #c4b5fd;
-  --color-indigo-400: #a78bfa;
-  --color-indigo-500: #7c3aed;
-  --color-indigo-600: #6d28d9;
-  --color-indigo-700: #5b21b6;
-  --color-indigo-800: #4c1d95;
-  --color-indigo-900: #3b0764;
+  /* AM Maroon (Pantone 7426C) brand primary */
+  --color-indigo-50: #fdf2f4;
+  --color-indigo-100: #fbe5e9;
+  --color-indigo-200: #f7ccd5;
+  --color-indigo-300: #f0a3b5;
+  --color-indigo-400: #e46e8d;
+  --color-indigo-500: #a9123e;
+  --color-indigo-600: #900f34;
+  --color-indigo-700: #770c2a;
+  --color-indigo-800: #5f0921;
+  --color-indigo-900: #4b071a;
 
-  /* Premium Warm Stone Gray neutrals */
-  --color-slate-50: #fafaf9;
-  --color-slate-100: #f5f5f4;
-  --color-slate-200: #e7e5e4;
-  --color-slate-300: #d6d3d1;
-  --color-slate-400: #a8a29e;
-  --color-slate-500: #78716c;
-  --color-slate-600: #57534e;
-  --color-slate-700: #44403c;
-  --color-slate-800: #292524;
-  --color-slate-900: #1c1917;
-  --color-slate-950: #0c0a09;
+  /* Cool slate grays and pure whites */
+  --color-slate-50: #ffffff;
+  --color-slate-100: #f8fafc;
+  --color-slate-200: #e2e8f0;
+  --color-slate-300: #cbd5e1;
+  --color-slate-400: #94a3b8;
+  --color-slate-500: #64748b;
+  --color-slate-600: #475569;
+  --color-slate-700: #334155;
+  --color-slate-800: #1e293b;
+  --color-slate-900: #0f172a;
+  --color-slate-955: #020617;
+  --color-slate-950: #020617;
 
   /* Softer, modern shadows */
-  --shadow-sm: 0 2px 8px -1px rgba(0, 0, 0, 0.04), 0 1px 3px -1px rgba(0, 0, 0, 0.02);
-  --shadow-md: 0 10px 20px -5px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.02);
-  --shadow-lg: 0 20px 30px -10px rgba(0, 0, 0, 0.08), 0 8px 12px -3px rgba(0, 0, 0, 0.03);
+  --shadow-sm: 0 2px 8px -1px rgba(0, 0, 0, 0.03), 0 1px 3px -1px rgba(0, 0, 0, 0.01);
+  --shadow-md: 0 10px 20px -5px rgba(0, 0, 0, 0.04), 0 4px 6px -2px rgba(0, 0, 0, 0.01);
+  --shadow-lg: 0 20px 30px -10px rgba(0, 0, 0, 0.06), 0 8px 12px -3px rgba(0, 0, 0, 0.02);
 
   /* Softer rounded corners */
   --radius-3xl: 24px;
@@ -47,15 +48,15 @@
 
 body {
   font-family: var(--font-sans);
-  background-color: #fafaf9;
-  color: #1c1917;
+  background-color: #ffffff;
+  color: #0f172a;
   overflow-x: hidden;
   transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 .dark body {
-  background-color: #0c0a09;
-  color: #fafaf9;
+  background-color: #020617;
+  color: #f8fafc;
 }
 
 /* Glassmorphic card boundary controls */
