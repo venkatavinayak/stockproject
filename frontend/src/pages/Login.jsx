@@ -348,7 +348,7 @@ const Login = () => {
                         onChange={(e) => setShopName(e.target.value)}
                         required
                         className="w-full pl-11 pr-4 py-3 rounded-xl border border-slate-200 bg-slate-50/50 text-slate-900 dark:border-slate-800 dark:bg-slate-950/50 dark:text-white placeholder-slate-400 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 transition-all font-sans text-sm font-semibold"
-                        placeholder="e.g. Vinayak Supermarket"
+                        placeholder="Shop Name"
                       />
                     </div>
                   </div>
