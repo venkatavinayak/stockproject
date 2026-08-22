@@ -440,6 +440,7 @@ async def export_pdf_report(
             "customer_name": tx_obj.customer_name if tx_obj else None,
             "customer_phone": tx_obj.customer_phone if tx_obj else None,
             "customer_email": tx_obj.customer_email if tx_obj else None,
+            "cashier_username": tx_obj.cashier_username if tx_obj else "Admin"
         })
             
     # 3. Fetch Expenses

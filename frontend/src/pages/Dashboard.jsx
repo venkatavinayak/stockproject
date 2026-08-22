@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { analyticsAPI, aiAPI, productsAPI, transactionsAPI, expensesAPI } from '../services/api';
+import { analyticsAPI, aiAPI, productsAPI, transactionsAPI, expensesAPI, API_BASE_URL } from '../services/api';
 import { 
   TrendingUp, TrendingDown, Coins, Receipt, 
   Layers, Package, AlertTriangle, Activity, 
@@ -110,7 +110,7 @@ const Dashboard = () => {
     try {
       setLoadingDetails(true);
       const token = localStorage.getItem('smartstock_token');
-      let url = `http://localhost:8000/api/analytics/report/pdf?period=${period}&token=${encodeURIComponent(token || '')}`;
+      let url = `${API_BASE_URL}/analytics/report/pdf?period=${period}&token=${encodeURIComponent(token || '')}`;
       if (period === 'custom') {
         if (customStartDate) url += `&start_date=${customStartDate}`;
         if (customEndDate) url += `&end_date=${customEndDate}`;

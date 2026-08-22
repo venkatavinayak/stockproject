@@ -60,10 +60,22 @@ async def get_product_forecast(
                     "timestamp": tx.timestamp
                 })
                 
-    # 7 Days Forecast output list
-    forecast = []
     today_dt = date.today()
     
+    # Helper to calculate totals from a 30-day forecast list
+    def build_forecast_response(forecast_30, method_name):
+        forecast_7 = forecast_30[:7]
+        week_total = sum(f["quantity"] for f in forecast_7)
+        month_total = sum(f["quantity"] for f in forecast_30)
+        return {
+            "product_id": str(product_id),
+            "name": product.name,
+            "forecast": forecast_7,
+            "upcoming_week_total": week_total,
+            "upcoming_month_total": month_total,
+            "method": method_name
+        }
+
     # If we don't have enough data, return a baseline average with slight weekday randomness
     if len(items) < 8:
         total_qty = sum(item["quantity"] for item in items)
@@ -74,19 +86,20 @@ async def get_product_forecast(
         else:
             base_sales = 0.0
             
-        for i in range(1, 8):
+        forecast_30 = []
+        for i in range(1, 31):
             target_date = today_dt + timedelta(days=i)
             day_mult = 1.3 if target_date.weekday() in [5, 6] else 0.9
             if items:
                 pred_qty = max(1, int(round(base_sales * day_mult)))
             else:
                 pred_qty = 0
-            forecast.append({
+            forecast_30.append({
                 "date": str(target_date),
                 "day_name": target_date.strftime("%A"),
                 "quantity": pred_qty
             })
-        return {"product_id": str(product_id), "name": product.name, "forecast": forecast, "method": "Baseline Moving Average"}
+        return build_forecast_response(forecast_30, "Baseline Moving Average")
         
     # ML model prediction
     try:
@@ -122,9 +135,10 @@ async def get_product_forecast(
         model = LinearRegression()
         model.fit(X, y)
         
-        # Roll forward for 7 days
+        # Roll forward for 30 days
         current_history = list(df["sales"])
-        for i in range(1, 8):
+        forecast_30 = []
+        for i in range(1, 31):
             target_date = today_dt + timedelta(days=i)
             target_dt = pd.to_datetime(target_date)
             
@@ -141,25 +155,24 @@ async def get_product_forecast(
             }])
             
             pred_val = float(model.predict(pred_row)[0])
-            pred_qty = int(round(pred_val))
-            if pred_qty < 0:
-                pred_qty = 0
-                
-            forecast.append({
+            pred_qty = max(0, int(round(pred_val)))
+            
+            forecast_30.append({
                 "date": str(target_date),
                 "day_name": target_date.strftime("%A"),
                 "quantity": pred_qty
             })
-            current_history.append(pred_val)
+            current_history.append(pred_qty)
             
-        return {"product_id": str(product_id), "name": product.name, "forecast": forecast, "method": "Linear Regression Forecast"}
+        return build_forecast_response(forecast_30, "Linear Regression Forecast")
     except Exception:
         base_sales = 1 if items else 0
-        for i in range(1, 8):
+        forecast_30 = []
+        for i in range(1, 31):
             target_date = today_dt + timedelta(days=i)
-            forecast.append({
+            forecast_30.append({
                 "date": str(target_date),
                 "day_name": target_date.strftime("%A"),
                 "quantity": base_sales
             })
-        return {"product_id": str(product_id), "name": product.name, "forecast": forecast, "method": "Fallback"}
+        return build_forecast_response(forecast_30, "Fallback")

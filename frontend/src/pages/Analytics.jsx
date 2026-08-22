@@ -283,6 +283,19 @@ const Analytics = () => {
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
+                
+                {/* Upcoming Week & Month Totals */}
+                <div className="grid grid-cols-2 gap-4 mb-4">
+                  <div className="p-3.5 rounded-2xl bg-indigo-50/40 border border-indigo-100/30 dark:bg-indigo-950/10 dark:border-indigo-950/20 text-center">
+                    <span className="block text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Upcoming Week Forecast</span>
+                    <span className="block text-lg font-extrabold text-indigo-600 dark:text-indigo-400 mt-1">{forecastResult.upcoming_week_total} items</span>
+                  </div>
+                  <div className="p-3.5 rounded-2xl bg-emerald-50/40 border border-emerald-100/30 dark:bg-emerald-950/10 dark:border-emerald-950/20 text-center">
+                    <span className="block text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Upcoming Month Forecast</span>
+                    <span className="block text-lg font-extrabold text-emerald-600 dark:text-emerald-400 mt-1">{forecastResult.upcoming_month_total} items</span>
+                  </div>
+                </div>
+
                 <div className="flex items-center gap-2 p-3.5 rounded-2xl bg-indigo-50/40 border border-indigo-100/30 dark:bg-indigo-950/10 dark:border-indigo-950/30 text-[10px]">
                   <Sparkles size={14} className="text-indigo-500 shrink-0" />
                   <span className="text-slate-500">

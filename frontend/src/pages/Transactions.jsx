@@ -142,7 +142,7 @@ const Transactions = () => {
           <button
             onClick={() => {
               const token = localStorage.getItem('smartstock_token');
-              let url = `http://localhost:8000/api/analytics/report/pdf?period=all&token=${encodeURIComponent(token || '')}`;
+              let url = `${API_BASE_URL}/analytics/report/pdf?period=all&token=${encodeURIComponent(token || '')}`;
               if (startDate) url += `&start_date=${startDate}`;
               if (endDate) url += `&end_date=${endDate}`;
               if (user?.role === 'worker') {

@@ -210,6 +210,7 @@ def generate_full_report_pdf(
         tx_data = [
             [
                 Paragraph("Invoice Details / Items Purchased", cell_header_style),
+                Paragraph("Staff/Cashier", cell_header_style),
                 Paragraph("Qty", cell_header_style),
                 Paragraph("Price", cell_header_style),
                 Paragraph("Tax/Disc", cell_header_style),
@@ -229,13 +230,13 @@ def generate_full_report_pdf(
             utc_ts = tx.timestamp.replace(tzinfo=dt_timezone.utc) if tx.timestamp.tzinfo is None else tx.timestamp
             local_ts = utc_ts.astimezone()
             formatted_time = local_ts.strftime('%d-%m-%Y %I:%M %p')
-            cashier_info = f" (Cashier: {tx.cashier_username or 'Admin'})"
-            header_text = f"<b>Invoice #{tx.invoice_number}</b> - {formatted_time} - {tx.payment_method}{cust_info}{cashier_info}"
+            header_text = f"<b>Invoice #{tx.invoice_number}</b> - {formatted_time} - {tx.payment_method}{cust_info}"
             tx_data.append([
                 Paragraph(header_text, ParagraphStyle('TxHeader', parent=cell_bold_style, textColor=colors.HexColor('#1e1b4b'))),
-                Paragraph("", cell_style),
-                Paragraph("", cell_style),
-                Paragraph("", cell_style),
+                Paragraph(f"<b>{tx.cashier_username or 'Admin'}</b>", cell_bold_style),
+                Paragraph("—", cell_style),
+                Paragraph("—", cell_style),
+                Paragraph("—", cell_style),
                 Paragraph(f"<b>Rs. {tx.grand_total:,.2f}</b>", cell_bold_style),
                 Paragraph(f"<b>Rs. {tx.profit:,.2f}</b>", cell_bold_style)
             ])
@@ -243,6 +244,7 @@ def generate_full_report_pdf(
                 item_details = f"   &bull; {item.product_name or 'Product'}"
                 tx_data.append([
                     Paragraph(clean_text(item_details), cell_style),
+                    Paragraph(tx.cashier_username or 'Admin', cell_style),
                     Paragraph(str(item.quantity), cell_style),
                     Paragraph(f"Rs. {item.unit_selling_price:.2f}", cell_style),
                     Paragraph(f"GST: {item.gst_rate:.0f}% / Disc: {item.discount_rate:.0f}%", cell_style),
@@ -250,9 +252,9 @@ def generate_full_report_pdf(
                     Paragraph(f"Rs. {item.profit:.2f}", cell_style)
                 ])
                 
-        tx_table = Table(tx_data, colWidths=[200, 35, 65, 110, 65, 65])
+        tx_table = Table(tx_data, colWidths=[180, 60, 30, 60, 85, 60, 65])
         
-        # Apply programmatic spanning and row backgrounds for transaction headers
+        # Apply programmatic row backgrounds for transaction headers
         t_style = [
             ('BACKGROUND', (0,0), (-1,0), colors.HexColor('#1e1b4b')),
             ('ALIGN', (0,0), (-1,-1), 'LEFT'),
@@ -263,7 +265,6 @@ def generate_full_report_pdf(
         curr_row = 1
         for tx in transactions:
             # Transaction Header Row Style
-            t_style.append(('SPAN', (0, curr_row), (3, curr_row)))
             t_style.append(('BACKGROUND', (0, curr_row), (-1, curr_row), colors.HexColor('#f1f5f9')))
             curr_row += 1
             # Items background style
@@ -283,6 +284,7 @@ def generate_full_report_pdf(
         ret_data = [
             [
                 Paragraph("Refund Details", cell_header_style),
+                Paragraph("Staff/Cashier", cell_header_style),
                 Paragraph("Product Name", cell_header_style),
                 Paragraph("Quantity", cell_header_style),
                 Paragraph("Refund Paid", cell_header_style),
@@ -297,6 +299,7 @@ def generate_full_report_pdf(
             quantity = r.get("quantity", 0) if isinstance(r, dict) else getattr(r, "quantity", 0)
             refund_amount = r.get("refund_amount", 0.0) if isinstance(r, dict) else getattr(r, "refund_amount", 0.0)
             reason = r.get("reason", "") if isinstance(r, dict) else getattr(r, "reason", "")
+            cashier = r.get("cashier_username", "Admin") if isinstance(r, dict) else getattr(r, "cashier_username", "Admin")
             
             # Format return timestamp
             r_ts = r.get("timestamp") if isinstance(r, dict) else getattr(r, "timestamp", None)
@@ -323,12 +326,13 @@ def generate_full_report_pdf(
             
             ret_data.append([
                 Paragraph(refund_details_html, cell_style),
+                Paragraph(cashier, cell_style),
                 Paragraph(clean_text(prod_name), cell_style),
                 Paragraph(str(quantity), cell_style),
                 Paragraph(f"Rs. {refund_amount:,.2f}", cell_bold_style),
                 Paragraph(clean_text(reason), cell_style)
             ])
-        ret_table = Table(ret_data, colWidths=[150, 110, 35, 75, 110])
+        ret_table = Table(ret_data, colWidths=[145, 60, 110, 40, 75, 110])
         ret_table.setStyle(TableStyle([
             ('BACKGROUND', (0,0), (-1,0), colors.HexColor('#b91c1c')),
             ('ALIGN', (0,0), (-1,-1), 'LEFT'),
