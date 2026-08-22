@@ -430,64 +430,57 @@ const Login = () => {
                     </svg>
                     <span>{loading ? 'Connecting Google Account...' : 'Continue with Google'}</span>
                   </button>
-                  
-                  {/* Or Divider */}
-                  <div className="relative flex py-2 items-center">
-                    <div className="flex-grow border-t border-slate-200 dark:border-slate-800"></div>
-                    <span className="flex-shrink mx-4 text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider">Local Account Fallback</span>
-                    <div className="flex-grow border-t border-slate-200 dark:border-slate-800"></div>
-                  </div>
                 </div>
-              ) : null}
-
-              {/* Local Credentials Fallback Form */}
-              <form onSubmit={handleSubmit} className="space-y-5 mt-4">
-                <div>
-                  <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-450 mb-1.5">
-                    Offline Username
-                  </label>
-                  <div className="relative">
-                    <span className="absolute inset-y-0 left-0 flex items-center pl-4 text-slate-450">
-                      <User size={16} />
-                    </span>
-                    <input
-                      type="text"
-                      value={username}
-                      onChange={(e) => setUsername(e.target.value)}
-                      required
-                      className="w-full pl-11 pr-4 py-3 rounded-xl border border-slate-200 bg-slate-50/50 text-slate-900 dark:border-slate-800 dark:bg-slate-950/50 dark:text-white placeholder-slate-400 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 transition-all font-sans text-sm font-semibold"
-                      placeholder="e.g. admin or counter username"
-                    />
+              ) : (
+                /* Local Credentials Fallback Form (Only shown if Clerk key is not configured locally) */
+                <form onSubmit={handleSubmit} className="space-y-5 mt-4">
+                  <div>
+                    <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-450 mb-1.5">
+                      Offline Username
+                    </label>
+                    <div className="relative">
+                      <span className="absolute inset-y-0 left-0 flex items-center pl-4 text-slate-450">
+                        <User size={16} />
+                      </span>
+                      <input
+                        type="text"
+                        value={username}
+                        onChange={(e) => setUsername(e.target.value)}
+                        required
+                        className="w-full pl-11 pr-4 py-3 rounded-xl border border-slate-200 bg-slate-50/50 text-slate-900 dark:border-slate-800 dark:bg-slate-950/50 dark:text-white placeholder-slate-400 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 transition-all font-sans text-sm font-semibold"
+                        placeholder="e.g. admin or counter username"
+                      />
+                    </div>
                   </div>
-                </div>
 
-                <div>
-                  <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-450 mb-1.5">
-                    Password
-                  </label>
-                  <div className="relative">
-                    <span className="absolute inset-y-0 left-0 flex items-center pl-4 text-slate-450">
-                      <KeyRound size={16} />
-                    </span>
-                    <input
-                      type="password"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      required
-                      className="w-full pl-11 pr-4 py-3 rounded-xl border border-slate-200 bg-slate-50/50 text-slate-900 dark:border-slate-800 dark:bg-slate-950/50 dark:text-white placeholder-slate-450 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 transition-all font-sans text-sm font-semibold"
-                      placeholder="••••••••"
-                    />
+                  <div>
+                    <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-450 mb-1.5">
+                      Password
+                    </label>
+                    <div className="relative">
+                      <span className="absolute inset-y-0 left-0 flex items-center pl-4 text-slate-450">
+                        <KeyRound size={16} />
+                      </span>
+                      <input
+                        type="password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        required
+                        className="w-full pl-11 pr-4 py-3 rounded-xl border border-slate-200 bg-slate-50/50 text-slate-900 dark:border-slate-800 dark:bg-slate-950/50 dark:text-white placeholder-slate-450 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 transition-all font-sans text-sm font-semibold"
+                        placeholder="••••••••"
+                      />
+                    </div>
                   </div>
-                </div>
 
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="w-full py-3.5 rounded-xl font-bold text-white bg-indigo-650 hover:bg-indigo-600 disabled:bg-indigo-850 hover:-translate-y-0.5 active:translate-y-0 shadow-lg shadow-indigo-600/15 hover:shadow-indigo-600/25 transition-all cursor-pointer text-sm"
-                >
-                  {loading ? 'Authenticating...' : 'Sign In Offline'}
-                </button>
-              </form>
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="w-full py-3.5 rounded-xl font-bold text-white bg-indigo-650 hover:bg-indigo-600 disabled:bg-indigo-850 hover:-translate-y-0.5 active:translate-y-0 shadow-lg shadow-indigo-600/15 hover:shadow-indigo-600/25 transition-all cursor-pointer text-sm"
+                  >
+                    {loading ? 'Authenticating...' : 'Sign In Offline'}
+                  </button>
+                </form>
+              )}
             </div>
           )}
         </div>
