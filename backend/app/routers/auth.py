@@ -352,3 +352,13 @@ async def clerk_login(data: ClerkLoginPayload):
         
     access_token = create_access_token(data={"sub": user.username})
     return {"access_token": access_token, "token_type": "bearer"}
+
+@router.get("/check-shop")
+async def check_shop(email: str):
+    user = await User.find_one(User.username == email)
+    if user:
+        return {
+            "exists": True,
+            "shop_name": user.full_name or "Smart Store"
+        }
+    return {"exists": False}
