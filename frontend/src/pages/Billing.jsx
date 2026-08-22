@@ -602,8 +602,8 @@ const Billing = () => {
 
       {/* Simplified Cash Pay Modal */}
       {showPayModal && (
-        <div className="no-print fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in">
-          <div className="w-full max-w-sm p-6 rounded-3xl bg-white border shadow-2xl dark:bg-slate-950 dark:border-slate-800">
+        <div className="no-print fixed inset-0 z-50 flex items-center justify-center p-4 animate-backdrop-fade">
+          <div className="w-full max-w-sm p-6 rounded-3xl bg-white border shadow-2xl dark:bg-slate-955 dark:border-slate-800 animate-modal-pop">
             <h3 className="text-md font-bold font-title border-b pb-3 mb-4">Complete Cash Transaction</h3>
             
             <div className="space-y-4">
@@ -657,8 +657,8 @@ const Billing = () => {
 
       {/* Checkout Success Printable Receipt Overlay */}
       {completedTx && (
-        <div className="print-only-container fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in">
-          <div className="no-print-card w-full max-w-sm p-6 rounded-3xl bg-white border shadow-2xl dark:bg-slate-950 dark:border-slate-800 max-h-[85vh] flex flex-col justify-between">
+        <div className="print-only-container fixed inset-0 z-50 flex items-center justify-center p-4 animate-backdrop-fade">
+          <div className="no-print-card w-full max-w-sm p-6 rounded-3xl bg-white border shadow-2xl dark:bg-slate-955 dark:border-slate-800 max-h-[85vh] flex flex-col justify-between animate-modal-pop">
             <div className="text-center mb-4 no-print">
               <CheckCircle2 className="mx-auto text-emerald-500 mb-2" size={36} />
               <h3 className="text-lg font-bold font-title text-slate-900 dark:text-white">Transaction Completed</h3>

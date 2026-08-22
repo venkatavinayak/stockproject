@@ -127,7 +127,7 @@ const Login = () => {
           <img 
             src="/assets/login_illustration.jpg" 
             alt="Store Management Illustration" 
-            className="w-full max-w-sm mx-auto mb-8 rounded-2xl shadow-xl shadow-slate-900/5 border border-slate-200/50 dark:border-slate-800/50 object-cover aspect-square"
+            className="w-full max-w-sm mx-auto mb-8 rounded-2xl shadow-xl shadow-slate-900/5 border border-slate-200/50 dark:border-slate-800/50 object-cover aspect-square interactive-image"
           />
           <h3 className="text-2xl font-bold tracking-tight text-slate-800 dark:text-white font-title">
             Smart & Clean Store Operations
