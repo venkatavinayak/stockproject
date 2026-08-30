@@ -6,7 +6,7 @@ import { authAPI } from '../services/api';
 import { useSignIn, useSignUp, useUser, useClerk } from '@clerk/clerk-react';
 
 const Login = () => {
-  const { login } = useAuth();
+  const { login, setToken, setUser } = useAuth();
   const navigate = useNavigate();
   
   // Detect if Clerk keys are configured locally
@@ -119,6 +119,8 @@ const Login = () => {
           const localAuth = await authAPI.clerkLogin(email, user.id, shopName, 'admin', createPassword); 
           localStorage.setItem('smartstock_token', localAuth.access_token);
           localStorage.setItem('smartstock_user', JSON.stringify({ username: email, role: 'admin' }));
+          setToken(localAuth.access_token);
+          setUser({ username: email, role: 'admin' });
           navigate('/');
         } catch (err) {
           setError(err.response?.data?.detail || err.message || 'Failed to setup shop');
@@ -133,6 +135,8 @@ const Login = () => {
             const localAuth = await authAPI.clerkLogin(email, user.id, null, 'admin');
             localStorage.setItem('smartstock_token', localAuth.access_token);
             localStorage.setItem('smartstock_user', JSON.stringify({ username: email, role: 'admin' }));
+            setToken(localAuth.access_token);
+            setUser({ username: email, role: 'admin' });
             navigate('/');
           } catch (err) {
             setError(err.message || 'Launch failed');
