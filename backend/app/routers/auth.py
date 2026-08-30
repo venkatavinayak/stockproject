@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from datetime import datetime
+from typing import Optional
 
 from backend.app.models.user import User
 from backend.app.models.audit_logs import AuditLog

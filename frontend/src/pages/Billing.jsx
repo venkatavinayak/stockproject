@@ -25,6 +25,7 @@ const Billing = () => {
   // Settings
   const [settings, setSettings] = useState({ currency_symbol: '₹' });
   const [loading, setLoading] = useState(false);
+  const [manualInputQty, setManualInputQty] = useState(1);
 
   // POS State
   const [showPayModal, setShowPayModal] = useState(false);
@@ -113,7 +114,8 @@ const Billing = () => {
     }
   };
 
-  const addToCart = (product) => {
+  const addToCart = (product, customQty = null) => {
+    const qtyToAdd = customQty !== null ? customQty : Number(manualInputQty) || 1;
     if (product.current_stock <= 0) {
       alert(`Product '${product.name}' is out of stock!`);
       return;
@@ -122,18 +124,24 @@ const Billing = () => {
     setCart((prev) => {
       const existing = prev.find(item => item.product.id === product.id);
       if (existing) {
-        if (existing.quantity >= product.current_stock) {
-          alert(`Cannot add more. Only ${product.current_stock} units in stock.`);
+        const nextQty = existing.quantity + qtyToAdd;
+        if (nextQty > product.current_stock) {
+          alert(`Cannot add more. Only ${product.current_stock} units in stock. (Currently in cart: ${existing.quantity})`);
           return prev;
         }
         return prev.map(item => 
           item.product.id === product.id 
-            ? { ...item, quantity: item.quantity + 1 }
+            ? { ...item, quantity: nextQty }
             : item
         );
       }
-      return [...prev, { product, quantity: 1 }];
+      if (qtyToAdd > product.current_stock) {
+        alert(`Cannot add ${qtyToAdd} units. Only ${product.current_stock} units in stock.`);
+        return prev;
+      }
+      return [...prev, { product, quantity: qtyToAdd }];
     });
+    setManualInputQty(1);
   };
 
   const updateQuantity = (productId, change, maxStock) => {
@@ -301,6 +309,22 @@ const Billing = () => {
                   className="w-full pl-11 pr-4 py-3 rounded-2xl border border-slate-200 bg-slate-50/50 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 dark:border-slate-800 dark:bg-slate-955 transition-all text-sm font-semibold"
                 />
               </div>
+
+              {/* Manual Quantity Input */}
+              <div className="flex items-center gap-2 px-4 py-2.5 rounded-2xl border border-slate-200 bg-slate-50/50 dark:border-slate-800 dark:bg-slate-955 transition-all shadow-sm">
+                <span className="text-[10px] font-black text-slate-400 dark:text-slate-550 uppercase tracking-wider select-none pl-1">Qty</span>
+                <input
+                  type="number"
+                  min="1"
+                  value={manualInputQty}
+                  onChange={(e) => {
+                    const val = parseInt(e.target.value);
+                    setManualInputQty(isNaN(val) || val <= 0 ? 1 : val);
+                  }}
+                  className="w-12 text-center bg-transparent border-none p-0 focus:ring-0 focus:outline-none text-xs font-black font-mono text-slate-850 dark:text-slate-150"
+                />
+              </div>
+
               <button type="submit" className="px-6 py-3 rounded-2xl bg-indigo-600 text-white font-extrabold text-sm hover:bg-indigo-500 active:scale-[0.98] transition-all shadow-md shadow-indigo-650/10">
                 Scan / Add
               </button>
