@@ -58,6 +58,8 @@ class TransactionResponse(BaseModel):
     customer_phone: Optional[str] = None
     customer_email: Optional[str] = None
     total_savings: float = 0.0
+    cashier_username: Optional[str] = None
+    owner_username: Optional[str] = None
 
     class Config:
         from_attributes = True
