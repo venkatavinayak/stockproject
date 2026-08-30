@@ -14,7 +14,7 @@ async def get_notifications(
     unread_only: bool = False,
     current_user: User = Depends(get_current_user)
 ):
-    filters = {}
+    filters = {"owner_username": current_user.owner}
     if unread_only:
         filters["is_read"] = False
     return await Notification.find(filters).sort(-Notification.timestamp).to_list()
@@ -24,7 +24,7 @@ async def mark_as_read(
     notification_id: PydanticObjectId,
     current_user: User = Depends(get_current_user)
 ):
-    notif = await Notification.get(notification_id)
+    notif = await Notification.find_one(Notification.id == notification_id, Notification.owner_username == current_user.owner)
     if not notif:
         raise HTTPException(status_code=404, detail="Notification not found")
         
@@ -36,7 +36,7 @@ async def mark_as_read(
 async def mark_all_as_read(
     current_user: User = Depends(get_current_user)
 ):
-    await Notification.find(Notification.is_read == False).update({"$set": {"is_read": True}})
+    await Notification.find(Notification.is_read == False, Notification.owner_username == current_user.owner).update({"$set": {"is_read": True}})
     return {"message": "All notifications marked as read"}
 
 @router.delete("/{notification_id}")
@@ -44,7 +44,7 @@ async def delete_notification(
     notification_id: PydanticObjectId,
     current_user: User = Depends(get_current_user)
 ):
-    notif = await Notification.get(notification_id)
+    notif = await Notification.find_one(Notification.id == notification_id, Notification.owner_username == current_user.owner)
     if not notif:
         raise HTTPException(status_code=404, detail="Notification not found")
         

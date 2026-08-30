@@ -15,10 +15,10 @@ from backend.app.models.user import User
 
 router = APIRouter(prefix="/analytics", tags=["Advanced Analytics"])
 
-async def get_top_products_qty(days: int, limit: int = 1, reverse: bool = False):
+async def get_top_products_qty(days: int, owner_username: str, limit: int = 1, reverse: bool = False):
     cutoff = datetime.utcnow() - timedelta(days=days)
     pipeline = [
-        {"$match": {"timestamp": {"$gte": cutoff}}},
+        {"$match": {"timestamp": {"$gte": cutoff}, "owner_username": owner_username}},
         {"$unwind": "$items"},
         {"$group": {"_id": "$items.product_name", "total_qty": {"$sum": "$items.quantity"}}},
         {"$sort": {"total_qty": 1 if reverse else -1}},
@@ -27,10 +27,10 @@ async def get_top_products_qty(days: int, limit: int = 1, reverse: bool = False)
     res = await Transaction.get_pymongo_collection().aggregate(pipeline).to_list(length=None)
     return res
 
-async def get_top_products_qty_sorted(days: int):
+async def get_top_products_qty_sorted(days: int, owner_username: str):
     cutoff = datetime.utcnow() - timedelta(days=days)
     pipeline = [
-        {"$match": {"timestamp": {"$gte": cutoff}}},
+        {"$match": {"timestamp": {"$gte": cutoff}, "owner_username": owner_username}},
         {"$unwind": "$items"},
         {"$group": {"_id": "$items.product_name", "total_qty": {"$sum": "$items.quantity"}}},
         {"$sort": {"total_qty": -1}}
@@ -61,10 +61,12 @@ async def get_dashboard_kpis(
         else:  # today
             start_dt = datetime.combine(today, datetime.min.time())
         
+    owner_username = current_user.owner
     # 1. Sales and Profit in range
     txs = await Transaction.find(
         Transaction.timestamp >= start_dt,
-        Transaction.timestamp <= end_dt
+        Transaction.timestamp <= end_dt,
+        Transaction.owner_username == owner_username
     ).to_list()
     
     revenue = sum(tx.grand_total for tx in txs)
@@ -73,7 +75,7 @@ async def get_dashboard_kpis(
     
     # 2. Items sold in range
     items_sold_pipeline = [
-        {"$match": {"timestamp": {"$gte": start_dt, "$lte": end_dt}}},
+        {"$match": {"timestamp": {"$gte": start_dt, "$lte": end_dt}, "owner_username": owner_username}},
         {"$unwind": "$items"},
         {"$group": {"_id": None, "total_qty": {"$sum": "$items.quantity"}}}
     ]
@@ -82,16 +84,18 @@ async def get_dashboard_kpis(
     
     # 3. Expenses in range
     if period == "all" and not (start_date and end_date):
-        exps = await Expense.find_all().to_list()
+        exps = await Expense.find(Expense.owner_username == owner_username).to_list()
     else:
         exps = await Expense.find(
             Expense.date >= start_dt.date(),
-            Expense.date <= end_dt.date()
+            Expense.date <= end_dt.date(),
+            Expense.owner_username == owner_username
         ).to_list()
     expenses = sum(e.amount for e in exps)
     
     # 4. Inventory Values using Aggregation
     inv_val_pipeline = [
+        {"$match": {"owner_username": owner_username}},
         {
             "$group": {
                 "_id": None,
@@ -117,20 +121,20 @@ async def get_dashboard_kpis(
     # 6. Top product counts based on period
     days_range = 1 if period == "today" else 7 if period == "week" else 30 if period == "month" else 365
     
-    prod_sales = await get_top_products_qty_sorted(days_range)
+    prod_sales = await get_top_products_qty_sorted(days_range, owner_username)
     best_seller = prod_sales[0]["_id"] if prod_sales else "N/A"
     slow_moving = prod_sales[-1]["_id"] if prod_sales and len(prod_sales) > 1 else "N/A"
     
     if period == "today" or period == "week":
         fast_moving = best_seller
     else:
-        fast_sales = await get_top_products_qty_sorted(7)
+        fast_sales = await get_top_products_qty_sorted(7, owner_username)
         fast_moving = fast_sales[0]["_id"] if fast_sales else "N/A"
         
     # 9. Dead Stock Count
     thirty_days_ago = datetime.utcnow() - timedelta(days=30)
     sold_pipeline = [
-        {"$match": {"timestamp": {"$gte": thirty_days_ago}}},
+        {"$match": {"timestamp": {"$gte": thirty_days_ago}, "owner_username": owner_username}},
         {"$unwind": "$items"},
         {"$group": {"_id": "$items.product_id"}}
     ]
@@ -139,6 +143,7 @@ async def get_dashboard_kpis(
     
     dead_stock_count = await Product.find({
         "current_stock": {"$gt": 0},
+        "owner_username": owner_username,
         "_id": {"$nin": sold_ids}
     }).count()
     
@@ -159,15 +164,15 @@ async def get_dashboard_kpis(
         slow_moving=slow_moving,
         dead_stock_count=dead_stock_count
     )
-
+ 
 @router.get("/dashboard/recent-activity", response_model=List[ActivityLogItem])
 async def get_recent_activity(
     current_user: User = Depends(get_current_analytics_viewer)
 ):
-    recent_txs = await Transaction.find_all().sort(-Transaction.timestamp).limit(5).to_list()
-    recent_inv = await InventoryHistory.find(InventoryHistory.event != "Created").sort(-InventoryHistory.timestamp).limit(5).to_list()
-    recent_exp = await Expense.find_all().sort(-Expense.date).limit(5).to_list()
-    recent_bk = await BackupHistory.find_all().sort(-BackupHistory.timestamp).limit(3).to_list()
+    recent_txs = await Transaction.find(Transaction.owner_username == current_user.owner).sort(-Transaction.timestamp).limit(5).to_list()
+    recent_inv = await InventoryHistory.find(InventoryHistory.event != "Created", InventoryHistory.owner_username == current_user.owner).sort(-InventoryHistory.timestamp).limit(5).to_list()
+    recent_exp = await Expense.find(Expense.owner_username == current_user.owner).sort(-Expense.date).limit(5).to_list()
+    recent_bk = await BackupHistory.find(BackupHistory.owner_username == current_user.owner).sort(-BackupHistory.timestamp).limit(3).to_list() if hasattr(BackupHistory, "owner_username") else await BackupHistory.find_all().sort(-BackupHistory.timestamp).limit(3).to_list()
     
     sortable_items = []
     
@@ -205,13 +210,14 @@ async def get_sales_trends(
     current_user: User = Depends(get_current_analytics_viewer)
 ):
     trends = []
+    owner_username = current_user.owner
     
     if period == "week" or period == "month":
         num_days = 7 if period == "week" else 30
         cutoff = datetime.combine(date.today() - timedelta(days=num_days - 1), datetime.min.time())
         
         pipeline = [
-            {"$match": {"timestamp": {"$gte": cutoff}}},
+            {"$match": {"timestamp": {"$gte": cutoff}, "owner_username": owner_username}},
             {
                 "$group": {
                     "_id": {
@@ -238,7 +244,7 @@ async def get_sales_trends(
     elif period == "year":
         cutoff = datetime.combine(date.today() - timedelta(days=365), datetime.min.time())
         pipeline = [
-            {"$match": {"timestamp": {"$gte": cutoff}}},
+            {"$match": {"timestamp": {"$gte": cutoff}, "owner_username": owner_username}},
             {
                 "$group": {
                     "_id": {
@@ -271,7 +277,9 @@ async def get_sales_trends(
 async def get_category_share(
     current_user: User = Depends(get_current_analytics_viewer)
 ):
+    owner_username = current_user.owner
     pipeline = [
+        {"$match": {"owner_username": owner_username}},
         {"$unwind": "$items"},
         {"$group": {"_id": "$items.product_id", "revenue": {"$sum": "$items.total_amount"}}}
     ]
@@ -282,9 +290,9 @@ async def get_category_share(
         prod_id = item["_id"]
         rev = item["revenue"]
         if prod_id:
-            prod = await Product.get(prod_id)
+            prod = await Product.find_one(Product.id == prod_id, Product.owner_username == owner_username)
             if prod and prod.category_id:
-                cat = await Category.get(prod.category_id)
+                cat = await Category.find_one(Category.id == prod.category_id, Category.owner_username == owner_username)
                 cat_name = cat.name if cat else "Uncategorized"
             else:
                 cat_name = "Uncategorized"
@@ -308,7 +316,9 @@ async def get_category_share(
 async def get_payment_methods(
     current_user: User = Depends(get_current_analytics_viewer)
 ):
+    owner_username = current_user.owner
     pipeline = [
+        {"$match": {"owner_username": owner_username}},
         {"$group": {"_id": "$payment_method", "total": {"$sum": "$grand_total"}}}
     ]
     res = await Transaction.get_pymongo_collection().aggregate(pipeline).to_list(length=None)
@@ -318,8 +328,10 @@ async def get_payment_methods(
 async def get_hourly_heatmap(
     current_user: User = Depends(get_current_analytics_viewer)
 ):
-    # Groups transactions by hour of day (0-23)
+    # Groups transactions by hour of day (0-23) scoped to owner
+    owner_username = current_user.owner
     pipeline = [
+        {"$match": {"owner_username": owner_username}},
         {
             "$group": {
                 "_id": {"$hour": "$timestamp"},
@@ -397,12 +409,14 @@ async def export_pdf_report(
             start_dt = datetime.combine(today, datetime.min.time())
             
     # Enforce cashier limits for non-admin accounts
+    owner_username = current_user.owner
     if role != "admin":
         cashier_username = current_user.username
         
     # 1. Fetch Transactions
     tx_filters = {
-        "timestamp": {"$gte": start_dt, "$lte": end_dt}
+        "timestamp": {"$gte": start_dt, "$lte": end_dt},
+        "owner_username": owner_username
     }
     if cashier_username:
         tx_filters["cashier_username"] = cashier_username
@@ -411,24 +425,26 @@ async def export_pdf_report(
     
     # 2. Fetch Returns
     if cashier_username:
-        txs = await Transaction.find({"cashier_username": cashier_username}).to_list()
+        txs = await Transaction.find({"cashier_username": cashier_username, "owner_username": owner_username}).to_list()
         tx_ids = [str(tx.id) for tx in txs]
         returns_raw = await Return.find(
             Return.timestamp >= start_dt,
             Return.timestamp <= end_dt,
+            Return.owner_username == owner_username,
             {"transaction_id": {"$in": tx_ids}}
         ).to_list()
     else:
         returns_raw = await Return.find(
             Return.timestamp >= start_dt,
-            Return.timestamp <= end_dt
+            Return.timestamp <= end_dt,
+            Return.owner_username == owner_username
         ).to_list()
         
     returns = []
     for r in returns_raw:
-        p = await Product.get(r.product_id)
+        p = await Product.find_one(Product.id == r.product_id, Product.owner_username == owner_username)
         prod_info = {"name": p.name} if p else {"name": "Product"}
-        tx_obj = await Transaction.get(r.transaction_id)
+        tx_obj = await Transaction.find_one(Transaction.id == r.transaction_id, Transaction.owner_username == owner_username)
         invoice_ref = tx_obj.invoice_number if tx_obj else "INV-REF"
         returns.append({
             "details": invoice_ref,
@@ -445,18 +461,20 @@ async def export_pdf_report(
             
     # 3. Fetch Expenses
     if period == "all" and not (start_date and end_date):
-        expenses = await Expense.find_all().to_list()
+        expenses = await Expense.find(Expense.owner_username == owner_username).to_list()
     else:
         expenses = await Expense.find(
             Expense.date >= start_dt.date(),
-            Expense.date <= end_dt.date()
+            Expense.date <= end_dt.date(),
+            Expense.owner_username == owner_username
         ).to_list()
         
     # 4. Fetch Inventory movements
     inv_history = await InventoryHistory.find(
         InventoryHistory.timestamp >= start_dt,
         InventoryHistory.timestamp <= end_dt,
-        InventoryHistory.event != "Created"
+        InventoryHistory.event != "Created",
+        InventoryHistory.owner_username == owner_username
     ).sort(InventoryHistory.timestamp).to_list()
     
     # 5. Calculate KPIs dynamically based on actual query range and cashier filtering
@@ -468,7 +486,7 @@ async def export_pdf_report(
     items_sold = sum(tx.items_count for tx in transactions)
     average_bill = today_revenue / bills_today if bills_today > 0 else 0.0
     
-    products_list = await Product.find_all().to_list()
+    products_list = await Product.find(Product.owner_username == owner_username).to_list()
     inventory_value = sum((p.current_stock or 0) * (p.selling_price or 0.0) for p in products_list)
     current_stock_value = sum((p.current_stock or 0) * (p.buying_price or 0.0) for p in products_list)
     potential_profit = inventory_value - current_stock_value
@@ -487,12 +505,12 @@ async def export_pdf_report(
     }
     
     # 6. Fetch all products for stock valuation catalog
-    products = await Product.find_all().to_list()
+    products = await Product.find(Product.owner_username == owner_username).to_list()
     
     # 7. Store Settings
-    settings = await StoreSettings.find_one()
+    settings = await StoreSettings.find_one(StoreSettings.owner_username == owner_username)
     if not settings:
-        settings = StoreSettings()
+        settings = StoreSettings(owner_username=owner_username)
         await settings.insert()
         
     # 8. Generate PDF

@@ -11,11 +11,13 @@ class InventoryHistory(Document):
     stock_after: int  # stock count after change
     timestamp: datetime = Field(default_factory=datetime.utcnow)
     details: Optional[str] = None  # e.g., "Sold via Invoice INV-..."
+    owner_username: str = "admin"
 
     class Settings:
         name = "inventory_history"
         indexes = [
             "product_id",
             "event",
-            "timestamp"
+            "timestamp",
+            "owner_username"
         ]

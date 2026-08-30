@@ -126,7 +126,12 @@ const Transactions = () => {
   const handleDownloadPDF = (tx) => {
     const token = localStorage.getItem('smartstock_token');
     const url = `${API_BASE_URL}/transactions/${tx.id}/pdf?token=${encodeURIComponent(token || '')}`;
-    window.open(url, '_blank');
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `Invoice_${tx.invoice_number || tx.id}.pdf`);
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
   };
 
   return (
@@ -150,7 +155,12 @@ const Transactions = () => {
               } else if (selectedCashier) {
                 url += `&cashier_username=${selectedCashier}`;
               }
-              window.open(url, '_blank');
+              const link = document.createElement('a');
+              link.href = url;
+              link.setAttribute('download', 'Operations_Report_All_Time.pdf');
+              document.body.appendChild(link);
+              link.click();
+              link.remove();
             }}
             className="flex items-center gap-1.5 px-4 py-2.5 text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl shadow-lg active:scale-95 transition-all self-start sm:self-center"
           >

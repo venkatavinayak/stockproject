@@ -45,7 +45,7 @@ async def checkout(
     
     # 1. Validation and calculations
     for item_in in tx_in.items:
-        product = await Product.get(item_in.product_id)
+        product = await Product.find_one(Product.id == item_in.product_id, Product.owner_username == current_user.owner)
         if not product:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
@@ -117,14 +117,15 @@ async def checkout(
     # 2. Persist customer loyalty points if phone number provided
     if tx_in.customer_phone:
         clean_phone = tx_in.customer_phone.strip()
-        customer = await Customer.find_one(Customer.phone == clean_phone)
+        customer = await Customer.find_one(Customer.phone == clean_phone, Customer.owner_username == current_user.owner)
         points_earned = int(final_grand_total // 100) # 1 point per Rs.100
         
         if not customer:
             customer = Customer(
                 name=tx_in.customer_name or "Retail Customer",
                 phone=clean_phone,
-                loyalty_points=points_earned
+                loyalty_points=points_earned,
+                owner_username=current_user.owner
             )
             await customer.insert()
         else:
@@ -151,7 +152,8 @@ async def checkout(
         customer_email=tx_in.customer_email,
         total_savings=total_savings,
         pdf_path="",
-        cashier_username=current_user.username
+        cashier_username=current_user.username,
+        owner_username=current_user.owner
     )
     
     # Save transaction to database (to generate transaction.id)
@@ -169,13 +171,14 @@ async def checkout(
             product_id=product.id,
             event="Sold",
             quantity_change=-qty,
-            details=f"Sold via Invoice {invoice_no}"
+            details=f"Sold via Invoice {invoice_no}",
+            owner_username=current_user.owner
         )
         
     # Get store settings for PDF print
-    settings = await StoreSettings.find_one()
+    settings = await StoreSettings.find_one(StoreSettings.owner_username == current_user.owner)
     if not settings:
-        settings = StoreSettings(store_name="Smart Store Ai")
+        settings = StoreSettings(owner_username=current_user.owner, store_name="Smart Store Ai")
         await settings.insert()
         
     # 5. Generate receipt PDF & Dispatch Email
@@ -190,7 +193,8 @@ async def checkout(
                 notif = Notification(
                     type="System",
                     message=f"Invoice {invoice_no} email skipped: SMTP configuration is incomplete in Store Settings.",
-                    timestamp=datetime.utcnow()
+                    timestamp=datetime.utcnow(),
+                    owner_username=current_user.owner
                 )
                 await notif.insert()
             else:
@@ -209,7 +213,8 @@ async def checkout(
     audit = AuditLog(
         username=current_user.username,
         action="CHECKOUT",
-        details=f"Issued invoice {invoice_no} totaling Rs.{final_grand_total:.2f}."
+        details=f"Issued invoice {invoice_no} totaling Rs.{final_grand_total:.2f}.",
+        owner_username=current_user.owner
     )
     await audit.insert()
     

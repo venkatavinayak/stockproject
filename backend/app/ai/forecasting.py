@@ -11,11 +11,21 @@ from backend.app.models.ai_prediction import AIPrediction
 # Import Scikit-learn model
 from sklearn.linear_model import LinearRegression
 
-async def generate_ai_insights():
-    # Clear old recommendations
-    await AIRecommendations.delete_all()
+async def generate_ai_insights(owner_username: str = None):
+    if owner_username is None:
+        from backend.app.models.user import User
+        try:
+            admins = await User.find(User.role == "admin").to_list()
+            for admin in admins:
+                await generate_ai_insights(owner_username=admin.username)
+        except Exception as e:
+            print("Failed to loop admins for AI insights:", str(e))
+        return
+
+    # Clear old recommendations for this owner
+    await AIRecommendations.find(AIRecommendations.owner_username == owner_username).delete()
     
-    products = await Product.find_all().to_list()
+    products = await Product.find(Product.owner_username == owner_username).to_list()
     if not products:
         return
         
@@ -25,9 +35,8 @@ async def generate_ai_insights():
     thirty_days_ago = datetime.utcnow() - timedelta(days=30)
     
     for product in products:
-        # In Beanie, Transaction has items: List[TransactionItem] inside the document!
-        # Search Transaction documents containing an item with product_id == product.id
-        txs = await Transaction.find({"items.product_id": product.id}).to_list()
+        # Search Transaction documents containing an item with product_id == product.id for this owner
+        txs = await Transaction.find({"items.product_id": product.id, "owner_username": owner_username}).to_list()
         
         # Extract matching transaction items from all matching transactions
         items = []
@@ -52,7 +61,8 @@ async def generate_ai_insights():
                 product_id=product.id,
                 suggestion=f"Product '{product.name}' (Stock: {product.current_stock}) has logged zero sales in the last 30 days. Recommend promotional discounting or bundle placement.",
                 confidence=0.95,
-                timestamp=datetime.utcnow()
+                timestamp=datetime.utcnow(),
+                owner_username=owner_username
             )
             await rec.insert()
             recommendations.append(rec)
@@ -80,7 +90,8 @@ async def generate_ai_insights():
                     product_id=product.id,
                     suggestion=f"Stock for '{product.name}' will deplete in {days_until_out:.1f} days at current rate ({avg_daily_sales:.2f}/day). Order {suggested_qty} units to cover next 3 weeks.",
                     confidence=0.88,
-                    timestamp=datetime.utcnow()
+                    timestamp=datetime.utcnow(),
+                    owner_username=owner_username
                 )
                 await rec.insert()
                 recommendations.append(rec)
@@ -148,6 +159,7 @@ async def generate_ai_insights():
                 today_sales = sales_by_date.get(today_dt, 0.0)
                 yesterday_pred = await AIPrediction.find_one(
                     AIPrediction.product_id == product.id,
+                    AIPrediction.owner_username == owner_username,
                     AIPrediction.created_at >= datetime.combine(today_dt - timedelta(days=1), datetime.min.time()),
                     AIPrediction.created_at <= datetime.combine(today_dt - timedelta(days=1), datetime.max.time())
                 )
@@ -164,7 +176,8 @@ async def generate_ai_insights():
                 new_prediction = AIPrediction(
                     product_id=product.id,
                     predicted_sales=round(tomorrow_pred, 1),
-                    created_at=datetime.utcnow()
+                    created_at=datetime.utcnow(),
+                    owner_username=owner_username
                 )
                 await new_prediction.insert()
                 
@@ -176,7 +189,8 @@ async def generate_ai_insights():
                         product_id=product.id,
                         suggestion=f"AI predicts a demand surge for '{product.name}' tomorrow ({tomorrow_pred:.1f} expected sales). Suggest having at least {suggest_order} units ready.",
                         confidence=round(max(0.60, min(0.98, float(model.score(X, y)))), 2) if len(df) > 10 else 0.70,
-                        timestamp=datetime.utcnow()
+                        timestamp=datetime.utcnow(),
+                        owner_username=owner_username
                     )
                     await rec.insert()
                     recommendations.append(rec)
@@ -192,7 +206,8 @@ async def generate_ai_insights():
                     product_id=p.id,
                     suggestion=f"Refill Suggestion: '{p.name}' is near safety stock limit. Suggest reordering {p.minimum_stock * 3} units.",
                     confidence=0.80,
-                    timestamp=datetime.utcnow()
+                    timestamp=datetime.utcnow(),
+                    owner_username=owner_username
                 )
                 await rec.insert()
                 recommendations.append(rec)

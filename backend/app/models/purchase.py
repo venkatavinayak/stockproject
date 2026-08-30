@@ -14,11 +14,13 @@ class Purchase(Document):
     total_cost: float  # Total cost including GST
     status: str = "Received"  # Received, Pending
     created_at: datetime = Field(default_factory=datetime.utcnow)
+    owner_username: str = "admin"
 
     class Settings:
         name = "purchases"
         indexes = [
             "invoice_number",
             "supplier_id",
-            "product_id"
+            "product_id",
+            "owner_username"
         ]

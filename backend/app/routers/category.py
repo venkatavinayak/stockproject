@@ -13,14 +13,14 @@ router = APIRouter(prefix="/categories", tags=["Categories"])
 async def get_categories(
     current_user: User = Depends(get_current_user)
 ):
-    return await Category.find_all().to_list()
+    return await Category.find(Category.owner_username == current_user.owner).to_list()
 
 @router.post("", response_model=CategoryResponse)
 async def create_category(
     category_in: CategoryCreate,
     current_user: User = Depends(get_current_user)
 ):
-    existing = await Category.find_one(Category.name == category_in.name)
+    existing = await Category.find_one(Category.name == category_in.name, Category.owner_username == current_user.owner)
     if existing:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -29,7 +29,8 @@ async def create_category(
     
     category = Category(
         name=category_in.name,
-        description=category_in.description
+        description=category_in.description,
+        owner_username=current_user.owner
     )
     await category.insert()
     return category
@@ -39,7 +40,7 @@ async def delete_category(
     category_id: PydanticObjectId,
     current_user: User = Depends(get_current_user)
 ):
-    category = await Category.get(category_id)
+    category = await Category.find_one(Category.id == category_id, Category.owner_username == current_user.owner)
     if not category:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,

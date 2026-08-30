@@ -9,10 +9,12 @@ class Expense(Document):
     date: date
     description: Optional[str] = None
     created_at: datetime = Field(default_factory=datetime.utcnow)
+    owner_username: str = "admin"
 
     class Settings:
         name = "expenses"
         indexes = [
             "category",
-            "date"
+            "date",
+            "owner_username"
         ]

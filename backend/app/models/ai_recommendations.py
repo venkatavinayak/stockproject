@@ -10,10 +10,12 @@ class AIRecommendations(Document):
     confidence: float = 1.0  # Confidence level of forecast
     timestamp: datetime = Field(default_factory=datetime.utcnow)
     product: Optional[dict] = Field(default=None, exclude=True)
+    owner_username: str = "admin"
 
     class Settings:
         name = "ai_recommendations"
         indexes = [
             "type",
-            "product_id"
+            "product_id",
+            "owner_username"
         ]

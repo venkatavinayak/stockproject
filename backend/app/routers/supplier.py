@@ -13,14 +13,14 @@ router = APIRouter(prefix="/suppliers", tags=["Suppliers"])
 async def get_suppliers(
     current_user: User = Depends(get_current_user)
 ):
-    return await Supplier.find_all().to_list()
+    return await Supplier.find(Supplier.owner_username == current_user.owner).to_list()
 
 @router.post("", response_model=SupplierResponse)
 async def create_supplier(
     supplier_in: SupplierCreate,
     current_user: User = Depends(get_current_user)
 ):
-    supplier = Supplier(**supplier_in.model_dump())
+    supplier = Supplier(**supplier_in.model_dump(), owner_username=current_user.owner)
     await supplier.insert()
     return supplier
 
@@ -29,7 +29,7 @@ async def delete_supplier(
     supplier_id: PydanticObjectId,
     current_user: User = Depends(get_current_user)
 ):
-    supplier = await Supplier.get(supplier_id)
+    supplier = await Supplier.find_one(Supplier.id == supplier_id, Supplier.owner_username == current_user.owner)
     if not supplier:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,

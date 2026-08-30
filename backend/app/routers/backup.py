@@ -22,7 +22,7 @@ BACKUP_DIR = "backups"
 async def list_backups(
     current_user: User = Depends(get_current_admin)
 ):
-    return await BackupHistory.find_all().sort(-BackupHistory.timestamp).to_list()
+    return await BackupHistory.find(BackupHistory.owner_username == current_user.owner).sort(-BackupHistory.timestamp).to_list()
 
 @router.post("/create", response_model=BackupHistoryResponse)
 async def trigger_backup(
@@ -30,14 +30,22 @@ async def trigger_backup(
 ):
     os.makedirs(BACKUP_DIR, exist_ok=True)
     timestamp = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
-    filename = f"backup_{timestamp}.json"
+    owner_username = current_user.owner
+    filename = f"backup_{owner_username}_{timestamp}.json"
     dest_path = os.path.join(BACKUP_DIR, filename)
     
     status_str = "Success"
     try:
         backup_data = {}
         for model in all_document_models:
-            documents = await model.find_all().to_list()
+            if model.__name__ == "User":
+                from beanie.operators import Or
+                documents = await User.find(Or(User.username == owner_username, User.owner_username == owner_username)).to_list()
+            elif hasattr(model, "owner_username"):
+                documents = await model.find(model.owner_username == owner_username).to_list()
+            else:
+                documents = await model.find_all().to_list()
+                
             # Serialize each document via Pydantic model serialization
             backup_data[model.__name__] = [
                 json.loads(doc.model_dump_json()) for doc in documents
@@ -55,7 +63,8 @@ async def trigger_backup(
         filename=filename,
         backup_type="Manual",
         timestamp=datetime.utcnow(),
-        status=status_str
+        status=status_str,
+        owner_username=owner_username
     )
     await history.insert()
     
@@ -63,7 +72,8 @@ async def trigger_backup(
     notif = Notification(
         type="Backup",
         message=f"Manual database backup completed successfully: {filename}" if status_str == "Success" else f"Manual database backup failed.",
-        timestamp=datetime.utcnow()
+        timestamp=datetime.utcnow(),
+        owner_username=owner_username
     )
     await notif.insert()
     
@@ -71,7 +81,8 @@ async def trigger_backup(
     audit = AuditLog(
         username=current_user.username,
         action="BACKUP",
-        details=f"Triggered manual database backup. Status: {status_str}."
+        details=f"Triggered manual database backup. Status: {status_str}.",
+        owner_username=owner_username
     )
     await audit.insert()
     
@@ -82,7 +93,8 @@ async def restore_backup(
     backup_id: PydanticObjectId,
     current_user: User = Depends(get_current_admin)
 ):
-    history = await BackupHistory.get(backup_id)
+    owner_username = current_user.owner
+    history = await BackupHistory.find_one(BackupHistory.id == backup_id, BackupHistory.owner_username == owner_username)
     if not history:
         raise HTTPException(status_code=404, detail="Backup record not found")
         
@@ -97,30 +109,46 @@ async def restore_backup(
         # Map models by name
         model_map = {model.__name__: model for model in all_document_models}
         
-        # 1. Clear current database collections and import documents
+        # 1. Clear current database collections scoped to this owner and import documents
         for model_name, doc_dicts in backup_data.items():
             if model_name in model_map:
                 model = model_map[model_name]
-                # Drop existing documents in collection
-                await model.delete_all()
-                # Insert all documents from backup
+                # Drop existing documents scoped to this owner
+                if model.__name__ == "User":
+                    from beanie.operators import Or
+                    await User.find(Or(User.username == owner_username, User.owner_username == owner_username)).delete()
+                elif hasattr(model, "owner_username"):
+                    await model.find(model.owner_username == owner_username).delete()
+                else:
+                    await model.delete_all()
+                    
+                # Insert all documents from backup and assign current owner
                 for doc_dict in doc_dicts:
                     doc_obj = model.model_validate(doc_dict)
-                    # Force insert the document with its original ObjectId
-                    await doc_obj.insert()
-                    
+                    if doc_obj.__class__.__name__ == "User":
+                        if doc_obj.username != owner_username:
+                            doc_obj.owner_username = owner_username
+                        await doc_obj.insert()
+                    else:
+                        if hasattr(doc_obj, "owner_username"):
+                            doc_obj.owner_username = owner_username
+                        # Force insert the document with its original ObjectId
+                        await doc_obj.insert()
+                        
         # Log restoration event to the newly restored database
         notif = Notification(
             type="System",
             message=f"Database successfully restored to state: {history.filename}",
-            timestamp=datetime.utcnow()
+            timestamp=datetime.utcnow(),
+            owner_username=owner_username
         )
         await notif.insert()
         
         audit = AuditLog(
             username=current_user.username,
             action="RESTORE",
-            details=f"Restored database to backup: {history.filename}."
+            details=f"Restored database to backup: {history.filename}.",
+            owner_username=owner_username
         )
         await audit.insert()
         
@@ -154,7 +182,7 @@ async def download_backup_file(
     if not user or getattr(user, "role", "admin") != "admin":
         raise HTTPException(status_code=403, detail="Admin access required")
         
-    history = await BackupHistory.get(backup_id)
+    history = await BackupHistory.find_one(BackupHistory.id == backup_id, BackupHistory.owner_username == user.owner)
     if not history:
         raise HTTPException(status_code=404, detail="Backup record not found")
         

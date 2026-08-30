@@ -18,6 +18,11 @@ class StoreSettings(Document):
     smtp_user: Optional[str] = None
     smtp_password: Optional[str] = None
     smtp_sender: Optional[str] = None
+    
+    owner_username: str = "admin"
 
     class Settings:
         name = "store_settings"
+        indexes = [
+            "owner_username"
+        ]

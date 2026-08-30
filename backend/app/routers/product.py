@@ -58,7 +58,7 @@ async def get_products(
     status: Optional[str] = None,
     current_user: User = Depends(get_current_user)
 ):
-    filters = {}
+    filters = {"owner_username": current_user.owner}
     if category_id is not None:
         filters["category_id"] = category_id
     if barcode:
@@ -87,7 +87,7 @@ async def get_product(
     product_id: PydanticObjectId,
     current_user: User = Depends(get_current_user)
 ):
-    product = await Product.get(product_id)
+    product = await Product.find_one(Product.id == product_id, Product.owner_username == current_user.owner)
     if not product:
         raise HTTPException(status_code=404, detail="Product not found")
     return await populate_product_relations(product)
@@ -97,14 +97,14 @@ async def create_product(
     product_in: ProductCreate,
     current_user: User = Depends(get_current_stock_manager)
 ):
-    existing = await Product.find_one(Product.barcode == product_in.barcode)
+    existing = await Product.find_one(Product.barcode == product_in.barcode, Product.owner_username == current_user.owner)
     if existing:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Product with barcode '{product_in.barcode}' already exists"
         )
     
-    product = Product(**product_in.model_dump())
+    product = Product(**product_in.model_dump(), owner_username=current_user.owner)
     await product.insert()
     
     # Log Created Event
@@ -126,7 +126,7 @@ async def update_product(
     product_in: ProductUpdate,
     current_user: User = Depends(get_current_stock_manager)
 ):
-    product = await Product.get(product_id)
+    product = await Product.find_one(Product.id == product_id, Product.owner_username == current_user.owner)
     if not product:
         raise HTTPException(status_code=404, detail="Product not found")
         
@@ -152,7 +152,8 @@ async def update_product(
             product_id=product.id,
             event="Adjusted",
             quantity_change=(new_stock - old_stock),
-            details="Direct stock value update"
+            details="Direct stock value update",
+            owner_username=current_user.owner
         )
         
     return await populate_product_relations(product)
@@ -162,7 +163,7 @@ async def delete_product(
     product_id: PydanticObjectId,
     current_user: User = Depends(get_current_stock_manager)
 ):
-    product = await Product.get(product_id)
+    product = await Product.find_one(Product.id == product_id, Product.owner_username == current_user.owner)
     if not product:
         raise HTTPException(status_code=404, detail="Product not found")
         
@@ -174,7 +175,8 @@ async def delete_product(
         quantity_change=-product.current_stock,
         stock_after=0,
         timestamp=datetime.utcnow(),
-        details=f"Product '{product.name}' removed from store catalog"
+        details=f"Product '{product.name}' removed from store catalog",
+        owner_username=current_user.owner
     )
     await history_entry.insert()
     
@@ -238,7 +240,7 @@ async def import_products_excel(
         batch_number = str(row.get("batch_number", "")) if not pd.isna(row.get("batch_number")) else None
         
         # Check if product with barcode exists
-        product = await Product.find_one(Product.barcode == barcode)
+        product = await Product.find_one(Product.barcode == barcode, Product.owner_username == current_user.owner)
         if product:
             product.current_stock += current_stock
             product.buying_price = buying_price
@@ -251,7 +253,8 @@ async def import_products_excel(
                 product_id=product.id,
                 event="Purchased",
                 quantity_change=current_stock,
-                details="Bulk import restock adjustment"
+                details="Bulk import restock adjustment",
+                owner_username=current_user.owner
             )
         else:
             product = Product(
@@ -265,7 +268,8 @@ async def import_products_excel(
                 gst=gst,
                 discount=discount,
                 batch_number=batch_number,
-                status="Available" if current_stock > 0 else "Out of Stock"
+                status="Available" if current_stock > 0 else "Out of Stock",
+                owner_username=current_user.owner
             )
             await product.insert()
             
@@ -273,7 +277,8 @@ async def import_products_excel(
                 product_id=product.id,
                 event="Created",
                 quantity_change=current_stock,
-                details="Bulk import creation"
+                details="Bulk import creation",
+                owner_username=current_user.owner
             )
         success_count += 1
         
@@ -304,7 +309,7 @@ async def export_products_excel(
         
     if getattr(user, "role", "admin") != "admin" and not getattr(user, "can_manage_stock", False):
         raise HTTPException(status_code=403, detail="Permission denied. Stock management rights required.")
-    products = await Product.find_all().to_list()
+    products = await Product.find(Product.owner_username == user.owner).to_list()
     
     data = []
     for p in products:
@@ -344,13 +349,18 @@ async def export_products_excel(
 async def clear_inventory(
     current_user: User = Depends(get_current_admin)
 ):
-    await Product.delete_all()
+    owner_username = current_user.owner
+    if owner_username == "admin":
+        await Product.find({"$or": [{"owner_username": "admin"}, {"owner_username": None}]}).delete()
+    else:
+        await Product.find(Product.owner_username == owner_username).delete()
     
     # Audit log
     audit = AuditLog(
         username=current_user.username,
         action="CLEAR_INVENTORY",
-        details="Admin permanently cleared all products from the departmental store catalog."
+        details="Admin permanently cleared all products from the departmental store catalog.",
+        owner_username=owner_username
     )
     await audit.insert()
     

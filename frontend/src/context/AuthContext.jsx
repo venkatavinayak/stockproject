@@ -17,7 +17,7 @@ export const AuthProvider = ({ children }) => {
         try {
           const profile = await authAPI.getMe();
           const userData = {
-            username: profile.username,
+            username: profile.username.includes(':') ? profile.username.split(':').slice(1).join(':') : profile.username,
             role: profile.role,
             can_manage_stock: profile.can_manage_stock,
             can_view_expenses: profile.can_view_expenses,
@@ -47,7 +47,7 @@ export const AuthProvider = ({ children }) => {
       // Fetch user profile to retrieve role and permissions info
       const profile = await authAPI.getMe();
       const userData = { 
-        username: profile.username, 
+        username: profile.username.includes(':') ? profile.username.split(':').slice(1).join(':') : profile.username, 
         role: profile.role,
         can_manage_stock: profile.can_manage_stock,
         can_view_expenses: profile.can_view_expenses,

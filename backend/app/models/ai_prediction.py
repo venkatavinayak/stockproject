@@ -9,10 +9,12 @@ class AIPrediction(Document):
     actual_sales: Optional[float] = None
     accuracy: Optional[float] = None  # Percentage accuracy (e.g. 0.85 for 85%)
     created_at: datetime = Field(default_factory=datetime.utcnow)
+    owner_username: str = "admin"
 
     class Settings:
         name = "ai_predictions"
         indexes = [
             "product_id",
-            "created_at"
+            "created_at",
+            "owner_username"
         ]

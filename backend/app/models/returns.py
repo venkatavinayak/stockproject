@@ -11,10 +11,12 @@ class Return(Document):
     reason: str
     timestamp: datetime = Field(default_factory=datetime.utcnow)
     product: Optional[dict] = Field(default=None, exclude=True)
+    owner_username: str = "admin"
 
     class Settings:
         name = "returns"
         indexes = [
             "transaction_id",
-            "product_id"
+            "product_id",
+            "owner_username"
         ]

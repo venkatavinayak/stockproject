@@ -17,7 +17,7 @@ async def get_expenses(
     end_date: Optional[date] = None,
     current_user: User = Depends(get_current_expenses_manager)
 ):
-    filters = {}
+    filters = {"owner_username": current_user.owner}
     if category:
         filters["category"] = category
         
@@ -35,7 +35,7 @@ async def create_expense(
     expense_in: ExpenseCreate,
     current_user: User = Depends(get_current_expenses_manager)
 ):
-    expense = Expense(**expense_in.model_dump())
+    expense = Expense(**expense_in.model_dump(), owner_username=current_user.owner)
     await expense.insert()
     return expense
 
@@ -44,7 +44,7 @@ async def delete_expense(
     expense_id: PydanticObjectId,
     current_user: User = Depends(get_current_expenses_manager)
 ):
-    expense = await Expense.get(expense_id)
+    expense = await Expense.find_one(Expense.id == expense_id, Expense.owner_username == current_user.owner)
     if not expense:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,

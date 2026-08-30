@@ -25,9 +25,11 @@ class DailySummary(Document):
     bills_count: int = 0
     top_products: List[TopProductItem] = []
     created_at: datetime = Field(default_factory=datetime.utcnow)
+    owner_username: str = "admin"
 
     class Settings:
         name = "daily_summaries"
         indexes = [
-            "date"
+            "date",
+            "owner_username"
         ]

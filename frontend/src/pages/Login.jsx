@@ -146,7 +146,7 @@ const Login = () => {
         } else {
           // Counter login with manual credentials
           try {
-            const success = await login(username, password);
+            const success = await login(`${email}:${username}`, password);
             if (success) navigate('/');
           } catch (err) {
             setError(err.message || 'Invalid cashier username or password');

@@ -20,14 +20,15 @@ router = APIRouter(prefix="/ai", tags=["AI Recommendations & Forecasts"])
 async def get_recommendations(
     current_user: User = Depends(get_current_user)
 ):
-    recs = await AIRecommendations.find_all().to_list()
+    owner_username = current_user.owner
+    recs = await AIRecommendations.find(AIRecommendations.owner_username == owner_username).to_list()
     if not recs:
-        await generate_ai_insights()
-        recs = await AIRecommendations.find_all().to_list()
+        await generate_ai_insights(owner_username=owner_username)
+        recs = await AIRecommendations.find(AIRecommendations.owner_username == owner_username).to_list()
         
     for r in recs:
         if r.product_id:
-            p = await Product.get(r.product_id)
+            p = await Product.find_one(Product.id == r.product_id, Product.owner_username == owner_username)
             if p:
                 r.product = await populate_product_relations(p)
     return recs
@@ -36,7 +37,7 @@ async def get_recommendations(
 async def trigger_analysis(
     current_user: User = Depends(get_current_user)
 ):
-    await generate_ai_insights()
+    await generate_ai_insights(owner_username=current_user.owner)
     return {"message": "AI insights compiled successfully"}
 
 @router.get("/forecast/{product_id}")
@@ -44,12 +45,12 @@ async def get_product_forecast(
     product_id: PydanticObjectId,
     current_user: User = Depends(get_current_user)
 ):
-    product = await Product.get(product_id)
+    product = await Product.find_one(Product.id == product_id, Product.owner_username == current_user.owner)
     if not product:
         raise HTTPException(status_code=404, detail="Product not found")
         
     # Query transactions containing this product
-    txs = await Transaction.find({"items.product_id": product.id}).to_list()
+    txs = await Transaction.find({"items.product_id": product.id, "owner_username": current_user.owner}).to_list()
     
     items = []
     for tx in txs:

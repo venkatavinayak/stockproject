@@ -21,6 +21,7 @@ class Product(Document):
     status: str = "Available"  # Available, Out of Stock
     image_path: Optional[str] = None
     created_at: datetime = Field(default_factory=datetime.utcnow)
+    owner_username: str = "admin"
 
     class Settings:
         name = "products"
@@ -28,5 +29,6 @@ class Product(Document):
             "barcode",
             "name",
             "brand",
-            "category_id"
+            "category_id",
+            "owner_username"
         ]

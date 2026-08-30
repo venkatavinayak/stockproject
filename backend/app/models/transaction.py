@@ -41,11 +41,13 @@ class Transaction(Document):
     customer_phone: Optional[str] = None
     customer_email: Optional[str] = None
     total_savings: float = 0.0
+    owner_username: str = "admin"
 
     class Settings:
         name = "transactions"
         indexes = [
             "invoice_number",
             "timestamp",
-            "payment_method"
+            "payment_method",
+            "owner_username"
         ]

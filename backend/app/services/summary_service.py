@@ -7,23 +7,34 @@ from backend.app.models.returns import Return
 from backend.app.models.product import Product
 from backend.app.models.purchase import Purchase
 
-async def compile_daily_closing_summary(summary_date: date = None):
+async def compile_daily_closing_summary(summary_date: date = None, owner_username: str = None):
+    if owner_username is None:
+        from backend.app.models.user import User
+        try:
+            admins = await User.find(User.role == "admin").to_list()
+            for admin in admins:
+                await compile_daily_closing_summary(summary_date, owner_username=admin.username)
+        except Exception as e:
+            print("Failed to loop admins for daily summary compilation:", str(e))
+        return
+
     try:
         if summary_date is None:
             summary_date = date.today()
             
-        # Avoid duplicate: delete existing summary for the same date
-        existing = await DailySummary.find_one(DailySummary.date == summary_date)
+        # Avoid duplicate: delete existing summary for the same date and owner
+        existing = await DailySummary.find_one(DailySummary.date == summary_date, DailySummary.owner_username == owner_username)
         if existing:
             await existing.delete()
             
         start_dt = datetime.combine(summary_date, datetime.min.time())
         end_dt = datetime.combine(summary_date, datetime.max.time())
         
-        # 1. Sales aggregates for today
+        # 1. Sales aggregates for today scoped to owner
         txs_today = await Transaction.find(
             Transaction.timestamp >= start_dt,
-            Transaction.timestamp <= end_dt
+            Transaction.timestamp <= end_dt,
+            Transaction.owner_username == owner_username
         ).to_list()
         
         rev = sum(tx.grand_total for tx in txs_today)
@@ -42,19 +53,21 @@ async def compile_daily_closing_summary(summary_date: date = None):
         upi += mixed * 0.4
         card += mixed * 0.2
         
-        # Expenses today
-        exps_today = await Expense.find(Expense.date == summary_date).to_list()
+        # Expenses today scoped to owner
+        exps_today = await Expense.find(Expense.date == summary_date, Expense.owner_username == owner_username).to_list()
         expenses = sum(e.amount for e in exps_today)
         
-        # Returns today
+        # Returns today scoped to owner
         returns_today = await Return.find(
             Return.timestamp >= start_dt,
-            Return.timestamp <= end_dt
+            Return.timestamp <= end_dt,
+            Return.owner_username == owner_username
         ).to_list()
         returned = sum(r.refund_amount for r in returns_today)
         
-        # Current inventory value using Aggregation
+        # Current inventory value scoped to owner
         inv_stats_pipeline = [
+            {"$match": {"owner_username": owner_username}},
             {
                 "$group": {
                     "_id": None,
@@ -65,10 +78,11 @@ async def compile_daily_closing_summary(summary_date: date = None):
         inv_stats = await Product.get_pymongo_collection().aggregate(inv_stats_pipeline).to_list(length=None)
         closing_val = float(inv_stats[0].get("buying_val", 0.0)) if inv_stats else 0.0
         
-        # Restocks purchased today
+        # Restocks purchased today scoped to owner
         purchases_today = await Purchase.find(
             Purchase.purchase_date == summary_date,
-            Purchase.status == "Received"
+            Purchase.status == "Received",
+            Purchase.owner_username == owner_username
         ).to_list()
         purchased = sum(p.total_cost for p in purchases_today)
         
@@ -77,9 +91,9 @@ async def compile_daily_closing_summary(summary_date: date = None):
         if opening_val < 0:
             opening_val = 0.0
             
-        # Top products today using Mongo aggregation
+        # Top products today using Mongo aggregation scoped to owner
         top_items_pipeline = [
-            {"$match": {"timestamp": {"$gte": start_dt, "$lte": end_dt}}},
+            {"$match": {"timestamp": {"$gte": start_dt, "$lte": end_dt}, "owner_username": owner_username}},
             {"$unwind": "$items"},
             {
                 "$group": {
@@ -117,11 +131,12 @@ async def compile_daily_closing_summary(summary_date: date = None):
             upi_sales=upi,
             card_sales=card,
             bills_count=bills,
-            top_products=top_list
+            top_products=top_list,
+            owner_username=owner_username
         )
         await summary.insert()
-        print(f"Daily closing summary compiled for {summary_date}")
+        print(f"Daily closing summary compiled for date={summary_date} owner={owner_username}")
     except Exception as e:
         import traceback
         traceback.print_exc()
-        print("Daily closing summary compilation failed:", str(e))
+        print(f"Daily closing summary compilation failed for owner={owner_username}:", str(e))

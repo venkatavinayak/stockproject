@@ -19,8 +19,16 @@ class User(Document):
     full_name: Optional[str] = None
     email: Optional[str] = None
 
+    # Shop owner scoping
+    owner_username: Optional[str] = None
+
+    @property
+    def owner(self) -> str:
+        return self.owner_username or self.username
+
     class Settings:
         name = "users"
         indexes = [
-            "username"
+            "username",
+            "owner_username"
         ]

@@ -8,9 +8,11 @@ class BackupHistory(Document):
     backup_type: str  # Manual, Auto
     timestamp: datetime = Field(default_factory=datetime.utcnow)
     status: str = "Success"  # Success, Failed
+    owner_username: str = "admin"
 
     class Settings:
         name = "backup_history"
         indexes = [
-            "timestamp"
+            "timestamp",
+            "owner_username"
         ]

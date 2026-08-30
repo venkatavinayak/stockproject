@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import Optional
 import re
 from beanie import PydanticObjectId
 from backend.app.models.product import Product
@@ -9,13 +10,15 @@ async def log_inventory_change(
     product_id: PydanticObjectId,
     event: str,
     quantity_change: int,
-    details: str
+    details: str,
+    owner_username: Optional[str] = None
 ) -> InventoryHistory:
     # Fetch product to update and compute new stock
     product = await Product.get(product_id)
     if not product:
         raise ValueError("Product not found")
         
+    resolved_owner = owner_username or getattr(product, "owner_username", "admin")
     previous_stock = product.current_stock
     new_stock = previous_stock + quantity_change
     if new_stock < 0:
@@ -37,7 +40,8 @@ async def log_inventory_change(
         quantity_change=quantity_change,
         stock_after=new_stock,
         timestamp=datetime.utcnow(),
-        details=details
+        details=details,
+        owner_username=resolved_owner
     )
     await history_entry.insert()
     
@@ -48,26 +52,30 @@ async def log_inventory_change(
         existing = await Notification.find_one({
             "type": "Out of Stock",
             "message": name_regex,
-            "is_read": False
+            "is_read": False,
+            "owner_username": resolved_owner
         })
         if not existing:
             notif = Notification(
                 type="Out of Stock",
                 message=f"Product '{product.name}' is out of stock!",
-                timestamp=datetime.utcnow()
+                timestamp=datetime.utcnow(),
+                owner_username=resolved_owner
             )
             await notif.insert()
     elif new_stock <= product.minimum_stock:
         existing = await Notification.find_one({
             "type": "Low Stock",
             "message": name_regex,
-            "is_read": False
+            "is_read": False,
+            "owner_username": resolved_owner
         })
         if not existing:
             notif = Notification(
                 type="Low Stock",
                 message=f"Product '{product.name}' is low on stock ({new_stock} remaining). Minimum limit is {product.minimum_stock}.",
-                timestamp=datetime.utcnow()
+                timestamp=datetime.utcnow(),
+                owner_username=resolved_owner
             )
             await notif.insert()
             

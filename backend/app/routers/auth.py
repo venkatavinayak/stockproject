@@ -114,10 +114,11 @@ async def list_users(current_user: User = Depends(get_current_user)):
     # Verify current user is admin
     if getattr(current_user, "role", "admin") != "admin":
         raise HTTPException(status_code=403, detail="Admin access required")
-    users = await User.find_all().to_list()
+    owner_username = current_user.owner
+    users = await User.find({"$or": [{"username": owner_username}, {"owner_username": owner_username}]}).to_list()
     return [{
         "id": str(u.id),
-        "username": u.username,
+        "username": u.username.split(":")[-1] if ":" in u.username else u.username,
         "role": getattr(u, "role", "admin"),
         "is_active": u.is_active,
         "last_login": u.last_login,
@@ -134,19 +135,23 @@ async def create_user(data: UserCreate, current_user: User = Depends(get_current
     if getattr(current_user, "role", "admin") != "admin":
         raise HTTPException(status_code=403, detail="Admin access required")
         
+    owner_username = current_user.owner
+    scoped_username = f"{owner_username}:{data.username}"
+    
     # Check if username exists
-    existing = await User.find_one(User.username == data.username)
+    existing = await User.find_one(User.username == scoped_username)
     if existing:
-        raise HTTPException(status_code=400, detail="Username already exists")
+        raise HTTPException(status_code=400, detail="Counter username already exists for this shop")
         
     new_user = User(
-        username=data.username,
+        username=scoped_username,
         hashed_password=get_password_hash(data.password),
         role=data.role,
         is_active=True,
         can_manage_stock=data.can_manage_stock,
         can_view_expenses=data.can_view_expenses,
-        can_view_analytics=data.can_view_analytics
+        can_view_analytics=data.can_view_analytics,
+        owner_username=owner_username
     )
     await new_user.insert()
     
@@ -154,7 +159,8 @@ async def create_user(data: UserCreate, current_user: User = Depends(get_current
     audit = AuditLog(
         username=current_user.username,
         action="CREATE_USER",
-        details=f"Created worker account: {data.username}"
+        details=f"Created worker account: {data.username}",
+        owner_username=owner_username
     )
     await audit.insert()
     
@@ -166,13 +172,16 @@ async def delete_user(username: str, current_user: User = Depends(get_current_us
     if getattr(current_user, "role", "admin") != "admin":
         raise HTTPException(status_code=403, detail="Admin access required")
         
+    owner_username = current_user.owner
+    scoped_username = f"{owner_username}:{username}"
+    
     if username == "admin":
         raise HTTPException(status_code=400, detail="Cannot delete default admin user")
         
-    if username == current_user.username:
+    if scoped_username == current_user.username or username == current_user.username:
         raise HTTPException(status_code=400, detail="Cannot delete currently logged-in user")
         
-    user = await User.find_one(User.username == username)
+    user = await User.find_one(User.username == scoped_username, User.owner_username == owner_username)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
         
@@ -182,7 +191,8 @@ async def delete_user(username: str, current_user: User = Depends(get_current_us
     audit = AuditLog(
         username=current_user.username,
         action="DELETE_USER",
-        details=f"Deleted worker account: {username}"
+        details=f"Deleted worker account: {username}",
+        owner_username=owner_username
     )
     await audit.insert()
     
@@ -203,7 +213,10 @@ async def update_user_rights(
     if getattr(current_user, "role", "admin") != "admin":
         raise HTTPException(status_code=403, detail="Admin access required")
         
-    user = await User.find_one(User.username == username)
+    owner_username = current_user.owner
+    scoped_username = f"{owner_username}:{username}"
+    
+    user = await User.find_one(User.username == scoped_username, User.owner_username == owner_username)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
         
@@ -220,7 +233,8 @@ async def update_user_rights(
     audit = AuditLog(
         username=current_user.username,
         action="UPDATE_USER_RIGHTS",
-        details=f"Updated rights for {username}: Stock={data.can_manage_stock}, Expenses={data.can_view_expenses}, Analytics={data.can_view_analytics}, Active={data.is_active}"
+        details=f"Updated rights for {username}: Stock={data.can_manage_stock}, Expenses={data.can_view_expenses}, Analytics={data.can_view_analytics}, Active={data.is_active}",
+        owner_username=owner_username
     )
     await audit.insert()
     
@@ -252,7 +266,10 @@ async def reset_user_password(
     if getattr(current_user, "role", "admin") != "admin":
         raise HTTPException(status_code=403, detail="Admin access required")
         
-    user = await User.find_one(User.username == username)
+    owner_username = current_user.owner
+    scoped_username = f"{owner_username}:{username}"
+    
+    user = await User.find_one(User.username == scoped_username, User.owner_username == owner_username)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
         
@@ -266,7 +283,8 @@ async def reset_user_password(
     audit = AuditLog(
         username=current_user.username,
         action="RESET_WORKER_PASSWORD",
-        details=f"Reset password for worker account: {username}"
+        details=f"Reset password for worker account: {username}",
+        owner_username=owner_username
     )
     await audit.insert()
     
@@ -291,16 +309,27 @@ async def register_shop(data: ShopRegister):
         role="admin",
         is_active=True,
         email=data.owner_email,
-        full_name=data.shop_name
+        full_name=data.shop_name,
+        owner_username=data.owner_email
     )
     await new_user.insert()
     
-    # Update store settings with shop name
+    # Update store settings with shop name, scoped to this owner
     from backend.app.models.settings import StoreSettings
-    settings = await StoreSettings.find_one()
+    settings = await StoreSettings.find_one(StoreSettings.owner_username == data.owner_email)
     if not settings:
-        settings = StoreSettings()
-    settings.store_name = data.shop_name
+        settings = StoreSettings(
+            owner_username=data.owner_email,
+            store_name=data.shop_name,
+            gst_number="27AAAAA1111A1Z1",
+            address="123 Shopping Arcade, Central Market Road, Sector 5",
+            contact_info="+91 98765 43210",
+            currency_symbol="₹",
+            receipt_format="Thermal",
+            invoice_footer="Thank you for shopping with us! Visit again."
+        )
+    else:
+        settings.store_name = data.shop_name
     await settings.save()
     
     # Audit log
@@ -331,16 +360,27 @@ async def clerk_login(data: ClerkLoginPayload):
             role=data.role,
             is_active=True,
             email=data.email,
-            full_name=data.shop_name or "Store Owner"
+            full_name=data.shop_name or "Store Owner",
+            owner_username=data.email
         )
         await user.insert()
         
         if data.role == "admin" and data.shop_name:
             from backend.app.models.settings import StoreSettings
-            settings = await StoreSettings.find_one()
+            settings = await StoreSettings.find_one(StoreSettings.owner_username == data.email)
             if not settings:
-                settings = StoreSettings()
-            settings.store_name = data.shop_name
+                settings = StoreSettings(
+                    owner_username=data.email,
+                    store_name=data.shop_name,
+                    gst_number="27AAAAA1111A1Z1",
+                    address="123 Shopping Arcade, Central Market Road, Sector 5",
+                    contact_info="+91 98765 43210",
+                    currency_symbol="₹",
+                    receipt_format="Thermal",
+                    invoice_footer="Thank you for shopping with us! Visit again."
+                )
+            else:
+                settings.store_name = data.shop_name
             await settings.save()
             
         audit = AuditLog(

@@ -115,7 +115,12 @@ const Dashboard = () => {
         if (customStartDate) url += `&start_date=${customStartDate}`;
         if (customEndDate) url += `&end_date=${customEndDate}`;
       }
-      window.open(url, '_blank');
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `Operations_Report_${period}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
     } catch (e) {
       console.error(e);
       alert("Failed to download PDF report");

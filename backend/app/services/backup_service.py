@@ -31,14 +31,16 @@ async def run_automated_backup():
         filename=filename,
         backup_type="Auto",
         timestamp=datetime.utcnow(),
-        status=status_str
+        status=status_str,
+        owner_username="admin"
     )
     await history.insert()
     
     notif = Notification(
         type="Backup",
         message=f"Automated nightly database backup completed: {filename}" if status_str == "Success" else "Automated nightly database backup failed.",
-        timestamp=datetime.utcnow()
+        timestamp=datetime.utcnow(),
+        owner_username="admin"
     )
     await notif.insert()
     return history

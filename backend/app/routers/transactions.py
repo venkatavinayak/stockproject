@@ -28,7 +28,7 @@ async def get_transactions(
     limit: Optional[int] = 100,
     current_user: User = Depends(get_current_user)
 ):
-    filters = {}
+    filters = {"owner_username": current_user.owner}
     if invoice_number:
         # Case-insensitive substring match
         filters["invoice_number"] = re.compile(re.escape(invoice_number), re.IGNORECASE)
@@ -116,12 +116,36 @@ async def get_transactions(
                 
     return txs
 
+@router.get("/my-summary")
+async def get_my_summary(current_user: User = Depends(get_current_user)):
+    today = date.today()
+    start_date = datetime.combine(today, datetime.min.time())
+    end_date = datetime.combine(today, datetime.max.time())
+    
+    # Query transactions processed by this user today
+    txs = await Transaction.find(
+        Transaction.cashier_username == current_user.username,
+        Transaction.owner_username == current_user.owner,
+        Transaction.timestamp >= start_date,
+        Transaction.timestamp <= end_date
+    ).to_list()
+    
+    total_sales = sum(tx.grand_total for tx in txs)
+    total_items = sum(tx.items_count for tx in txs)
+    invoice_count = len(txs)
+    
+    return {
+        "total_sales": total_sales,
+        "invoice_count": invoice_count,
+        "total_items": total_items
+    }
+
 @router.get("/{transaction_id}", response_model=TransactionResponse)
 async def get_transaction(
     transaction_id: PydanticObjectId,
     current_user: User = Depends(get_current_user)
 ):
-    tx = await Transaction.get(transaction_id)
+    tx = await Transaction.find_one(Transaction.id == transaction_id, Transaction.owner_username == current_user.owner)
     if not tx:
         raise HTTPException(status_code=404, detail="Transaction not found")
         
@@ -130,9 +154,9 @@ async def get_transaction(
         try:
             from backend.app.models.settings import StoreSettings
             from backend.app.reports.receipt import generate_thermal_receipt
-            settings = await StoreSettings.find_one()
+            settings = await StoreSettings.find_one(StoreSettings.owner_username == current_user.owner)
             if not settings:
-                settings = StoreSettings()
+                settings = StoreSettings(owner_username=current_user.owner)
                 await settings.insert()
             tx.pdf_path = generate_thermal_receipt(tx, settings)
             await tx.save()
@@ -157,7 +181,7 @@ async def refund_item(
     current_user: User = Depends(get_current_user)
 ):
     # Fetch invoice
-    tx = await Transaction.get(transaction_id)
+    tx = await Transaction.find_one(Transaction.id == transaction_id, Transaction.owner_username == current_user.owner)
     if not tx:
         raise HTTPException(status_code=404, detail="Transaction invoice not found")
         
@@ -176,7 +200,8 @@ async def refund_item(
     # Check returned quantity does not exceed original quantity
     already_returned = await Return.find(
         Return.transaction_id == transaction_id,
-        Return.product_id == product_id
+        Return.product_id == product_id,
+        Return.owner_username == current_user.owner
     ).to_list()
     total_returned = sum(r.quantity for r in already_returned)
     
@@ -206,7 +231,8 @@ async def refund_item(
         product_id=product_id,
         quantity=quantity,
         refund_amount=deduct_total,
-        reason=reason
+        reason=reason,
+        owner_username=current_user.owner
     )
     await ret.insert()
     
@@ -239,9 +265,9 @@ async def refund_item(
     try:
         from backend.app.models.settings import StoreSettings
         from backend.app.reports.receipt import generate_thermal_receipt
-        settings = await StoreSettings.find_one()
+        settings = await StoreSettings.find_one(StoreSettings.owner_username == current_user.owner)
         if not settings:
-            settings = StoreSettings()
+            settings = StoreSettings(owner_username=current_user.owner)
             await settings.insert()
             
         new_pdf_path = generate_thermal_receipt(tx, settings)
@@ -255,7 +281,8 @@ async def refund_item(
         product_id=product_id,
         event="Returned",
         quantity_change=quantity,
-        details=f"Returned {quantity} units from Invoice {tx.invoice_number} (Reason: {reason})"
+        details=f"Returned {quantity} units from Invoice {tx.invoice_number} (Reason: {reason})",
+        owner_username=current_user.owner
     )
     
     # Populate product details for response schema
@@ -269,12 +296,13 @@ async def refund_item(
 async def list_returns(
     current_user: User = Depends(get_current_user)
 ):
+    owner_username = current_user.owner
     if getattr(current_user, "role", "admin") != "admin":
-        txs = await Transaction.find(Transaction.cashier_username == current_user.username).to_list()
+        txs = await Transaction.find(Transaction.cashier_username == current_user.username, Transaction.owner_username == owner_username).to_list()
         tx_ids = [str(tx.id) for tx in txs]
-        returns_list = await Return.find({"transaction_id": {"$in": tx_ids}}).sort(-Return.timestamp).to_list()
+        returns_list = await Return.find({"transaction_id": {"$in": tx_ids}, "owner_username": owner_username}).sort(-Return.timestamp).to_list()
     else:
-        returns_list = await Return.find_all().sort(-Return.timestamp).to_list()
+        returns_list = await Return.find(Return.owner_username == owner_username).sort(-Return.timestamp).to_list()
         
     for r in returns_list:
         if r.product_id:
@@ -282,29 +310,6 @@ async def list_returns(
             if p:
                 r.product = await populate_product_relations(p)
     return returns_list
-
-@router.get("/my-summary")
-async def get_my_summary(current_user: User = Depends(get_current_user)):
-    today = date.today()
-    start_date = datetime.combine(today, datetime.min.time())
-    end_date = datetime.combine(today, datetime.max.time())
-    
-    # Query transactions processed by this user today
-    txs = await Transaction.find(
-        Transaction.cashier_username == current_user.username,
-        Transaction.timestamp >= start_date,
-        Transaction.timestamp <= end_date
-    ).to_list()
-    
-    total_sales = sum(tx.grand_total for tx in txs)
-    total_items = sum(tx.items_count for tx in txs)
-    invoice_count = len(txs)
-    
-    return {
-        "total_sales": total_sales,
-        "invoice_count": invoice_count,
-        "total_items": total_items
-    }
 
 @router.get("/{transaction_id}/pdf")
 async def get_transaction_pdf(
@@ -331,7 +336,7 @@ async def get_transaction_pdf(
     if not current_user:
         raise HTTPException(status_code=401, detail="User not found")
         
-    tx = await Transaction.get(transaction_id)
+    tx = await Transaction.find_one(Transaction.id == transaction_id, Transaction.owner_username == current_user.owner)
     if not tx:
         raise HTTPException(status_code=404, detail="Transaction not found")
         
@@ -344,9 +349,9 @@ async def get_transaction_pdf(
     from backend.app.models.settings import StoreSettings
     from backend.app.reports.receipt import generate_thermal_receipt
     
-    settings = await StoreSettings.find_one()
+    settings = await StoreSettings.find_one(StoreSettings.owner_username == current_user.owner)
     if not settings:
-        settings = StoreSettings()
+        settings = StoreSettings(owner_username=current_user.owner)
         await settings.insert()
         
     if not tx.pdf_path or not os.path.exists(tx.pdf_path):

@@ -8,10 +8,12 @@ class AuditLog(Document):
     action: str  # LOGIN, CHECKOUT, REFUND, ADJUST_STOCK, BACKUP
     details: str  # Descriptive summary of parameters
     timestamp: datetime = Field(default_factory=datetime.utcnow)
+    owner_username: str = "admin"
 
     class Settings:
         name = "audit_logs"
         indexes = [
             "action",
-            "timestamp"
+            "timestamp",
+            "owner_username"
         ]

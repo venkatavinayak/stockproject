@@ -8,9 +8,11 @@ class Supplier(Document):
     email: Optional[str] = None
     address: Optional[str] = None
     gst_number: Optional[str] = None
+    owner_username: str = "admin"
 
     class Settings:
         name = "suppliers"
         indexes = [
-            "name"
+            "name",
+            "owner_username"
         ]

@@ -9,10 +9,12 @@ class Customer(Document):
     email: Optional[str] = None
     loyalty_points: int = 0
     created_at: datetime = Field(default_factory=datetime.utcnow)
+    owner_username: str = "admin"
 
     class Settings:
         name = "customers"
         indexes = [
             "phone",
-            "name"
+            "name",
+            "owner_username"
         ]

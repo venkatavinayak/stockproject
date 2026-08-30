@@ -8,10 +8,12 @@ class Notification(Document):
     message: str
     is_read: bool = False
     timestamp: datetime = Field(default_factory=datetime.utcnow)
+    owner_username: str = "admin"
 
     class Settings:
         name = "notifications"
         indexes = [
             "is_read",
-            "timestamp"
+            "timestamp",
+            "owner_username"
         ]
