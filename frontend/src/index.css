@@ -508,9 +508,27 @@ body {
   color: #a78bfa !important;
 }
 
-/* Hide or clean up default development mode stripe banner */
-.cl-internal-ph158m {
-  background: transparent !important;
-  border: none !important;
+/* Hide or clean up default development mode stripe banner & Secured by Clerk box */
+.cl-internal-ph158m,
+.cl-internal-b38462,
+.cl-internal-1df17q8,
+.cl-internal-186d91g,
+.cl-internal-1dauv8s,
+.cl-internal-1574e44,
+.cl-internal-df2k8k,
+.cl-footerAction__development,
+.cl-badge,
+[data-localization-key*="devModeBadge"],
+[class*="devMode"],
+[class*="SecuredBy"],
+[class*="securedBy"] {
+  display: none !important;
+  visibility: hidden !important;
+  height: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
 }
+
 

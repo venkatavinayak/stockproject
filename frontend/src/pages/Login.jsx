@@ -236,7 +236,8 @@ const Login = () => {
     layout: {
       socialButtonsVariant: 'blockButton',
       socialButtonsBlockButtonPlacement: 'left',
-      logoPlacement: 'none'
+      logoPlacement: 'none',
+      unsafe_disableDevelopmentModeWarnings: true
     },
     variables: {
       colorPrimary: '#6d28d9',
