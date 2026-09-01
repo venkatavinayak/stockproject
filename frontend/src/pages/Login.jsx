@@ -6,9 +6,16 @@ import { authAPI } from '../services/api';
 import { useSignIn, useSignUp, useUser, useClerk } from '@clerk/clerk-react';
 
 const Login = () => {
-  const { login, setToken, setUser } = useAuth();
+  const { isAuthenticated, login, setToken, setUser } = useAuth();
   const navigate = useNavigate();
   
+  // Auto-redirect if already authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate('/', { replace: true });
+    }
+  }, [isAuthenticated, navigate]);
+
   // Detect if Clerk keys are configured locally
   const clerkEnabled = !!import.meta.env.VITE_CLERK_PUBLISHABLE_KEY && import.meta.env.VITE_CLERK_PUBLISHABLE_KEY !== 'your_clerk_publishable_key_here';
   
@@ -52,6 +59,7 @@ const Login = () => {
   // Check shop status whenever Clerk user signs in
   useEffect(() => {
     const runCheck = async () => {
+      if (isAuthenticated) return;
       if (isSignedIn && user?.primaryEmailAddress?.emailAddress) {
         setCheckingShop(true);
         setError('');
