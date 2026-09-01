@@ -12,13 +12,9 @@ const Login = () => {
   // Auto-redirect if already authenticated
   useEffect(() => {
     if (isAuthenticated) {
-      if (user?.role === 'worker') {
-        navigate('/billing', { replace: true });
-      } else {
-        navigate('/', { replace: true });
-      }
+      navigate('/', { replace: true });
     }
-  }, [isAuthenticated, user, navigate]);
+  }, [isAuthenticated, navigate]);
 
   // Detect if Clerk keys are configured locally
   const clerkEnabled = !!import.meta.env.VITE_CLERK_PUBLISHABLE_KEY && import.meta.env.VITE_CLERK_PUBLISHABLE_KEY !== 'your_clerk_publishable_key_here';
@@ -39,7 +35,7 @@ const Login = () => {
     console.warn("Clerk hooks failed to load. Make sure ClerkProvider wraps the App component.", e);
   }
 
-  const { user: clerkUser, isSignedIn } = userHook || { user: null, isSignedIn: false };
+  const { user, isSignedIn } = userHook || { user: null, isSignedIn: false };
 
   const [mode, setMode] = useState('login'); // 'login' or 'register'
   const [portal, setPortal] = useState('owner'); // 'owner' or 'counter'
@@ -64,11 +60,11 @@ const Login = () => {
   useEffect(() => {
     const runCheck = async () => {
       if (isAuthenticated) return;
-      if (isSignedIn && clerkUser?.primaryEmailAddress?.emailAddress) {
+      if (isSignedIn && user?.primaryEmailAddress?.emailAddress) {
         setCheckingShop(true);
         setError('');
         try {
-          const email = clerkUser.primaryEmailAddress.emailAddress;
+          const email = user.primaryEmailAddress.emailAddress;
           const res = await authAPI.checkShop(email);
           if (res.exists) {
             setShopExists(true);
@@ -90,21 +86,39 @@ const Login = () => {
       }
     };
     runCheck();
-  }, [isSignedIn, clerkUser, isAuthenticated]);
+  }, [isSignedIn, user]);
 
   const handleGoogleLogin = async () => {
-    if (!clerkEnabled || !signInHook?.isLoaded) return;
+    if (!clerkEnabled) return;
     setError('');
     setLoading(true);
     try {
-      await signInHook.signIn.authenticateWithRedirect({
-        strategy: "oauth_google",
-        redirectUrl: window.location.origin + "/login",
-        redirectUrlComplete: window.location.origin + "/login"
-      });
+      // Clear any previous Clerk session so Google prompts account selector
+      if (clerkInstance && isSignedIn) {
+        await clerkInstance.signOut();
+      }
+      
+      if (signInHook?.isLoaded) {
+        await signInHook.signIn.authenticateWithRedirect({
+          strategy: "oauth_google",
+          redirectUrl: window.location.origin + "/login",
+          redirectUrlComplete: window.location.origin + "/login"
+        });
+      }
     } catch (err) {
-      setError(err.errors?.[0]?.message || err.message || 'Google Auth redirection failed');
-      setLoading(false);
+      console.warn("SignIn redirect failed, attempting SignUp redirect...", err);
+      try {
+        if (signUpHook?.isLoaded) {
+          await signUpHook.signUp.authenticateWithRedirect({
+            strategy: "oauth_google",
+            redirectUrl: window.location.origin + "/login",
+            redirectUrlComplete: window.location.origin + "/login"
+          });
+        }
+      } catch (signUpErr) {
+        setError(signUpErr.errors?.[0]?.message || signUpErr.message || 'Google Auth redirection failed');
+        setLoading(false);
+      }
     }
   };
 
@@ -113,6 +127,7 @@ const Login = () => {
       setLoading(true);
       await clerkInstance.signOut();
       setShopExists(null);
+      setMode('login');
       setLoading(false);
     }
   };
@@ -123,12 +138,12 @@ const Login = () => {
     setRegisterSuccess('');
     setLoading(true);
     
-    if (isSignedIn && clerkUser?.primaryEmailAddress?.emailAddress) {
-      const email = clerkUser.primaryEmailAddress.emailAddress;
+    if (isSignedIn && user?.primaryEmailAddress?.emailAddress) {
+      const email = user.primaryEmailAddress.emailAddress;
       if (mode === 'register') {
         // Step 2: Register shop for authenticated Clerk user
         try {
-          const localAuth = await authAPI.clerkLogin(email, clerkUser.id, shopName, 'admin', createPassword); 
+          const localAuth = await authAPI.clerkLogin(email, user.id, shopName, 'admin', createPassword); 
           localStorage.setItem('smartstock_token', localAuth.access_token);
           localStorage.setItem('smartstock_user', JSON.stringify({ username: email, role: 'admin' }));
           setToken(localAuth.access_token);
@@ -144,7 +159,7 @@ const Login = () => {
         if (portal === 'owner') {
           // Owner login requiring store owner password authentication
           try {
-            const localAuth = await authAPI.clerkLogin(email, clerkUser.id, null, 'admin', password);
+            const localAuth = await authAPI.clerkLogin(email, user.id, null, 'admin', password);
             localStorage.setItem('smartstock_token', localAuth.access_token);
             localStorage.setItem('smartstock_user', JSON.stringify({ username: email, role: 'admin' }));
             setToken(localAuth.access_token);

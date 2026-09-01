@@ -25,10 +25,13 @@ api.interceptors.response.use((response) => {
   return response;
 }, (error) => {
   if (error.response && error.response.status === 401) {
-    // Clear storage and redirect
-    localStorage.removeItem('smartstock_token');
-    localStorage.removeItem('smartstock_user');
-    window.location.href = '/login';
+    const requestUrl = error.config?.url || '';
+    // Only perform automatic login redirect for protected data routes, not auth routes
+    if (!requestUrl.includes('/auth/login') && !requestUrl.includes('/auth/clerk-login') && !requestUrl.includes('/auth/check-shop')) {
+      localStorage.removeItem('smartstock_token');
+      localStorage.removeItem('smartstock_user');
+      window.location.href = '/login';
+    }
   }
   return Promise.reject(error);
 });
