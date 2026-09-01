@@ -14,11 +14,9 @@ DEFAULT_SMTP_PORT = int(os.environ.get("SMTP_PORT", 587))
 DEFAULT_SMTP_USER = os.environ.get("SMTP_USER", os.environ.get("SMTP_USERNAME", ""))
 
 def _send_sync_email(to_email: str, subject: str, html_body: str, smtp_config: Optional[dict] = None) -> bool:
-    """Synchronous helper function to send email via SMTP using Gmail TLS."""
+    """Synchronous helper function to send email via SMTP using Gmail TLS & SSL fallbacks."""
     cfg = smtp_config or {}
     
-    host = cfg.get("smtp_host") or DEFAULT_SMTP_HOST
-    port = int(cfg.get("smtp_port") or DEFAULT_SMTP_PORT)
     password = (cfg.get("smtp_password") or DEFAULT_GMAIL_APP_PASS).replace(" ", "")
     user = cfg.get("smtp_user") or DEFAULT_SMTP_USER or to_email
     sender = cfg.get("smtp_sender") or os.environ.get("SMTP_FROM", user or to_email)
@@ -30,25 +28,37 @@ def _send_sync_email(to_email: str, subject: str, html_body: str, smtp_config: O
     msg.set_content("Please enable HTML to view this message.")
     msg.add_alternative(html_body, subtype='html')
 
-    # Candidate SMTP usernames to try for Gmail authentication
+    # List candidate usernames for login
     candidates = []
     if user:
         candidates.append(user)
     if to_email not in candidates:
         candidates.append(to_email)
 
+    # Ports & connection methods to attempt (587 TLS and 465 SSL)
+    attempts = [
+        ("smtp.gmail.com", 587, "tls"),
+        ("smtp.gmail.com", 465, "ssl")
+    ]
+
     for auth_user in candidates:
-        try:
-            logger.info(f"[MAILER] Attempting SMTP send to {to_email} via {host}:{port} with user {auth_user}")
-            msg.replace_header('From', auth_user)
-            with smtplib.SMTP(host, port, timeout=12) as server:
-                server.starttls()
-                server.login(auth_user, password)
-                server.send_message(msg)
-            logger.info(f"[MAILER] Real OTP email successfully sent to {to_email}")
-            return True
-        except Exception as e:
-            logger.warning(f"[MAILER] SMTP send attempt with user '{auth_user}' failed: {str(e)}")
+        for host, port, mode in attempts:
+            try:
+                logger.info(f"[MAILER] Sending email to {to_email} via {host}:{port} ({mode}) as user '{auth_user}'")
+                msg.replace_header('From', auth_user)
+                if mode == "ssl":
+                    with smtplib.SMTP_SSL(host, port, timeout=12) as server:
+                        server.login(auth_user, password)
+                        server.send_message(msg)
+                else:
+                    with smtplib.SMTP(host, port, timeout=12) as server:
+                        server.starttls()
+                        server.login(auth_user, password)
+                        server.send_message(msg)
+                logger.info(f"[MAILER] OTP email successfully sent to {to_email}")
+                return True
+            except Exception as e:
+                logger.warning(f"[MAILER] Send attempt ({mode} {port}, user {auth_user}) failed: {str(e)}")
 
     logger.error(f"[MAILER] All SMTP send attempts to {to_email} failed.")
     return False

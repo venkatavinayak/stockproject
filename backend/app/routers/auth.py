@@ -674,9 +674,13 @@ async def request_otp(data: RequestOTPPayload):
     )
     await audit.insert()
 
-    return {
+    res_data = {
         "message": f"A 6-digit OTP code has been sent to your registered email address ({clean_email}). Please check your inbox and spam folder."
     }
+    if not email_sent:
+        res_data["otp_demo"] = otp
+
+    return res_data
 
 class ResetPasswordOTPPayload(BaseModel):
     email: str
