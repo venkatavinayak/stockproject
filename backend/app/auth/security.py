@@ -1,4 +1,3 @@
-import secrets
 from datetime import datetime, timedelta, timezone
 from typing import Optional
 from jose import jwt
@@ -26,17 +25,6 @@ def get_password_hash(password: str) -> str:
     hashed = bcrypt.hashpw(password.encode("utf-8"), salt)
     return hashed.decode("utf-8")
 
-def verify_pin(plain_pin: str, stored_hash_or_pin: str) -> bool:
-    """
-    Constant-time comparison for counter worker 4-digit PINs.
-    """
-    if not plain_pin or not stored_hash_or_pin:
-        return False
-    if stored_hash_or_pin.startswith("$2b$") or stored_hash_or_pin.startswith("$2a$"):
-        return verify_password(plain_pin, stored_hash_or_pin)
-    # Direct constant-time string comparison
-    return secrets.compare_digest(plain_pin.strip(), stored_hash_or_pin.strip())
-
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
     to_encode = data.copy()
     if expires_delta:
@@ -46,4 +34,3 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -
     to_encode.update({"exp": expire})
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
-

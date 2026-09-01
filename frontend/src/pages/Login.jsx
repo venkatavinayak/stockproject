@@ -1,243 +1,186 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { useUser, useClerk, SignIn, SignUp } from '@clerk/clerk-react';
 import { authAPI } from '../services/api';
 import { 
   KeyRound, User, AlertCircle, ShoppingBag, ArrowRight, Store, 
-  ShieldCheck, LogOut, Lock, UserCheck, Smartphone, Sparkles
+  UserCheck, ShieldCheck, Monitor, LogOut, CheckCircle2, Sparkles
 } from 'lucide-react';
-import { useUser, useClerk, SignIn } from '@clerk/clerk-react';
 
 const Login = () => {
-  const { 
-    isAuthenticated, 
-    login, 
-    loginCounterPin, 
-    registerShop, 
-    logout,
-    kioskShopId, 
-    isAuthenticatingBackend 
-  } = useAuth();
-  
+  const { isAuthenticated, loginOwner, loginCounter, registerShop } = useAuth();
   const navigate = useNavigate();
+  const { isSignedIn, user: clerkUser } = useUser();
+  const { signOut } = useClerk();
 
-  // Clerk hook integration with fallbacks
-  let clerkUser = null;
-  let isClerkLoaded = true;
-  let clerkSignOut = null;
-
-  try {
-    const userHook = useUser();
-    clerkUser = userHook.user;
-    isClerkLoaded = userHook.isLoaded;
-    const clerkObj = useClerk();
-    clerkSignOut = clerkObj.signOut;
-  } catch (e) {
-    // Clerk optional fallback
-  }
-
-  // Active view tab state
-  const [authMode, setAuthMode] = useState('clerk'); // 'clerk', 'onboarding', 'shop_hub'
-  const [portalTab, setPortalTab] = useState('owner'); // 'owner', 'counter', 'pin'
-
-  // Shop status check state
-  const [shopExists, setShopExists] = useState(null);
-  const [shopInfo, setShopInfo] = useState({ name: '', owner_username: '' });
+  // Shop state & stage controls
+  const [shopStatus, setShopStatus] = useState(null); // { exists: boolean, shop_name?: string, owner_username?: string }
   const [checkingShop, setCheckingShop] = useState(false);
+  const [authMode, setAuthMode] = useState('sign_in'); // 'sign_in' | 'sign_up'
+  const [loginType, setLoginType] = useState('owner'); // 'owner' | 'counter'
 
-  // Form inputs
-  const [ownerUsername, setOwnerUsername] = useState('admin');
-  const [password, setPassword] = useState('admin123');
-  
-  // Onboarding inputs
+  // Form states
   const [shopName, setShopName] = useState('');
-  const [newOwnerUsername, setNewOwnerUsername] = useState('');
-  const [newOwnerPassword, setNewOwnerPassword] = useState('');
-  const [newCounterPin, setNewCounterPin] = useState('');
+  const [ownerUsername, setOwnerUsername] = useState('');
+  const [ownerPassword, setOwnerPassword] = useState('');
 
-  // Counter worker inputs
-  const [counterUsername, setCounterUsername] = useState('');
+  const [counterUsername, setCounterUsername] = useState('cashier1');
   const [counterPassword, setCounterPassword] = useState('');
-  const [pin, setPin] = useState('');
+
+  const [existingOwnerUsername, setExistingOwnerUsername] = useState('');
+  const [existingOwnerPassword, setExistingOwnerPassword] = useState('');
 
   const [error, setError] = useState('');
+  const [successMsg, setSuccessMsg] = useState('');
   const [loading, setLoading] = useState(false);
 
-  // Auto-redirect if ERP session authenticated
+  // Direct to dashboard if already authenticated with ERP
   useEffect(() => {
     if (isAuthenticated) {
       navigate('/', { replace: true });
     }
   }, [isAuthenticated, navigate]);
 
-  // Check shop status when Clerk user is loaded
+  // Sync Clerk User -> Check if Shop Exists
   useEffect(() => {
-    const checkUserShop = async () => {
-      if (clerkUser) {
+    const fetchShopInfo = async () => {
+      if (isSignedIn && clerkUser) {
+        const primaryEmail = clerkUser.primaryEmailAddress?.emailAddress;
+        if (!primaryEmail) return;
+
         setCheckingShop(true);
         setError('');
-        const userEmail = clerkUser.primaryEmailAddress?.emailAddress || '';
-        const clerkId = clerkUser.id;
-        
         try {
-          const res = await authAPI.checkShop(userEmail, clerkId);
-          if (res && res.exists) {
-            setShopExists(true);
-            setShopInfo({ name: res.shop_name, owner_username: res.owner_username });
-            setAuthMode('shop_hub');
-            setOwnerUsername(res.owner_username || 'admin');
+          const res = await authAPI.checkShop(primaryEmail);
+          setShopStatus(res);
+          if (res.exists) {
+            setExistingOwnerUsername(res.owner_username || 'admin');
           } else {
-            setShopExists(false);
-            setAuthMode('onboarding');
-            setShopName(clerkUser.firstName ? `${clerkUser.firstName}'s Store` : 'My Store');
-            setNewOwnerUsername(userEmail.split('@')[0] || 'owner');
+            // Suggest default owner username based on email prefix
+            const emailPrefix = primaryEmail.split('@')[0].replace(/[^a-zA-Z0-9]/g, '');
+            setOwnerUsername(emailPrefix || 'admin');
+            setShopName(`${clerkUser.firstName || 'My'} Store`);
           }
         } catch (err) {
-          console.error("Shop check error:", err);
-          setShopExists(false);
-          setAuthMode('onboarding');
-          setShopName(clerkUser.firstName ? `${clerkUser.firstName}'s Store` : 'My Store');
-          setNewOwnerUsername(userEmail.split('@')[0] || 'owner');
+          console.error('Failed to check shop status:', err);
+          setError('Could not connect to backend store service.');
         } finally {
           setCheckingShop(false);
         }
-      } else {
-        setAuthMode('clerk');
       }
     };
 
-    if (isClerkLoaded) {
-      checkUserShop();
-    }
-  }, [clerkUser, isClerkLoaded]);
+    fetchShopInfo();
+  }, [isSignedIn, clerkUser]);
 
-  // Owner Form Submit
-  const handleOwnerSubmit = async (e) => {
+  // Handler: Create New Shop
+  const handleCreateShop = async (e) => {
     e.preventDefault();
     setError('');
     setLoading(true);
 
+    const primaryEmail = clerkUser?.primaryEmailAddress?.emailAddress;
+    if (!primaryEmail) {
+      setError('Clerk Gmail address not found');
+      setLoading(false);
+      return;
+    }
+
     try {
-      const success = await login(ownerUsername, password);
-      if (success) {
+      await registerShop(shopName, ownerUsername, primaryEmail, ownerPassword);
+      setSuccessMsg('Shop created successfully! Directing to store dashboard...');
+      setTimeout(() => {
         navigate('/');
-      }
+      }, 800);
     } catch (err) {
-      setError(err.message || 'Invalid owner username or password');
+      setError(err.message || 'Failed to create shop');
     } finally {
       setLoading(false);
     }
   };
 
-  // Counter Worker Submit
-  const handleCounterSubmit = async (e) => {
+  // Handler: Owner Login
+  const handleOwnerLogin = async (e) => {
     e.preventDefault();
     setError('');
     setLoading(true);
 
+    const primaryEmail = clerkUser?.primaryEmailAddress?.emailAddress;
     try {
-      const targetUser = shopInfo.owner_username 
-        ? `${shopInfo.owner_username}:${counterUsername}` 
-        : counterUsername;
-      const success = await login(targetUser, counterPassword);
-      if (success) {
-        navigate('/billing');
-      }
-    } catch (err) {
-      setError(err.message || 'Invalid counter worker username or password');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // 4-Digit PIN Submit
-  const handlePinSubmit = async (e) => {
-    e.preventDefault();
-    setError('');
-    setLoading(true);
-
-    const targetShop = shopInfo.owner_username || kioskShopId || ownerUsername;
-    try {
-      const success = await loginCounterPin(targetShop, pin);
-      if (success) {
-        navigate('/billing');
-      }
-    } catch (err) {
-      setError(err.message || 'Invalid 4-digit PIN for this shop');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Onboarding Create Shop Submit
-  const handleOnboardingSubmit = async (e) => {
-    e.preventDefault();
-    setError('');
-    setLoading(true);
-
-    try {
-      const userEmail = clerkUser?.primaryEmailAddress?.emailAddress || '';
-      const clerkToken = null;
-      
-      const success = await registerShop(
-        shopName,
-        newOwnerUsername,
-        newOwnerPassword,
-        clerkToken,
-        userEmail,
-        newCounterPin
-      );
-
-      if (success) {
+      await loginOwner(existingOwnerUsername, existingOwnerPassword, primaryEmail, clerkUser?.id);
+      setSuccessMsg('Owner login successful!');
+      setTimeout(() => {
         navigate('/');
-      }
+      }, 500);
     } catch (err) {
-      setError(err.message || 'Failed to create shop account');
+      setError(err.message || 'Incorrect Owner Username or Password');
     } finally {
       setLoading(false);
     }
+  };
+
+  // Handler: Counter Login
+  const handleCounterLogin = async (e) => {
+    e.preventDefault();
+    setError('');
+    setLoading(true);
+
+    const ownerName = shopStatus?.owner_username || existingOwnerUsername || 'admin';
+    try {
+      await loginCounter(ownerName, counterUsername, counterPassword);
+      setSuccessMsg('Counter login successful!');
+      setTimeout(() => {
+        navigate('/');
+      }, 500);
+    } catch (err) {
+      setError(err.message || 'Incorrect Counter Username or Password');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Handler: Clerk Sign Out
+  const handleClerkSignOut = () => {
+    signOut();
+    setShopStatus(null);
   };
 
   return (
-    <div className="flex min-h-screen bg-slate-50 dark:bg-slate-950 transition-colors duration-300 relative">
-      {/* Backend Loading Shield Overlay */}
-      {(isAuthenticatingBackend || checkingShop) && (
-        <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-slate-950/80 backdrop-blur-md text-white animate-fade-in">
-          <div className="w-14 h-14 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin mb-4"></div>
-          <h3 className="text-xl font-bold font-title">Connecting Store ERP...</h3>
-          <p className="text-sm text-slate-400 mt-1">Verifying session credentials and shop permissions</p>
-        </div>
-      )}
-
-      {/* Left Pane: Auth Form */}
-      <div className="flex flex-col justify-center w-full lg:w-1/2 p-8 md:p-12 lg:p-16 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 transition-colors duration-300">
-        <div className="w-full max-w-md mx-auto animate-fade-in">
-          
-          {/* Logo Brand */}
-          <div className="flex items-center justify-between mb-8">
+    <div className="flex min-h-screen bg-slate-50 dark:bg-slate-950 transition-colors duration-300">
+      {/* Left Container */}
+      <div className="flex flex-col justify-center w-full lg:w-1/2 p-6 md:p-12 lg:p-14 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800">
+        <div className="w-full max-w-md mx-auto">
+          {/* Header Brand */}
+          <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-3">
-              <div className="p-3 text-white bg-indigo-600 rounded-2xl shadow-md shadow-indigo-600/20">
+              <div className="p-3 text-white bg-indigo-600 rounded-2xl shadow-lg shadow-indigo-600/20">
                 <ShoppingBag size={24} />
               </div>
               <div>
                 <h1 className="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white font-title">
-                  Smart Store Ai
+                  SmartStore AI
                 </h1>
                 <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
-                  Retail ERP & Multi-Tenant POS Platform
+                  Cloud Multi-Tenant Store ERP
                 </p>
               </div>
             </div>
 
-            {/* Kiosk Status Badge */}
-            {kioskShopId && (
-              <span className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 text-xs font-semibold rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
-                <Smartphone size={12} /> POS Kiosk Active
-              </span>
+            {/* Clerk User Badge if Signed In */}
+            {isSignedIn && clerkUser && (
+              <button
+                onClick={handleClerkSignOut}
+                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-rose-600 bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/40 dark:text-rose-400 rounded-lg transition-colors cursor-pointer"
+                title="Sign Out Gmail Account"
+              >
+                <LogOut size={14} />
+                Sign Out Gmail
+              </button>
             )}
           </div>
 
-          {/* Error Alert */}
+          {/* Feedback Messages */}
           {error && (
             <div className="flex items-center gap-3 p-4 mb-6 text-sm rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400 animate-shake">
               <AlertCircle size={18} className="shrink-0" />
@@ -245,94 +188,129 @@ const Login = () => {
             </div>
           )}
 
-          {/* Active Clerk Gmail Banner (if logged in via Clerk) */}
-          {clerkUser && (
-            <div className="flex items-center justify-between p-3.5 mb-6 rounded-2xl bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/70">
-              <div className="flex items-center gap-3 overflow-hidden">
-                <img 
-                  src={clerkUser.imageUrl || 'https://via.placeholder.com/40'} 
-                  alt="Clerk Avatar"
-                  className="w-9 h-9 rounded-full object-cover border border-indigo-500/30 shrink-0" 
-                />
-                <div className="truncate">
-                  <p className="text-xs font-bold text-slate-900 dark:text-white truncate">
-                    {clerkUser.fullName || clerkUser.primaryEmailAddress?.emailAddress}
+          {successMsg && (
+            <div className="flex items-center gap-3 p-4 mb-6 text-sm rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400">
+              <CheckCircle2 size={18} className="shrink-0" />
+              <span className="font-medium">{successMsg}</span>
+            </div>
+          )}
+
+          {/* STAGE 1: NOT SIGNED IN WITH CLERK */}
+          {!isSignedIn && (
+            <div className="animate-fade-in space-y-5">
+              <div className="mb-4">
+                <h2 className="text-xl font-bold text-slate-900 dark:text-white">
+                  Step 1: Sign in with Gmail
+                </h2>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                  Authenticate using your Google/Gmail account to access your store or create a new one.
+                </p>
+              </div>
+
+              {/* Clerk Sign In / Sign Up Card */}
+              <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 flex justify-center">
+                {authMode === 'sign_in' ? (
+                  <SignIn 
+                    routing="virtual"
+                    afterSignInUrl="/login"
+                    appearance={{
+                      elements: {
+                        card: "shadow-none bg-transparent w-full",
+                        headerTitle: "text-slate-900 dark:text-white font-bold",
+                        headerSubtitle: "text-slate-500 dark:text-slate-400",
+                        socialButtonsBlockButton: "rounded-xl border border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800",
+                        formButtonPrimary: "bg-indigo-600 hover:bg-indigo-500 rounded-xl",
+                        footerActionLink: "text-indigo-600 dark:text-indigo-400 font-bold"
+                      }
+                    }}
+                  />
+                ) : (
+                  <SignUp 
+                    routing="virtual"
+                    afterSignUpUrl="/login"
+                    appearance={{
+                      elements: {
+                        card: "shadow-none bg-transparent w-full",
+                        headerTitle: "text-slate-900 dark:text-white font-bold",
+                        headerSubtitle: "text-slate-500 dark:text-slate-400",
+                        socialButtonsBlockButton: "rounded-xl border border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800",
+                        formButtonPrimary: "bg-indigo-600 hover:bg-indigo-500 rounded-xl",
+                        footerActionLink: "text-indigo-600 dark:text-indigo-400 font-bold"
+                      }
+                    }}
+                  />
+                )}
+              </div>
+
+              <div className="flex justify-center text-xs text-slate-500">
+                {authMode === 'sign_in' ? (
+                  <p>
+                    Don't have a Gmail account ready?{' '}
+                    <button 
+                      onClick={() => setAuthMode('sign_up')} 
+                      className="font-bold text-indigo-600 dark:text-indigo-400 hover:underline cursor-pointer"
+                    >
+                      Sign Up with Clerk
+                    </button>
                   </p>
-                  <p className="text-[10px] text-slate-500 dark:text-slate-400 truncate">
-                    {clerkUser.primaryEmailAddress?.emailAddress}
+                ) : (
+                  <p>
+                    Already have an account?{' '}
+                    <button 
+                      onClick={() => setAuthMode('sign_in')} 
+                      className="font-bold text-indigo-600 dark:text-indigo-400 hover:underline cursor-pointer"
+                    >
+                      Sign In
+                    </button>
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* CHECKING SHOP STATUS */}
+          {isSignedIn && checkingShop && (
+            <div className="flex flex-col items-center justify-center py-12 space-y-4">
+              <div className="w-12 h-12 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
+              <p className="text-sm font-semibold text-slate-600 dark:text-slate-400">
+                Checking store account for {clerkUser?.primaryEmailAddress?.emailAddress}...
+              </p>
+            </div>
+          )}
+
+          {/* STAGE 2A: NEW GMAIL ACCOUNT -> CREATE SHOP */}
+          {isSignedIn && !checkingShop && shopStatus && !shopStatus.exists && (
+            <div className="animate-fade-in space-y-5">
+              <div className="p-4 rounded-2xl bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800/50 flex items-center gap-3">
+                <div className="p-2.5 text-white bg-indigo-600 rounded-xl">
+                  <Sparkles size={20} />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-indigo-950 dark:text-indigo-200">
+                    Welcome, {clerkUser.firstName || clerkUser.primaryEmailAddress?.emailAddress}!
+                  </h3>
+                  <p className="text-xs text-indigo-700 dark:text-indigo-300">
+                    No store registered for <span className="font-semibold">{clerkUser.primaryEmailAddress?.emailAddress}</span> yet. Let's create your shop!
                   </p>
                 </div>
               </div>
 
-              <button
-                type="button"
-                onClick={() => clerkSignOut ? clerkSignOut() : logout()}
-                className="p-2 text-slate-400 hover:text-rose-500 dark:hover:text-rose-400 transition-colors cursor-pointer rounded-xl hover:bg-slate-200 dark:hover:bg-slate-700/50"
-                title="Sign out of Gmail / Clerk"
-              >
-                <LogOut size={16} />
-              </button>
-            </div>
-          )}
-
-          {/* ================= STAGE 1: CLERK GMAIL AUTH ================= */}
-          {!clerkUser && authMode === 'clerk' && (
-            <div className="space-y-6 animate-fade-in">
-              <div>
-                <h2 className="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white font-title">
-                  Sign In with Gmail
+              <div className="mb-2">
+                <h2 className="text-xl font-extrabold text-slate-900 dark:text-white font-title">
+                  Create Your Store
                 </h2>
-                <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-                  Authenticate your identity using Clerk Google SSO to access your store ERP.
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                  Set up your store name, owner username, and password.
                 </p>
               </div>
 
-              {/* Clerk Sign In Widget */}
-              <div className="flex justify-center p-2 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800">
-                <SignIn 
-                  routing="virtual"
-                  afterSignInUrl="/login"
-                  appearance={{
-                    elements: {
-                      card: "shadow-none bg-transparent border-none p-0 w-full",
-                      headerTitle: "hidden",
-                      headerSubtitle: "hidden"
-                    }
-                  }}
-                />
-              </div>
-            </div>
-          )}
-
-          {/* ================= STAGE 2A: NEW GMAIL ACCOUNT SHOP ONBOARDING ================= */}
-          {authMode === 'onboarding' && (
-            <div className="space-y-6 animate-fade-in">
-              <div className="p-4 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-700 dark:text-indigo-300 flex items-start gap-3">
-                <Sparkles size={20} className="shrink-0 mt-0.5" />
+              <form onSubmit={handleCreateShop} className="space-y-4">
                 <div>
-                  <h4 className="text-sm font-bold">New Account Setup</h4>
-                  <p className="text-xs mt-0.5 text-indigo-600/80 dark:text-indigo-300/80">
-                    No shop is associated with <strong>{clerkUser?.primaryEmailAddress?.emailAddress}</strong>. Create your store now to get started!
-                  </p>
-                </div>
-              </div>
-
-              <div>
-                <h2 className="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white font-title">
-                  Create Your Shop
-                </h2>
-                <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-                  Enter your store details and administrative credentials.
-                </p>
-              </div>
-
-              <form onSubmit={handleOnboardingSubmit} className="space-y-4">
-                <div>
-                  <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">
+                  <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">
                     Shop Name
                   </label>
                   <div className="relative">
-                    <span className="absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400">
+                    <span className="absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400">
                       <Store size={16} />
                     </span>
                     <input
@@ -341,64 +319,45 @@ const Login = () => {
                       onChange={(e) => setShopName(e.target.value)}
                       required
                       placeholder="e.g. Grand Supermarket"
-                      className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 dark:border-slate-800 dark:bg-slate-950 dark:text-white text-sm font-semibold focus:ring-2 focus:ring-indigo-500/20 outline-none"
+                      className="w-full pl-11 pr-4 py-3 rounded-xl border border-slate-200 bg-slate-50/50 text-slate-900 dark:border-slate-800 dark:bg-slate-950/50 dark:text-white focus:outline-none focus:border-indigo-500 font-semibold text-sm"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">
+                  <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">
                     Owner Username
                   </label>
                   <div className="relative">
-                    <span className="absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400">
-                      <User size={16} />
+                    <span className="absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400">
+                      <UserCheck size={16} />
                     </span>
                     <input
                       type="text"
-                      value={newOwnerUsername}
-                      onChange={(e) => setNewOwnerUsername(e.target.value)}
+                      value={ownerUsername}
+                      onChange={(e) => setOwnerUsername(e.target.value)}
                       required
-                      placeholder="e.g. admin or vinayak"
-                      className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 dark:border-slate-800 dark:bg-slate-950 dark:text-white text-sm font-semibold focus:ring-2 focus:ring-indigo-500/20 outline-none"
+                      placeholder="e.g. admin or owner1"
+                      className="w-full pl-11 pr-4 py-3 rounded-xl border border-slate-200 bg-slate-50/50 text-slate-900 dark:border-slate-800 dark:bg-slate-950/50 dark:text-white focus:outline-none focus:border-indigo-500 font-semibold text-sm"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">
+                  <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">
                     Owner Password
                   </label>
                   <div className="relative">
-                    <span className="absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400">
+                    <span className="absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400">
                       <KeyRound size={16} />
                     </span>
                     <input
                       type="password"
-                      value={newOwnerPassword}
-                      onChange={(e) => setNewOwnerPassword(e.target.value)}
+                      value={ownerPassword}
+                      onChange={(e) => setOwnerPassword(e.target.value)}
                       required
                       placeholder="••••••••"
-                      className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 dark:border-slate-800 dark:bg-slate-950 dark:text-white text-sm font-semibold focus:ring-2 focus:ring-indigo-500/20 outline-none"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">
-                    Default Counter 4-Digit PIN (Optional)
-                  </label>
-                  <div className="relative">
-                    <span className="absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400">
-                      <Lock size={16} />
-                    </span>
-                    <input
-                      type="password"
-                      maxLength={4}
-                      value={newCounterPin}
-                      onChange={(e) => setNewCounterPin(e.target.value)}
-                      placeholder="e.g. 1234"
-                      className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 dark:border-slate-800 dark:bg-slate-950 dark:text-white text-sm font-semibold focus:ring-2 focus:ring-indigo-500/20 outline-none tracking-widest"
+                      className="w-full pl-11 pr-4 py-3 rounded-xl border border-slate-200 bg-slate-50/50 text-slate-900 dark:border-slate-800 dark:bg-slate-950/50 dark:text-white focus:outline-none focus:border-indigo-500 font-semibold text-sm"
                     />
                   </div>
                 </div>
@@ -406,110 +365,99 @@ const Login = () => {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full flex items-center justify-center gap-2 py-3 rounded-xl font-bold text-white bg-indigo-600 hover:bg-indigo-500 transition-all cursor-pointer text-sm shadow-lg shadow-indigo-600/20"
+                  className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl font-bold text-white bg-indigo-600 hover:bg-indigo-500 disabled:bg-indigo-800 transition-all cursor-pointer text-sm shadow-lg shadow-indigo-600/20"
                 >
-                  {loading ? 'Creating Shop...' : 'Create Shop & Open ERP'}
+                  {loading ? 'Creating Shop...' : 'Create & Enter Store'}
                   <ArrowRight size={16} />
                 </button>
               </form>
-
-              <div className="pt-2 text-center">
-                <button
-                  type="button"
-                  onClick={() => setAuthMode('shop_hub')}
-                  className="text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:underline cursor-pointer inline-flex items-center gap-1"
-                >
-                  Already have a registered shop? Sign in to existing shop <ArrowRight size={12} />
-                </button>
-              </div>
             </div>
           )}
 
-          {/* ================= STAGE 2B: EXISTING SHOP LOGIN PORTAL ================= */}
-          {authMode === 'shop_hub' && (
-            <div className="space-y-6 animate-fade-in">
-              <div>
-                <h2 className="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white font-title">
-                  {shopInfo.name ? shopInfo.name : 'Store Access Portal'}
-                </h2>
-                <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-                  Select your role to sign into the store system.
-                </p>
-              </div>
-
-              {/* Portal Selector Tabs */}
-              <div className="grid grid-cols-3 gap-1 p-1 rounded-2xl bg-slate-100 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-700/60">
-                <button
-                  type="button"
-                  onClick={() => setPortalTab('owner')}
-                  className={`py-2 px-3 text-xs font-bold rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
-                    portalTab === 'owner' 
-                      ? 'bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-sm' 
-                      : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
-                  }`}
-                >
-                  <ShieldCheck size={14} /> Owner
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setPortalTab('counter')}
-                  className={`py-2 px-3 text-xs font-bold rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
-                    portalTab === 'counter' 
-                      ? 'bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-sm' 
-                      : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
-                  }`}
-                >
-                  <UserCheck size={14} /> Counter
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setPortalTab('pin')}
-                  className={`py-2 px-3 text-xs font-bold rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
-                    portalTab === 'pin' 
-                      ? 'bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-sm' 
-                      : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
-                  }`}
-                >
-                  <Lock size={14} /> 4-Digit PIN
-                </button>
-              </div>
-
-              {/* TAB 1: OWNER PORTAL LOGIN */}
-              {portalTab === 'owner' && (
-                <form onSubmit={handleOwnerSubmit} className="space-y-4 animate-fade-in">
+          {/* STAGE 2B: EXISTING SHOP ACCOUNT -> OWNER OR COUNTER LOGIN */}
+          {isSignedIn && !checkingShop && shopStatus && shopStatus.exists && (
+            <div className="animate-fade-in space-y-5">
+              {/* Store Banner */}
+              <div className="p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/50 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="p-2.5 text-white bg-emerald-600 rounded-xl">
+                    <Store size={20} />
+                  </div>
                   <div>
-                    <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">
+                    <h3 className="text-sm font-bold text-emerald-950 dark:text-emerald-200">
+                      {shopStatus.shop_name}
+                    </h3>
+                    <p className="text-xs text-emerald-700 dark:text-emerald-300">
+                      Owner Email: <span className="font-semibold">{clerkUser?.primaryEmailAddress?.emailAddress}</span>
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Login Portal Toggle */}
+              <div className="flex p-1 bg-slate-100 dark:bg-slate-800/60 rounded-xl">
+                <button
+                  type="button"
+                  onClick={() => { setLoginType('owner'); setError(''); }}
+                  className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                    loginType === 'owner' 
+                      ? 'bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-sm' 
+                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
+                  }`}
+                >
+                  <ShieldCheck size={16} />
+                  Owner Login
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setLoginType('counter'); setError(''); }}
+                  className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                    loginType === 'counter' 
+                      ? 'bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-sm' 
+                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
+                  }`}
+                >
+                  <Monitor size={16} />
+                  Counter Login
+                </button>
+              </div>
+
+              {/* OWNER LOGIN FORM */}
+              {loginType === 'owner' ? (
+                <form onSubmit={handleOwnerLogin} className="space-y-4">
+                  <div>
+                    <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">
                       Owner Username
                     </label>
                     <div className="relative">
-                      <span className="absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400">
+                      <span className="absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400">
                         <User size={16} />
                       </span>
                       <input
                         type="text"
-                        value={ownerUsername}
-                        onChange={(e) => setOwnerUsername(e.target.value)}
+                        value={existingOwnerUsername}
+                        onChange={(e) => setExistingOwnerUsername(e.target.value)}
                         required
-                        className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 dark:border-slate-800 dark:bg-slate-950 dark:text-white text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+                        className="w-full pl-11 pr-4 py-3 rounded-xl border border-slate-200 bg-slate-50/50 text-slate-900 dark:border-slate-800 dark:bg-slate-950/50 dark:text-white focus:outline-none focus:border-indigo-500 font-semibold text-sm"
                         placeholder="Owner username"
                       />
                     </div>
                   </div>
 
                   <div>
-                    <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">
+                    <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">
                       Owner Password
                     </label>
                     <div className="relative">
-                      <span className="absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400">
+                      <span className="absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400">
                         <KeyRound size={16} />
                       </span>
                       <input
                         type="password"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
+                        value={existingOwnerPassword}
+                        onChange={(e) => setExistingOwnerPassword(e.target.value)}
                         required
-                        className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 dark:border-slate-800 dark:bg-slate-950 dark:text-white text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+                        className="w-full pl-11 pr-4 py-3 rounded-xl border border-slate-200 bg-slate-50/50 text-slate-900 dark:border-slate-800 dark:bg-slate-950/50 dark:text-white focus:outline-none focus:border-indigo-500 font-semibold text-sm"
                         placeholder="••••••••"
                       />
                     </div>
@@ -518,42 +466,40 @@ const Login = () => {
                   <button
                     type="submit"
                     disabled={loading}
-                    className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl font-bold text-white bg-indigo-600 hover:bg-indigo-500 transition-all cursor-pointer text-sm shadow-lg shadow-indigo-600/15"
+                    className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl font-bold text-white bg-indigo-600 hover:bg-indigo-500 disabled:bg-indigo-800 transition-all cursor-pointer text-sm shadow-lg shadow-indigo-600/20"
                   >
-                    {loading ? 'Authenticating...' : 'Sign In to Owner ERP'}
+                    {loading ? 'Authenticating Owner...' : 'Sign In as Store Owner'}
                     <ArrowRight size={16} />
                   </button>
                 </form>
-              )}
-
-              {/* TAB 2: COUNTER WORKER LOGIN */}
-              {portalTab === 'counter' && (
-                <form onSubmit={handleCounterSubmit} className="space-y-4 animate-fade-in">
+              ) : (
+                /* COUNTER LOGIN FORM */
+                <form onSubmit={handleCounterLogin} className="space-y-4">
                   <div>
-                    <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">
-                      Counter Worker Username
+                    <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">
+                      Counter / Cashier Username
                     </label>
                     <div className="relative">
-                      <span className="absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400">
-                        <User size={16} />
+                      <span className="absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400">
+                        <Monitor size={16} />
                       </span>
                       <input
                         type="text"
                         value={counterUsername}
                         onChange={(e) => setCounterUsername(e.target.value)}
                         required
-                        className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 dark:border-slate-800 dark:bg-slate-950 dark:text-white text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
-                        placeholder="Cashier username (e.g. counter1)"
+                        className="w-full pl-11 pr-4 py-3 rounded-xl border border-slate-200 bg-slate-50/50 text-slate-900 dark:border-slate-800 dark:bg-slate-950/50 dark:text-white focus:outline-none focus:border-indigo-500 font-semibold text-sm"
+                        placeholder="e.g. cashier1"
                       />
                     </div>
                   </div>
 
                   <div>
-                    <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">
-                      Password
+                    <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">
+                      Counter Password
                     </label>
                     <div className="relative">
-                      <span className="absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400">
+                      <span className="absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400">
                         <KeyRound size={16} />
                       </span>
                       <input
@@ -561,7 +507,7 @@ const Login = () => {
                         value={counterPassword}
                         onChange={(e) => setCounterPassword(e.target.value)}
                         required
-                        className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 dark:border-slate-800 dark:bg-slate-950 dark:text-white text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+                        className="w-full pl-11 pr-4 py-3 rounded-xl border border-slate-200 bg-slate-50/50 text-slate-900 dark:border-slate-800 dark:bg-slate-950/50 dark:text-white focus:outline-none focus:border-indigo-500 font-semibold text-sm"
                         placeholder="••••••••"
                       />
                     </div>
@@ -570,84 +516,48 @@ const Login = () => {
                   <button
                     type="submit"
                     disabled={loading}
-                    className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl font-bold text-white bg-indigo-600 hover:bg-indigo-500 transition-all cursor-pointer text-sm shadow-lg shadow-indigo-600/15"
+                    className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl font-bold text-white bg-emerald-600 hover:bg-emerald-500 disabled:bg-emerald-800 transition-all cursor-pointer text-sm shadow-lg shadow-emerald-600/20"
                   >
-                    {loading ? 'Authenticating...' : 'Sign In to Counter POS'}
+                    {loading ? 'Authenticating Counter...' : 'Sign In as Counter Cashier'}
                     <ArrowRight size={16} />
                   </button>
                 </form>
               )}
-
-              {/* TAB 3: 4-DIGIT POS PIN LOGIN */}
-              {portalTab === 'pin' && (
-                <form onSubmit={handlePinSubmit} className="space-y-4 animate-fade-in">
-                  <div className="p-3.5 rounded-xl bg-slate-100 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/50 text-center">
-                    <p className="text-xs text-slate-600 dark:text-slate-400 font-medium">
-                      POS Register ID: <span className="font-bold text-indigo-600 dark:text-indigo-400">{kioskShopId || shopInfo.owner_username || ownerUsername || 'Default Shop'}</span>
-                    </p>
-                  </div>
-
-                  <div>
-                    <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1 text-center">
-                      Enter 4-Digit Shift PIN
-                    </label>
-                    <div className="relative max-w-xs mx-auto">
-                      <input
-                        type="password"
-                        maxLength={4}
-                        value={pin}
-                        onChange={(e) => setPin(e.target.value)}
-                        required
-                        autoFocus
-                        className="w-full py-3.5 text-center text-2xl tracking-[0.5em] font-mono rounded-xl border border-slate-200 bg-slate-50 text-slate-900 dark:border-slate-800 dark:bg-slate-950 dark:text-white font-extrabold focus:outline-none focus:ring-2 focus:ring-indigo-500/30"
-                        placeholder="••••"
-                      />
-                    </div>
-                  </div>
-
-                  <button
-                    type="submit"
-                    disabled={loading}
-                    className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl font-bold text-white bg-indigo-600 hover:bg-indigo-500 transition-all cursor-pointer text-sm shadow-lg shadow-indigo-600/15"
-                  >
-                    {loading ? 'Verifying PIN...' : 'Open POS Checkout'}
-                    <ArrowRight size={16} />
-                  </button>
-                </form>
-              )}
-
-              <div className="pt-2 text-center">
-                <button
-                  type="button"
-                  onClick={() => setAuthMode('onboarding')}
-                  className="text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:underline cursor-pointer inline-flex items-center gap-1"
-                >
-                  Need to create a new shop for this account? Create Shop <ArrowRight size={12} />
-                </button>
-              </div>
             </div>
           )}
-
         </div>
       </div>
 
-      {/* Right Pane: Graphic Illustration */}
-      <div className="hidden lg:flex lg:w-1/2 bg-slate-100 dark:bg-slate-950 items-center justify-center p-12 relative overflow-hidden transition-colors duration-300">
-        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-indigo-500/5 rounded-full blur-[100px] pointer-events-none"></div>
-        <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-emerald-500/5 rounded-full blur-[100px] pointer-events-none"></div>
+      {/* Right Container: Visual Art & Information */}
+      <div className="hidden lg:flex lg:w-1/2 bg-slate-100 dark:bg-slate-950 items-center justify-center p-12 relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-indigo-500/10 rounded-full blur-[100px] pointer-events-none"></div>
+        <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-emerald-500/10 rounded-full blur-[100px] pointer-events-none"></div>
 
         <div className="relative max-w-md text-center z-10">
-          <img 
-            src="/assets/login_illustration.jpg" 
-            alt="Store Management Illustration" 
-            className="w-full max-w-sm mx-auto mb-8 rounded-2xl shadow-xl shadow-slate-900/5 border border-slate-200/50 dark:border-slate-800/50 object-cover aspect-square interactive-image"
-          />
-          <h3 className="text-2xl font-bold tracking-tight text-slate-800 dark:text-white font-title">
-            Smart & Multi-Tenant Retail Operations
+          <div className="w-24 h-24 mx-auto mb-8 bg-gradient-to-tr from-indigo-600 to-indigo-400 rounded-3xl flex items-center justify-center text-white shadow-2xl shadow-indigo-600/30">
+            <ShoppingBag size={48} />
+          </div>
+          
+          <h3 className="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white font-title">
+            Smart & Multi-Tenant Store ERP
           </h3>
-          <p className="text-slate-500 dark:text-slate-400 mt-3 text-sm leading-relaxed max-w-sm mx-auto font-sans">
-            Real-world Clerk Google authentication, multi-tenant shop isolation, high-speed cashier checkout, and business intelligence.
+          
+          <p className="text-slate-600 dark:text-slate-400 mt-4 text-sm leading-relaxed max-w-sm mx-auto">
+            Powered by real-world Clerk authentication. Manage multiple store branches, assign counter worker accounts, and oversee billing & stock analytics seamlessly.
           </p>
+
+          <div className="mt-8 grid grid-cols-2 gap-3 text-left">
+            <div className="p-4 rounded-xl bg-white/60 dark:bg-slate-900/60 border border-slate-200/50 dark:border-slate-800/50 backdrop-blur-md">
+              <ShieldCheck className="text-indigo-600 dark:text-indigo-400 mb-2" size={20} />
+              <h4 className="text-xs font-bold text-slate-900 dark:text-white">Owner Portal</h4>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">Full control over inventory, expenses, analytics & staff.</p>
+            </div>
+            <div className="p-4 rounded-xl bg-white/60 dark:bg-slate-900/60 border border-slate-200/50 dark:border-slate-800/50 backdrop-blur-md">
+              <Monitor className="text-emerald-600 dark:text-emerald-400 mb-2" size={20} />
+              <h4 className="text-xs font-bold text-slate-900 dark:text-white">Counter Billing</h4>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">Fast checkout billing & POS transactions for cashiers.</p>
+            </div>
+          </div>
         </div>
       </div>
     </div>

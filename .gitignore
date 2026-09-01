@@ -30,7 +30,3 @@ Thumbs.db
 
 # Local Netlify folder
 .netlify
-logs/
-backend/logs/
-reports_test/
-
