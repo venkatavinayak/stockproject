@@ -479,14 +479,24 @@ async def clerk_login(data: ClerkLoginPayload, response: Response):
     return {"access_token": access_token, "token_type": "bearer"}
 
 @router.get("/check-shop")
-async def check_shop(email: str, clerk_id: Optional[str] = None):
-    clean_email = email.lower().strip()
-    query_list = [{"email": clean_email}, {"username": clean_email}]
-    if clerk_id:
-        query_list.append({"clerk_user_id": clerk_id})
+async def check_shop(email: Optional[str] = None, clerk_id: Optional[str] = None):
+    clean_email = (email or "").lower().strip()
+    clean_clerk_id = (clerk_id or "").strip()
+
+    if not clean_email and not clean_clerk_id:
+        return {"exists": False}
+
+    query_list = []
+    if clean_email and clean_email not in ["null", "undefined"]:
+        query_list.extend([{"email": clean_email}, {"username": clean_email}])
+    if clean_clerk_id and clean_clerk_id not in ["null", "undefined"]:
+        query_list.append({"clerk_user_id": clean_clerk_id})
+
+    if not query_list:
+        return {"exists": False}
 
     user = await User.find_one({"$or": query_list})
-    if user:
+    if user and getattr(user, "username", None):
         settings = await StoreSettings.find_one(StoreSettings.owner_username == user.owner)
         shop_name = settings.store_name if settings else (user.full_name or "Smart Store")
         return {

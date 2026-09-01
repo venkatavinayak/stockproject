@@ -81,7 +81,7 @@ const Login = () => {
         
         try {
           const res = await authAPI.checkShop(userEmail, clerkId);
-          if (res.exists) {
+          if (res && res.exists) {
             setShopExists(true);
             setShopInfo({ name: res.shop_name, owner_username: res.owner_username });
             setAuthMode('shop_hub');
@@ -89,11 +89,15 @@ const Login = () => {
           } else {
             setShopExists(false);
             setAuthMode('onboarding');
-            setNewOwnerUsername(userEmail.split('@')[0] || 'admin');
+            setShopName(clerkUser.firstName ? `${clerkUser.firstName}'s Store` : 'My Store');
+            setNewOwnerUsername(userEmail.split('@')[0] || 'owner');
           }
         } catch (err) {
           console.error("Shop check error:", err);
-          setAuthMode('shop_hub');
+          setShopExists(false);
+          setAuthMode('onboarding');
+          setShopName(clerkUser.firstName ? `${clerkUser.firstName}'s Store` : 'My Store');
+          setNewOwnerUsername(userEmail.split('@')[0] || 'owner');
         } finally {
           setCheckingShop(false);
         }
@@ -408,6 +412,16 @@ const Login = () => {
                   <ArrowRight size={16} />
                 </button>
               </form>
+
+              <div className="pt-2 text-center">
+                <button
+                  type="button"
+                  onClick={() => setAuthMode('shop_hub')}
+                  className="text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:underline cursor-pointer inline-flex items-center gap-1"
+                >
+                  Already have a registered shop? Sign in to existing shop <ArrowRight size={12} />
+                </button>
+              </div>
             </div>
           )}
 
@@ -601,6 +615,16 @@ const Login = () => {
                   </button>
                 </form>
               )}
+
+              <div className="pt-2 text-center">
+                <button
+                  type="button"
+                  onClick={() => setAuthMode('onboarding')}
+                  className="text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:underline cursor-pointer inline-flex items-center gap-1"
+                >
+                  Need to create a new shop for this account? Create Shop <ArrowRight size={12} />
+                </button>
+              </div>
             </div>
           )}
 
