@@ -37,16 +37,20 @@ api.interceptors.response.use((response) => {
 });
 
 export const authAPI = {
-  checkShop: async (email) => {
-    const response = await api.get('/auth/check-shop', { params: { email } });
+  checkShop: async (email = null, clerk_id = null) => {
+    const response = await api.get('/auth/check-shop', { params: { email, clerk_id } });
     return response.data;
   },
   clerkLogin: async (email, clerk_id, shop_name = null, role = 'admin', password = null, owner_username = null) => {
     const response = await api.post('/auth/clerk-login', { email, clerk_id, shop_name, role, password, owner_username });
     return response.data;
   },
-  registerShop: async (shop_name, owner_username, email, password) => {
-    const response = await api.post('/auth/register-shop', { shop_name, owner_username, email, password });
+  registerShop: async (shop_name, owner_username, email, password, clerk_id = null) => {
+    const response = await api.post('/auth/register-shop', { shop_name, owner_username, email, password, clerk_id });
+    return response.data;
+  },
+  counterLogin: async (shop_code, username, password) => {
+    const response = await api.post('/auth/counter-login', { shop_code, username, password });
     return response.data;
   },
   login: async (username, password) => {

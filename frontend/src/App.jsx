@@ -9,6 +9,7 @@ import Navbar from './components/Navbar';
 
 // Import Pages
 import Login from './pages/Login';
+import CounterLogin from './pages/CounterLogin';
 import Dashboard from './pages/Dashboard';
 import Billing from './pages/Billing';
 import Inventory from './pages/Inventory';
@@ -71,8 +72,9 @@ function App() {
       <AuthProvider>
         <ThemeProvider>
           <Routes>
-            {/* Public Login Route */}
+            {/* Public Login Routes */}
             <Route path="/login" element={<Login />} />
+            <Route path="/pos" element={<CounterLogin />} />
 
             {/* Protected Store ERP Pages */}
             <Route element={<PrivateRoute />}>

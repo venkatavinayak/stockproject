@@ -295,16 +295,24 @@ class ShopRegister(BaseModel):
     owner_username: str
     email: str
     password: str
+    clerk_id: Optional[str] = None
 
 @router.post("/register-shop")
 async def register_shop(data: ShopRegister):
     clean_email = data.email.lower().strip()
     owner_uname = data.owner_username.strip()
     
-    # Check if a user with this username or email already exists
-    existing = await User.find_one({"$or": [{"username": owner_uname}, {"email": clean_email}, {"username": clean_email}]})
+    # Check if a user with this username, email, or clerk_id already exists
+    existing = await User.find_one({
+        "$or": [
+            {"username": owner_uname}, 
+            {"email": clean_email}, 
+            {"username": clean_email},
+            *([{"clerk_user_id": data.clerk_id}] if data.clerk_id else [])
+        ]
+    })
     if existing:
-        raise HTTPException(status_code=400, detail="Owner username or email is already registered")
+        raise HTTPException(status_code=400, detail="Owner username, email, or Clerk account is already registered")
         
     # Create the owner user (admin role)
     new_user = User(
@@ -314,7 +322,8 @@ async def register_shop(data: ShopRegister):
         is_active=True,
         email=clean_email,
         full_name=data.shop_name,
-        owner_username=owner_uname
+        owner_username=owner_uname,
+        clerk_user_id=data.clerk_id
     )
     await new_user.insert()
     
@@ -344,7 +353,11 @@ async def register_shop(data: ShopRegister):
     )
     await audit.insert()
     
-    access_token = create_access_token(data={"sub": new_user.username})
+    access_token = create_access_token(data={
+        "sub": new_user.username,
+        "role": new_user.role,
+        "owner_username": owner_uname
+    })
     return {
         "message": "Shop registered successfully!",
         "access_token": access_token,
@@ -365,7 +378,14 @@ async def clerk_login(data: ClerkLoginPayload):
     clean_email = data.email.lower().strip()
     target_username = data.owner_username.strip() if data.owner_username else clean_email
 
-    user = await User.find_one({"$or": [{"username": target_username}, {"email": clean_email}, {"username": clean_email}]})
+    user = await User.find_one({
+        "$or": [
+            {"clerk_user_id": data.clerk_id},
+            {"username": target_username}, 
+            {"email": clean_email}, 
+            {"username": clean_email}
+        ]
+    })
     if not user:
         if not data.shop_name:
             raise HTTPException(status_code=404, detail="No shop found for this account. Please create a shop.")
@@ -377,7 +397,8 @@ async def clerk_login(data: ClerkLoginPayload):
             is_active=True,
             email=clean_email,
             full_name=data.shop_name or "Store Owner",
-            owner_username=target_username
+            owner_username=target_username,
+            clerk_user_id=data.clerk_id
         )
         await user.insert()
         
@@ -406,6 +427,9 @@ async def clerk_login(data: ClerkLoginPayload):
         )
         await audit.insert()
     else:
+        # Bind clerk_user_id if not previously attached
+        if not user.clerk_user_id:
+            user.clerk_user_id = data.clerk_id
         if data.password:
             if not verify_password(data.password, user.hashed_password):
                 raise HTTPException(
@@ -415,15 +439,31 @@ async def clerk_login(data: ClerkLoginPayload):
         user.last_login = datetime.utcnow()
         await user.save()
         
-    access_token = create_access_token(data={"sub": user.username})
+    access_token = create_access_token(data={
+        "sub": user.username,
+        "role": user.role,
+        "owner_username": user.owner
+    })
     return {"access_token": access_token, "token_type": "bearer", "owner_username": user.owner}
 
 @router.get("/check-shop")
-async def check_shop(email: str):
-    clean_email = email.lower().strip()
-    user = await User.find_one({"$or": [{"username": clean_email}, {"email": clean_email}, {"owner_username": clean_email}]})
+async def check_shop(email: Optional[str] = None, clerk_id: Optional[str] = None):
+    query_conditions = []
+    if clerk_id:
+        query_conditions.append({"clerk_user_id": clerk_id.strip()})
+    if email:
+        clean_email = email.lower().strip()
+        query_conditions.extend([
+            {"username": clean_email},
+            {"email": clean_email},
+            {"owner_username": clean_email}
+        ])
+    
+    if not query_conditions:
+        raise HTTPException(status_code=400, detail="Email or clerk_id query param required")
+
+    user = await User.find_one({"$or": query_conditions})
     if user:
-        # Find store settings for shop name if possible
         from backend.app.models.settings import StoreSettings
         settings = await StoreSettings.find_one(StoreSettings.owner_username == user.owner)
         shop_name = settings.store_name if settings else (user.full_name or "Smart Store")
@@ -431,7 +471,53 @@ async def check_shop(email: str):
             "exists": True,
             "shop_name": shop_name,
             "owner_username": user.owner,
-            "email": user.email or clean_email
+            "email": user.email or email
         }
     return {"exists": False}
+
+class CounterLoginRequest(BaseModel):
+    shop_code: str  # Owner username
+    username: str   # Counter username
+    password: str
+
+@router.post("/counter-login")
+async def counter_login(data: CounterLoginRequest):
+    shop_code = data.shop_code.strip()
+    counter_name = data.username.strip()
+    
+    scoped_username = counter_name if ":" in counter_name else f"{shop_code}:{counter_name}"
+    
+    user = await User.find_one({"$or": [{"username": scoped_username}, {"username": counter_name, "owner_username": shop_code}]})
+    if not user or not verify_password(data.password, user.hashed_password):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect Shop Code, Counter Username, or Password"
+        )
+    if not user.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Inactive counter account. Please contact store owner."
+        )
+
+    user.last_login = datetime.utcnow()
+    await user.save()
+
+    audit = AuditLog(
+        username=user.username,
+        action="COUNTER_LOGIN",
+        details=f"Counter cashier logged into shop: {shop_code}",
+        owner_username=shop_code
+    )
+    await audit.insert()
+
+    access_token = create_access_token(data={
+        "sub": user.username,
+        "role": user.role,
+        "owner_username": user.owner,
+        "can_manage_stock": user.can_manage_stock,
+        "can_view_expenses": user.can_view_expenses,
+        "can_view_analytics": user.can_view_analytics
+    })
+    return {"access_token": access_token, "token_type": "bearer", "owner_username": user.owner}
+
 

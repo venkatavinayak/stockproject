@@ -117,9 +117,34 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const registerShop = async (shop_name, owner_username, email, password) => {
+  const loginCounterDirect = async (shop_code, counter_username, password) => {
     try {
-      const data = await authAPI.registerShop(shop_name, owner_username, email, password);
+      const data = await authAPI.counterLogin(shop_code, counter_username, password);
+      localStorage.setItem('smartstock_token', data.access_token);
+      setToken(data.access_token);
+
+      const profile = await authAPI.getMe();
+      const userData = {
+        username: counter_username,
+        full_username: profile.username,
+        role: profile.role,
+        can_manage_stock: profile.can_manage_stock,
+        can_view_expenses: profile.can_view_expenses,
+        can_view_analytics: profile.can_view_analytics,
+        full_name: profile.full_name,
+        email: profile.email
+      };
+      localStorage.setItem('smartstock_user', JSON.stringify(userData));
+      setUser(userData);
+      return true;
+    } catch (err) {
+      throw new Error(err.response?.data?.detail || 'Incorrect Shop Code, Counter Username, or Password');
+    }
+  };
+
+  const registerShop = async (shop_name, owner_username, email, password, clerk_id = null) => {
+    try {
+      const data = await authAPI.registerShop(shop_name, owner_username, email, password, clerk_id);
       if (data.access_token) {
         localStorage.setItem('smartstock_token', data.access_token);
         setToken(data.access_token);
@@ -152,7 +177,7 @@ export const AuthProvider = ({ children }) => {
 
   return (
     <AuthContext.Provider value={{
-      token, setToken, user, setUser, login, loginOwner, loginCounter, registerShop, logout, isAuthenticated: !!token, loading
+      token, setToken, user, setUser, login, loginOwner, loginCounter, loginCounterDirect, registerShop, logout, isAuthenticated: !!token, loading
     }}>
       {children}
     </AuthContext.Provider>
@@ -160,4 +185,5 @@ export const AuthProvider = ({ children }) => {
 };
 
 export const useAuth = () => useContext(AuthContext);
+
 

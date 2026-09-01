@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useUser, useClerk, SignIn, SignUp } from '@clerk/clerk-react';
 import { authAPI } from '../services/api';
 import { 
@@ -52,7 +52,7 @@ const Login = () => {
         setCheckingShop(true);
         setError('');
         try {
-          const res = await authAPI.checkShop(primaryEmail);
+          const res = await authAPI.checkShop(primaryEmail, clerkUser.id);
           setShopStatus(res);
           if (res.exists) {
             setExistingOwnerUsername(res.owner_username || 'admin');
@@ -88,7 +88,7 @@ const Login = () => {
     }
 
     try {
-      await registerShop(shopName, ownerUsername, primaryEmail, ownerPassword);
+      await registerShop(shopName, ownerUsername, primaryEmail, ownerPassword, clerkUser?.id);
       setSuccessMsg('Shop created successfully! Directing to store dashboard...');
       setTimeout(() => {
         navigate('/');
@@ -264,6 +264,20 @@ const Login = () => {
                     </button>
                   </p>
                 )}
+              </div>
+
+              {/* Direct POS Cashier Login Prompt */}
+              <div className="mt-6 p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-center">
+                <p className="text-xs font-semibold text-emerald-700 dark:text-emerald-300">
+                  Are you a Cashier or Counter Staff?
+                </p>
+                <Link
+                  to="/pos"
+                  className="mt-2 inline-flex items-center justify-center gap-2 px-4 py-2 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-500 rounded-xl transition-all shadow-md shadow-emerald-600/20"
+                >
+                  <Monitor size={14} />
+                  Open Counter POS Login (/pos)
+                </Link>
               </div>
             </div>
           )}
