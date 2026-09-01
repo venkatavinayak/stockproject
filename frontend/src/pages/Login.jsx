@@ -725,18 +725,12 @@ const Login = () => {
             ) : (
               /* STEP 2: VERIFY OTP & RESET PASSWORD */
               <form onSubmit={handleResetPasswordOTP} className="space-y-4">
-                {otpDemoCode && (
-                  <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs font-semibold text-amber-700 dark:text-amber-400 flex items-center justify-between">
-                    <span>Demo OTP Code: <strong className="font-mono text-sm">{otpDemoCode}</strong></span>
-                    <button 
-                      type="button" 
-                      onClick={() => setOtpCode(otpDemoCode)}
-                      className="underline text-[11px] cursor-pointer"
-                    >
-                      Auto-fill
-                    </button>
-                  </div>
-                )}
+                <div className="p-3.5 rounded-2xl bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800 text-xs font-medium text-indigo-900 dark:text-indigo-300 flex items-start gap-2.5">
+                  <Mail size={18} className="shrink-0 text-indigo-600 dark:text-indigo-400 mt-0.5" />
+                  <span>
+                    A 6-digit OTP code has been sent to your registered email address <strong className="font-bold text-slate-900 dark:text-white font-mono">{forgotEmail}</strong>. Please check your inbox and spam folder.
+                  </span>
+                </div>
 
                 <div>
                   <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">

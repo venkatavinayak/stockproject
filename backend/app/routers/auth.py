@@ -631,6 +631,8 @@ async def counter_login(data: CounterLoginRequest):
         "shop_code": shop_code
     }
 
+from backend.app.utils.mailer import send_otp_email
+
 class RequestOTPPayload(BaseModel):
     email: str
 
@@ -640,23 +642,26 @@ async def request_otp(data: RequestOTPPayload):
     user = await User.find_one({"$or": [{"email": clean_email}, {"username": clean_email}]})
     if not user:
         # Return success message to avoid leaking user existence
-        return {"message": "If your email is registered, a 6-digit OTP has been sent."}
+        return {"message": "If your email is registered, a 6-digit OTP code has been sent."}
 
     otp = generate_otp()
     user.reset_otp = otp
     user.otp_expiry = datetime.utcnow() + timedelta(minutes=10)
     await user.save()
 
+    # Dispatch real email via SMTP
+    target_email = user.email or clean_email
+    email_sent = await send_otp_email(target_email, otp)
+
     audit = AuditLog(
         username=user.username,
         action="REQUEST_OTP",
-        details=f"Requested password reset OTP for email: {clean_email}"
+        details=f"Requested password reset OTP for email: {clean_email} (Sent: {email_sent})"
     )
     await audit.insert()
 
     return {
-        "message": f"6-digit OTP code has been sent to {clean_email}.",
-        "otp_demo": otp  # Included for seamless testing & display
+        "message": f"A 6-digit OTP code has been sent to your registered email address ({clean_email}). Please check your inbox and spam folder."
     }
 
 class ResetPasswordOTPPayload(BaseModel):
