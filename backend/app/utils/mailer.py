@@ -3,43 +3,57 @@ import os
 import logging
 import asyncio
 from email.message import EmailMessage
+from typing import Optional
 
 logger = logging.getLogger(__name__)
 
-SMTP_HOST = os.environ.get("SMTP_HOST", os.environ.get("SMTP_SERVER", "smtp.gmail.com"))
-SMTP_PORT = int(os.environ.get("SMTP_PORT", 587))
-SMTP_USER = os.environ.get("SMTP_USER", os.environ.get("SMTP_USERNAME", "pvenkatavinayak@gmail.com"))
-SMTP_PASS = os.environ.get("SMTP_PASS", os.environ.get("SMTP_PASSWORD", "rxwdvtatiamhtzel"))
-SMTP_FROM = os.environ.get("SMTP_FROM", os.environ.get("SMTP_FROM_EMAIL", "pvenkatavinayak@gmail.com"))
+# Default Gmail App Password provided by store owner
+DEFAULT_GMAIL_APP_PASS = os.environ.get("SMTP_PASS", os.environ.get("SMTP_PASSWORD", "rxwdvtatiamhtzel")).replace(" ", "")
+DEFAULT_SMTP_HOST = os.environ.get("SMTP_HOST", os.environ.get("SMTP_SERVER", "smtp.gmail.com"))
+DEFAULT_SMTP_PORT = int(os.environ.get("SMTP_PORT", 587))
+DEFAULT_SMTP_USER = os.environ.get("SMTP_USER", os.environ.get("SMTP_USERNAME", ""))
 
-def _send_sync_email(to_email: str, subject: str, html_body: str) -> bool:
-    """Synchronous helper function to send email via SMTP."""
+def _send_sync_email(to_email: str, subject: str, html_body: str, smtp_config: Optional[dict] = None) -> bool:
+    """Synchronous helper function to send email via SMTP using Gmail TLS."""
+    cfg = smtp_config or {}
+    
+    host = cfg.get("smtp_host") or DEFAULT_SMTP_HOST
+    port = int(cfg.get("smtp_port") or DEFAULT_SMTP_PORT)
+    password = (cfg.get("smtp_password") or DEFAULT_GMAIL_APP_PASS).replace(" ", "")
+    user = cfg.get("smtp_user") or DEFAULT_SMTP_USER or to_email
+    sender = cfg.get("smtp_sender") or os.environ.get("SMTP_FROM", user or to_email)
+
     msg = EmailMessage()
     msg['Subject'] = subject
-    msg['From'] = SMTP_FROM
+    msg['From'] = sender
     msg['To'] = to_email
     msg.set_content("Please enable HTML to view this message.")
     msg.add_alternative(html_body, subtype='html')
 
-    try:
-        if not SMTP_USER or not SMTP_PASS:
-            logger.warning(
-                f"[MAILER] SMTP credentials not configured (SMTP_USER/SMTP_PASS). "
-                f"Email dispatch to {to_email} skipped. Logged OTP securely for system debugging."
-            )
-            return False
+    # Candidate SMTP usernames to try for Gmail authentication
+    candidates = []
+    if user:
+        candidates.append(user)
+    if to_email not in candidates:
+        candidates.append(to_email)
 
-        with smtplib.SMTP(SMTP_HOST, SMTP_PORT, timeout=10) as server:
-            server.starttls()
-            server.login(SMTP_USER, SMTP_PASS)
-            server.send_message(msg)
-        logger.info(f"[MAILER] Email successfully sent to {to_email}")
-        return True
-    except Exception as e:
-        logger.error(f"[MAILER] Failed to send email to {to_email}: {str(e)}")
-        return False
+    for auth_user in candidates:
+        try:
+            logger.info(f"[MAILER] Attempting SMTP send to {to_email} via {host}:{port} with user {auth_user}")
+            msg.replace_header('From', auth_user)
+            with smtplib.SMTP(host, port, timeout=12) as server:
+                server.starttls()
+                server.login(auth_user, password)
+                server.send_message(msg)
+            logger.info(f"[MAILER] Real OTP email successfully sent to {to_email}")
+            return True
+        except Exception as e:
+            logger.warning(f"[MAILER] SMTP send attempt with user '{auth_user}' failed: {str(e)}")
 
-async def send_otp_email(to_email: str, otp_code: str) -> bool:
+    logger.error(f"[MAILER] All SMTP send attempts to {to_email} failed.")
+    return False
+
+async def send_otp_email(to_email: str, otp_code: str, smtp_config: Optional[dict] = None) -> bool:
     """Asynchronously sends a password reset OTP email."""
     subject = "SmartStore AI - Password Reset OTP Code"
     html_body = f"""
@@ -83,4 +97,4 @@ async def send_otp_email(to_email: str, otp_code: str) -> bool:
     </html>
     """
 
-    return await asyncio.to_thread(_send_sync_email, to_email, subject, html_body)
+    return await asyncio.to_thread(_send_sync_email, to_email, subject, html_body, smtp_config)

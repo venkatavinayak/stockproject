@@ -651,7 +651,21 @@ async def request_otp(data: RequestOTPPayload):
 
     # Dispatch real email via SMTP
     target_email = user.email or clean_email
-    email_sent = await send_otp_email(target_email, otp)
+    
+    # Check if custom store settings specify SMTP configuration
+    from backend.app.models.settings import StoreSettings
+    settings = await StoreSettings.find_one(StoreSettings.owner_username == user.owner)
+    smtp_cfg = None
+    if settings and settings.smtp_host and settings.smtp_password:
+        smtp_cfg = {
+            "smtp_host": settings.smtp_host,
+            "smtp_port": settings.smtp_port,
+            "smtp_user": settings.smtp_user,
+            "smtp_password": settings.smtp_password,
+            "smtp_sender": settings.smtp_sender
+        }
+
+    email_sent = await send_otp_email(target_email, otp, smtp_cfg)
 
     audit = AuditLog(
         username=user.username,
@@ -660,14 +674,9 @@ async def request_otp(data: RequestOTPPayload):
     )
     await audit.insert()
 
-    res_payload = {
-        "message": f"A 6-digit OTP code has been generated for {clean_email}.",
-        "email_sent": email_sent
+    return {
+        "message": f"A 6-digit OTP code has been sent to your registered email address ({clean_email}). Please check your inbox and spam folder."
     }
-    if not email_sent:
-        res_payload["otp_code"] = otp
-
-    return res_payload
 
 class ResetPasswordOTPPayload(BaseModel):
     email: str
