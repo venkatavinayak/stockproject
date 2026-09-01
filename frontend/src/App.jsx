@@ -41,24 +41,41 @@ const AdminRoute = () => {
   return isAdmin ? <Outlet /> : <Navigate to="/billing" replace />;
 };
 
-// Layout Shell for Authenticated Pages
 const MainLayout = () => {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [isMobileOpen, setIsMobileOpen] = useState(false);
 
   const toggleSidebar = () => {
     setIsSidebarCollapsed(!isSidebarCollapsed);
+    setIsMobileOpen(!isMobileOpen);
+  };
+
+  const closeMobile = () => {
+    setIsMobileOpen(false);
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 transition-colors duration-300 dark:bg-slate-950 dark:text-slate-100">
+    <div className="min-h-screen bg-slate-50 text-slate-900 transition-colors duration-300 dark:bg-slate-950 dark:text-slate-100 overflow-x-hidden">
+      {/* Mobile Backdrop Overlay */}
+      {isMobileOpen && (
+        <div 
+          onClick={closeMobile}
+          className="fixed inset-0 z-40 bg-slate-950/60 backdrop-blur-sm md:hidden animate-fade-in"
+        />
+      )}
+
       {/* Sidebar Navigation */}
-      <Sidebar isCollapsed={isSidebarCollapsed} />
+      <Sidebar 
+        isCollapsed={isSidebarCollapsed} 
+        isMobileOpen={isMobileOpen}
+        closeMobile={closeMobile}
+      />
 
       {/* Main Content Area */}
-      <div className={`flex flex-col min-h-screen transition-all duration-300 ${isSidebarCollapsed ? 'pl-20' : 'pl-64'}`}>
+      <div className={`flex flex-col min-h-screen transition-all duration-300 ${isSidebarCollapsed ? 'md:pl-20' : 'md:pl-64'} pl-0`}>
         <Navbar toggleSidebar={toggleSidebar} isSidebarCollapsed={isSidebarCollapsed} />
         
-        <main className="flex-1 p-6 md:p-8 animate-fade-in">
+        <main className="flex-1 p-4 sm:p-6 md:p-8 animate-fade-in max-w-full overflow-x-hidden">
           <Outlet />
         </main>
       </div>

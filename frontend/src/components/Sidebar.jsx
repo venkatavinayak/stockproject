@@ -7,7 +7,7 @@ import {
   Database, Bell, AlertTriangle, Users as UsersIcon
 } from 'lucide-react';
 
-const Sidebar = ({ isCollapsed, toggleCollapse }) => {
+const Sidebar = ({ isCollapsed, isMobileOpen, closeMobile }) => {
   const { user } = useAuth();
   const isAdmin = user?.role === 'admin';
 
@@ -26,8 +26,9 @@ const Sidebar = ({ isCollapsed, toggleCollapse }) => {
 
   return (
     <aside 
-      className={`fixed top-0 left-0 z-40 h-screen border-r transition-all duration-300 ease-in-out
-        ${isCollapsed ? 'w-20' : 'w-64'} 
+      className={`fixed top-0 left-0 z-50 h-screen border-r transition-all duration-300 ease-in-out
+        ${isMobileOpen ? 'translate-x-0 w-64' : '-translate-x-full md:translate-x-0'}
+        ${isCollapsed ? 'md:w-20' : 'md:w-64'} 
         bg-white border-slate-200 text-slate-800
         dark:bg-slate-950 dark:border-slate-800 dark:text-slate-200`}
     >
@@ -38,7 +39,7 @@ const Sidebar = ({ isCollapsed, toggleCollapse }) => {
             <div className="p-2 text-white bg-indigo-600 rounded-lg shadow-md shrink-0">
               <Package size={20} />
             </div>
-            {!isCollapsed && (
+            {(!isCollapsed || isMobileOpen) && (
               <span className="font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-violet-500 font-title text-md">
                 Smart Store Ai
               </span>
@@ -54,6 +55,7 @@ const Sidebar = ({ isCollapsed, toggleCollapse }) => {
               <NavLink
                 key={item.path}
                 to={item.path}
+                onClick={closeMobile}
                 className={({ isActive }) => `
                   flex items-center gap-3 px-3 py-3 rounded-xl font-semibold text-sm transition-all duration-300 transform active:scale-[0.98]
                   ${isActive 
@@ -62,7 +64,7 @@ const Sidebar = ({ isCollapsed, toggleCollapse }) => {
                 `}
               >
                 <Icon size={18} className="shrink-0" />
-                {!isCollapsed && <span className="font-sans">{item.name}</span>}
+                {(!isCollapsed || isMobileOpen) && <span className="font-sans">{item.name}</span>}
               </NavLink>
             );
           })}
