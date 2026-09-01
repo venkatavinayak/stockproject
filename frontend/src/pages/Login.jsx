@@ -5,7 +5,7 @@ import { useUser, useClerk, SignIn, SignUp } from '@clerk/clerk-react';
 import { authAPI } from '../services/api';
 import { 
   KeyRound, User, AlertCircle, ShoppingBag, ArrowRight, Store, 
-  UserCheck, ShieldCheck, Monitor, LogOut, CheckCircle2, Sparkles, Copy, Check, PlusCircle, LogIn, Lock, Send, X
+  UserCheck, ShieldCheck, Monitor, LogOut, CheckCircle2, Sparkles, Copy, Check, PlusCircle, LogIn, Lock, Send, X, Mail
 } from 'lucide-react';
 
 const Login = () => {
@@ -690,6 +690,14 @@ const Login = () => {
                 </p>
               </div>
             </div>
+
+            {/* Modal Error Banner */}
+            {error && (
+              <div className="flex items-center gap-2.5 p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-xs font-semibold text-rose-600 dark:text-rose-400">
+                <AlertCircle size={16} className="shrink-0" />
+                <span>{error}</span>
+              </div>
+            )}
 
             {/* STEP 1: REQUEST OTP */}
             {otpStep === 1 ? (
