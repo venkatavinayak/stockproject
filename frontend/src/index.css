@@ -508,3 +508,22 @@ body {
 .cl-footerActionLink:hover {
   text-decoration: underline !important;
 }
+
+/* Clean Clerk UI Overrides: Hide Footer, Dev Mode, Email Form & OR Divider */
+.cl-footer,
+.cl-footerAction,
+.cl-footerActionText,
+.cl-internal-ph67v9,
+.cl-internal-b384ic,
+.cl-dividerRow,
+.cl-dividerLine,
+.cl-dividerText,
+.cl-form,
+.cl-formFieldRow,
+.cl-formButtonPrimary,
+[class*="footer"],
+[class*="developmentMode"],
+[class*="internal"],
+[data-localization-key="badge.lastUsed"] {
+  display: none !important;
+}
