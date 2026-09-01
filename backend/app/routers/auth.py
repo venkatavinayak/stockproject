@@ -306,9 +306,20 @@ import random
 import string
 from datetime import timedelta
 
-def generate_shop_code() -> str:
-    # 6-character uppercase alphanumeric code e.g. STK849 or S7K9X2
+async def generate_unique_shop_code() -> str:
     chars = string.ascii_uppercase + string.digits
+    for _ in range(100):
+        code = "".join(random.choices(chars, k=6))
+        # Ensure code is unique across shop_code, username, and owner_username
+        existing = await User.find_one({
+            "$or": [
+                {"shop_code": code},
+                {"username": code},
+                {"owner_username": code}
+            ]
+        })
+        if not existing:
+            return code
     return "".join(random.choices(chars, k=6))
 
 def generate_otp() -> str:
@@ -334,15 +345,19 @@ async def register_shop(data: ShopRegister):
             detail="An account is already linked to this email address. Please log in to your existing store."
         )
 
-    # Check if owner username exists
-    existing_user = await User.find_one(User.username == owner_uname)
+    # Check if owner username or shop_code conflicts
+    existing_user = await User.find_one({
+        "$or": [
+            {"username": owner_uname},
+            {"owner_username": owner_uname},
+            {"shop_code": owner_uname}
+        ]
+    })
     if existing_user:
-        raise HTTPException(status_code=400, detail="Owner username is already taken. Please choose another username.")
+        raise HTTPException(status_code=400, detail="Owner username is already taken or conflicts with an existing Shop Code. Please choose another username.")
         
     # Generate unique 6-character shop code
-    shop_code = generate_shop_code()
-    while await User.find_one(User.shop_code == shop_code):
-        shop_code = generate_shop_code()
+    shop_code = await generate_unique_shop_code()
 
     # Create the owner user (admin role)
     new_user = User(
@@ -423,9 +438,7 @@ async def clerk_login(data: ClerkLoginPayload):
         if not data.shop_name:
             raise HTTPException(status_code=404, detail="No shop found for this account. Please create a shop.")
         
-        shop_code = generate_shop_code()
-        while await User.find_one(User.shop_code == shop_code):
-            shop_code = generate_shop_code()
+        shop_code = await generate_unique_shop_code()
 
         hashed = get_password_hash(data.password) if data.password else get_password_hash(data.clerk_id)
         user = User(
@@ -468,7 +481,7 @@ async def clerk_login(data: ClerkLoginPayload):
     else:
         # Ensure user has a 6-character shop code assigned
         if not user.shop_code:
-            user.shop_code = generate_shop_code()
+            user.shop_code = await generate_unique_shop_code()
         if not user.clerk_user_id:
             user.clerk_user_id = data.clerk_id
 
@@ -514,7 +527,7 @@ async def check_shop(email: Optional[str] = None, clerk_id: Optional[str] = None
     if user:
         # Ensure shop_code exists
         if not user.shop_code:
-            user.shop_code = generate_shop_code()
+            user.shop_code = await generate_unique_shop_code()
             await user.save()
 
         from backend.app.models.settings import StoreSettings
@@ -538,18 +551,52 @@ class CounterLoginRequest(BaseModel):
 async def counter_login(data: CounterLoginRequest):
     code_input = data.shop_code.strip()
     counter_name = data.username.strip()
+    password_input = data.password.strip()
 
-    # Find owner by 6-character shop_code or owner_username
-    owner = await User.find_one({"$or": [{"shop_code": code_input.upper()}, {"username": code_input}, {"owner_username": code_input}]})
-    owner_username = owner.owner if owner else code_input
-    
-    scoped_username = counter_name if ":" in counter_name else f"{owner_username}:{counter_name}"
-    
-    user = await User.find_one({"$or": [{"username": scoped_username}, {"username": counter_name, "owner_username": owner_username}]})
-    if not user or not verify_password(data.password, user.hashed_password):
+    if not code_input or not counter_name or not password_input:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Shop Code, Counter Username, and Password are required"
+        )
+
+    import re
+    regex_code = re.compile(f"^{re.escape(code_input)}$", re.IGNORECASE)
+
+    # Find store owner by 6-character shop_code, username, or owner_username
+    owner = await User.find_one({
+        "$or": [
+            {"shop_code": regex_code},
+            {"username": regex_code},
+            {"owner_username": regex_code}
+        ]
+    })
+
+    if not owner:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect Shop Code, Counter Username, or Password"
+            detail=f"Invalid Shop Code '{code_input}'. Please check your 6-character Shop Code."
+        )
+
+    owner_username = owner.owner
+    shop_code = owner.shop_code or owner_username
+
+    # Search for counter worker account
+    scoped_username = counter_name if ":" in counter_name else f"{owner_username}:{counter_name}"
+    regex_scoped = re.compile(f"^{re.escape(scoped_username)}$", re.IGNORECASE)
+    regex_counter = re.compile(f"^{re.escape(counter_name)}$", re.IGNORECASE)
+
+    user = await User.find_one({
+        "$or": [
+            {"username": regex_scoped},
+            {"username": regex_counter, "owner_username": owner_username},
+            {"username": regex_counter, "shop_code": shop_code}
+        ]
+    })
+
+    if not user or not verify_password(password_input, user.hashed_password):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect Counter Username or Password"
         )
     if not user.is_active:
         raise HTTPException(
@@ -563,7 +610,7 @@ async def counter_login(data: CounterLoginRequest):
     audit = AuditLog(
         username=user.username,
         action="COUNTER_LOGIN",
-        details=f"Counter cashier logged into shop: {owner_username}",
+        details=f"Counter cashier '{counter_name}' logged into shop: {owner_username} (Code: {shop_code})",
         owner_username=owner_username
     )
     await audit.insert()
@@ -571,12 +618,18 @@ async def counter_login(data: CounterLoginRequest):
     access_token = create_access_token(data={
         "sub": user.username,
         "role": user.role,
-        "owner_username": user.owner,
+        "owner_username": owner_username,
+        "shop_code": shop_code,
         "can_manage_stock": user.can_manage_stock,
         "can_view_expenses": user.can_view_expenses,
         "can_view_analytics": user.can_view_analytics
     })
-    return {"access_token": access_token, "token_type": "bearer", "owner_username": user.owner}
+    return {
+        "access_token": access_token, 
+        "token_type": "bearer", 
+        "owner_username": owner_username,
+        "shop_code": shop_code
+    }
 
 class RequestOTPPayload(BaseModel):
     email: str

@@ -81,6 +81,15 @@ async def on_startup():
             )
             await admin_user.insert()
             print("Default admin user created: admin / admin123")
+
+        # Migration: Ensure all store owners have a unique 6-character shop_code assigned
+        from backend.app.routers.auth import generate_unique_shop_code
+        all_users = await User.find_all().to_list()
+        for u in all_users:
+            if u.role == "admin" and not u.shop_code:
+                u.shop_code = await generate_unique_shop_code()
+                await u.save()
+                print(f"Assigned shop_code '{u.shop_code}' to store owner '{u.username}'")
             
         # 3. Create default store settings if not present
         store_settings = await StoreSettings.find_one()
