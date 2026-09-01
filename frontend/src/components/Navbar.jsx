@@ -8,7 +8,7 @@ import {
 } from 'lucide-react';
 
 const Navbar = ({ toggleSidebar, isSidebarCollapsed }) => {
-  const { logout, user } = useAuth();
+  const { logout, user, registerDeviceAsKiosk } = useAuth();
   const { darkMode, toggleDarkMode } = useTheme();
   
   const [notifications, setNotifications] = useState([]);
@@ -147,19 +147,35 @@ const Navbar = ({ toggleSidebar, isSidebarCollapsed }) => {
 
         {/* User Info & Logout */}
         <div className="flex items-center gap-3 pl-3 border-l border-slate-200 dark:border-slate-800">
+          {/* Owner Device POS Register Button */}
+          {user?.role === 'admin' && (
+            <button
+              onClick={() => {
+                registerDeviceAsKiosk();
+                alert(`This physical device is now bootstrapped as POS Register for shop: ${user?.owner_username || user?.username}`);
+              }}
+              className="hidden lg:inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-bold rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/20 border border-emerald-500/20 transition-all cursor-pointer"
+              title="Bootstrap this physical browser as active POS Kiosk for counter 4-digit PIN logons"
+            >
+              Set as POS Register
+            </button>
+          )}
+
           <div className="hidden text-right md:block">
             <span className="block text-xs font-bold text-slate-800 dark:text-slate-200">
-              {user?.role === 'admin' ? 'Owner Account' : `${user?.username || 'Worker'} (Cashier)`}
+              {user?.role === 'admin' ? `👑 ${user?.owner_username || 'Owner'}` : `🏬 ${user?.username || 'Worker'}`}
             </span>
-            <span className="block text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold">Online</span>
+            <span className="block text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold">
+              {user?.role === 'admin' ? 'Store Owner' : 'Counter Cashier'}
+            </span>
           </div>
           <div className="p-2 text-indigo-600 bg-indigo-50 rounded-full dark:bg-indigo-950/60 dark:text-indigo-400">
             <User size={18} />
           </div>
           <button
             onClick={logout}
-            className="p-2 text-slate-400 rounded-lg hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-950/30 dark:hover:text-rose-400"
-            title="Log Out"
+            className="p-2 text-slate-400 rounded-lg hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-950/30 dark:hover:text-rose-400 cursor-pointer"
+            title="Log Out (Clears Cookie & Sign Out)"
           >
             <LogOut size={18} />
           </button>

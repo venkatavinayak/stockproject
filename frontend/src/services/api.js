@@ -6,13 +6,19 @@ export const API_BASE_URL = import.meta.env.PROD
 
 const api = axios.create({
   baseURL: API_BASE_URL,
+  withCredentials: true,
 });
+
+// Callback subscriber for global auth eviction
+let onUnauthorizedCallback = null;
+export const setOnUnauthorizedCallback = (cb) => {
+  onUnauthorizedCallback = cb;
+};
 
 // Auto-inject JWT token header
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('smartstock_token');
   if (token) {
-    // Standard OAuth2 form or Bearer token header
     config.headers.Authorization = `Bearer ${token}`;
   }
   return config;
@@ -26,31 +32,52 @@ api.interceptors.response.use((response) => {
 }, (error) => {
   if (error.response && error.response.status === 401) {
     const requestUrl = error.config?.url || '';
-    // Only perform automatic login redirect for protected data routes, not auth routes
-    if (!requestUrl.includes('/auth/login') && !requestUrl.includes('/auth/clerk-login') && !requestUrl.includes('/auth/check-shop')) {
+    if (!requestUrl.includes('/auth/login') && !requestUrl.includes('/auth/clerk-login') && !requestUrl.includes('/auth/check-shop') && !requestUrl.includes('/auth/counter-pin-login')) {
       localStorage.removeItem('smartstock_token');
       localStorage.removeItem('smartstock_user');
-      window.location.href = '/login';
+      if (onUnauthorizedCallback) {
+        onUnauthorizedCallback();
+      } else {
+        window.location.href = '/login';
+      }
     }
   }
   return Promise.reject(error);
 });
 
 export const authAPI = {
-  checkShop: async (email) => {
-    const response = await api.get('/auth/check-shop', { params: { email } });
+  checkShop: async (email, clerk_id = null) => {
+    const response = await api.get('/auth/check-shop', { params: { email, clerk_id } });
     return response.data;
   },
-  clerkLogin: async (email, clerk_id, shop_name = null, role = 'admin', password = null) => {
-    const response = await api.post('/auth/clerk-login', { email, clerk_id, shop_name, role, password });
+  clerkLogin: async (email, clerk_id, shop_name = null, role = 'admin', password = null, clerk_token = null, owner_username = null) => {
+    const response = await api.post('/auth/clerk-login', { 
+      email, 
+      clerk_id, 
+      shop_name, 
+      role, 
+      password,
+      clerk_token,
+      owner_username
+    });
     return response.data;
   },
-  registerShop: async (shop_name, owner_email, password) => {
-    const response = await api.post('/auth/register-shop', { shop_name, owner_email, password });
+  registerShop: async (shop_name, owner_username, password, clerk_token = null, email = null, counter_pin = null) => {
+    const response = await api.post('/auth/register-shop', { 
+      shop_name, 
+      owner_username, 
+      password, 
+      clerk_token, 
+      email,
+      counter_pin
+    });
+    return response.data;
+  },
+  counterPinLogin: async (owner_username, pin) => {
+    const response = await api.post('/auth/counter-pin-login', { owner_username, pin });
     return response.data;
   },
   login: async (username, password) => {
-    // OAuth2PasswordRequestForm expects urlencoded payload
     const params = new URLSearchParams();
     params.append('username', username);
     params.append('password', password);
