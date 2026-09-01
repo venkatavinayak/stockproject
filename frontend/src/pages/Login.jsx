@@ -733,27 +733,16 @@ const Login = () => {
             ) : (
               /* STEP 2: VERIFY OTP & RESET PASSWORD */
               <form onSubmit={handleResetPasswordOTP} className="space-y-4">
-                <div className="p-3.5 rounded-2xl bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800 text-xs font-medium text-indigo-900 dark:text-indigo-300 flex items-center justify-between gap-3">
-                  <div className="flex items-center gap-2.5">
-                    <Mail size={20} className="shrink-0 text-indigo-600 dark:text-indigo-400" />
-                    <div>
-                      <span className="block text-slate-900 dark:text-white font-bold">
-                        OTP Code: <strong className="font-mono text-base text-indigo-600 dark:text-indigo-400 ml-1">{otpDemoCode || '******'}</strong>
-                      </span>
-                      <span className="text-[11px] text-slate-500 dark:text-slate-400">
-                        Dispatched to {forgotEmail}
-                      </span>
-                    </div>
+                <div className="p-3.5 rounded-2xl bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800 text-xs font-medium text-indigo-900 dark:text-indigo-300 flex items-center gap-3">
+                  <Mail size={20} className="shrink-0 text-indigo-600 dark:text-indigo-400" />
+                  <div>
+                    <span className="block text-slate-900 dark:text-white font-bold">
+                      Check Your Email Inbox
+                    </span>
+                    <span className="text-[11px] text-slate-500 dark:text-slate-400">
+                      A 6-digit OTP code has been sent to <strong className="font-semibold text-slate-900 dark:text-white font-mono">{forgotEmail}</strong>. Please check your inbox and spam folder.
+                    </span>
                   </div>
-                  {otpDemoCode && (
-                    <button
-                      type="button"
-                      onClick={() => setOtpCode(otpDemoCode)}
-                      className="px-3 py-1.5 text-xs font-extrabold text-white bg-indigo-600 hover:bg-indigo-500 rounded-xl shrink-0 cursor-pointer shadow-md shadow-indigo-600/20 active:scale-95 transition-all"
-                    >
-                      Auto-fill OTP
-                    </button>
-                  )}
                 </div>
 
                 <div>
