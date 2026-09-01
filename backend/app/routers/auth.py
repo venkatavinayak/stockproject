@@ -390,14 +390,38 @@ async def clerk_login(data: ClerkLoginPayload):
         )
         await audit.insert()
     else:
-        # Enforce password verification for existing owner logins
-        if not data.password or not verify_password(data.password, user.hashed_password):
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Incorrect store owner password"
-            )
-        user.last_login = datetime.utcnow()
-        await user.save()
+        if data.shop_name and data.password:
+            # Registration completion for pre-existing email record
+            user.hashed_password = get_password_hash(data.password)
+            user.full_name = data.shop_name
+            user.last_login = datetime.utcnow()
+            await user.save()
+            
+            from backend.app.models.settings import StoreSettings
+            settings = await StoreSettings.find_one(StoreSettings.owner_username == data.email)
+            if not settings:
+                settings = StoreSettings(
+                    owner_username=data.email,
+                    store_name=data.shop_name,
+                    gst_number="27AAAAA1111A1Z1",
+                    address="123 Shopping Arcade, Central Market Road, Sector 5",
+                    contact_info="+91 98765 43210",
+                    currency_symbol="₹",
+                    receipt_format="Thermal",
+                    invoice_footer="Thank you for shopping with us! Visit again."
+                )
+            else:
+                settings.store_name = data.shop_name
+            await settings.save()
+        else:
+            # Enforce password verification for existing owner logins
+            if not data.password or not verify_password(data.password, user.hashed_password):
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="Incorrect store owner password"
+                )
+            user.last_login = datetime.utcnow()
+            await user.save()
         
     access_token = create_access_token(data={"sub": user.username})
     return {"access_token": access_token, "token_type": "bearer"}
