@@ -8,9 +8,9 @@ logger = logging.getLogger(__name__)
 
 SMTP_HOST = os.environ.get("SMTP_HOST", os.environ.get("SMTP_SERVER", "smtp.gmail.com"))
 SMTP_PORT = int(os.environ.get("SMTP_PORT", 587))
-SMTP_USER = os.environ.get("SMTP_USER", os.environ.get("SMTP_USERNAME", ""))
-SMTP_PASS = os.environ.get("SMTP_PASS", os.environ.get("SMTP_PASSWORD", ""))
-SMTP_FROM = os.environ.get("SMTP_FROM", os.environ.get("SMTP_FROM_EMAIL", SMTP_USER or "no-reply@smartstore.ai"))
+SMTP_USER = os.environ.get("SMTP_USER", os.environ.get("SMTP_USERNAME", "pvenkatavinayak@gmail.com"))
+SMTP_PASS = os.environ.get("SMTP_PASS", os.environ.get("SMTP_PASSWORD", "rxwdvtatiamhtzel"))
+SMTP_FROM = os.environ.get("SMTP_FROM", os.environ.get("SMTP_FROM_EMAIL", "pvenkatavinayak@gmail.com"))
 
 def _send_sync_email(to_email: str, subject: str, html_body: str) -> bool:
     """Synchronous helper function to send email via SMTP."""

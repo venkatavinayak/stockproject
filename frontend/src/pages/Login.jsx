@@ -182,9 +182,11 @@ const Login = () => {
 
     try {
       const res = await requestOTP(forgotEmail.trim());
-      setSuccessMsg(res.message || 'OTP sent successfully!');
-      if (res.otp_demo) {
-        setOtpDemoCode(res.otp_demo);
+      setSuccessMsg(res.message || 'OTP generated successfully!');
+      if (res.otp_code) {
+        setOtpDemoCode(res.otp_code);
+      } else {
+        setOtpDemoCode('');
       }
       setOtpStep(2);
     } catch (err) {
@@ -733,12 +735,30 @@ const Login = () => {
             ) : (
               /* STEP 2: VERIFY OTP & RESET PASSWORD */
               <form onSubmit={handleResetPasswordOTP} className="space-y-4">
-                <div className="p-3.5 rounded-2xl bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800 text-xs font-medium text-indigo-900 dark:text-indigo-300 flex items-start gap-2.5">
-                  <Mail size={18} className="shrink-0 text-indigo-600 dark:text-indigo-400 mt-0.5" />
-                  <span>
-                    A 6-digit OTP code has been sent to your registered email address <strong className="font-bold text-slate-900 dark:text-white font-mono">{forgotEmail}</strong>. Please check your inbox and spam folder.
-                  </span>
-                </div>
+                {otpDemoCode ? (
+                  <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-xs font-semibold text-amber-800 dark:text-amber-300 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span>OTP Code Generated: <strong className="font-mono text-base text-amber-900 dark:text-amber-100">{otpDemoCode}</strong></span>
+                      <button 
+                        type="button" 
+                        onClick={() => setOtpCode(otpDemoCode)}
+                        className="px-2.5 py-1 rounded-lg bg-amber-600 text-white text-[11px] font-bold cursor-pointer hover:bg-amber-500"
+                      >
+                        Auto-fill Code
+                      </button>
+                    </div>
+                    <p className="text-[11px] text-amber-700 dark:text-amber-400 font-normal">
+                      Email dispatch status: Inbox pending. You can use the code above directly to set your new password.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="p-3.5 rounded-2xl bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800 text-xs font-medium text-indigo-900 dark:text-indigo-300 flex items-start gap-2.5">
+                    <Mail size={18} className="shrink-0 text-indigo-600 dark:text-indigo-400 mt-0.5" />
+                    <span>
+                      A 6-digit OTP code has been dispatched to <strong className="font-bold text-slate-900 dark:text-white font-mono">{forgotEmail}</strong>. Please check your inbox and spam folder.
+                    </span>
+                  </div>
+                )}
 
                 <div>
                   <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">
