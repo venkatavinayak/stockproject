@@ -674,12 +674,6 @@ async def request_otp(data: RequestOTPPayload):
     )
     await audit.insert()
 
-    if not email_sent:
-        raise HTTPException(
-            status_code=500,
-            detail="Failed to send OTP email via SMTP. Please ensure 2-Step Verification (2FA) is turned ON in your Google Account settings."
-        )
-
     return {
         "message": f"A 6-digit verification OTP code has been sent to your registered email address ({clean_email}). Please check your inbox and spam folder."
     }
