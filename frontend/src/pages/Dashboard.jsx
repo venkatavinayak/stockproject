@@ -5,7 +5,8 @@ import {
   TrendingUp, TrendingDown, Coins, Receipt, 
   Layers, Package, AlertTriangle, Activity, 
   Sparkles, FileText, Database, ShieldAlert,
-  ArrowUpRight, ShoppingBag, DollarSign, X, ArrowDownRight, ArrowRight
+  ArrowUpRight, ShoppingBag, DollarSign, X, ArrowDownRight, ArrowRight,
+  Copy, Check, Store, Monitor
 } from 'lucide-react';
 import { 
   ResponsiveContainer, LineChart, Line, BarChart, 
@@ -17,6 +18,7 @@ const COLORS = ['#6366f1', '#10b981', '#f59e0b', '#ec4899', '#3b82f6'];
 
 const Dashboard = () => {
   const { user } = useAuth();
+  const [copiedCode, setCopiedCode] = useState(false);
   const [kpis, setKpis] = useState(null);
   const [activity, setActivity] = useState([]);
   const [recommendations, setRecommendations] = useState([]);
@@ -400,31 +402,48 @@ const Dashboard = () => {
         )}
       </div>
 
-      {/* Welcome Hero Banner */}
+      {/* Welcome Hero Banner with Big Shop Code Badge */}
       <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-indigo-600 via-indigo-700 to-violet-700 text-white p-6 md:p-8 shadow-xl shadow-indigo-600/10">
         {/* Decorative background glows */}
         <div className="absolute -top-24 -right-24 w-80 h-80 bg-white/10 rounded-full blur-3xl pointer-events-none"></div>
         <div className="absolute -bottom-24 -left-24 w-80 h-80 bg-indigo-500/20 rounded-full blur-3xl pointer-events-none"></div>
         
-        <div className="flex flex-col md:flex-row items-center justify-between gap-6 relative z-10">
-          <div className="space-y-3 max-w-xl text-center md:text-left">
+        <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 relative z-10">
+          <div className="space-y-3 max-w-xl text-center lg:text-left">
             <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 text-white text-xs font-semibold backdrop-blur-md">
               <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse"></span>
               Live store system operational
             </span>
             <h2 className="text-3xl font-extrabold tracking-tight font-title md:text-4xl">
-              Welcome back, {user?.role === 'admin' ? 'Owner' : user?.username || 'Owner'}!
+              {user?.full_name || 'Smart Store Dashboard'}
             </h2>
             <p className="text-indigo-100 text-sm leading-relaxed max-w-md">
-              Here is your departmental store status overview. Check inventory alerts, review transaction ledgers, or browse recent AI insights.
+              Welcome back, <strong className="text-white">{user?.username || 'Store Owner'}</strong>! Share your 6-character Shop Code below with cashiers & counter staff to log in at <strong className="text-white font-mono bg-white/10 px-2 py-0.5 rounded">/pos</strong>.
             </p>
           </div>
-          <div className="shrink-0 hidden md:block">
-            <img 
-              src="/assets/dashboard_welcome.jpg" 
-              alt="Welcome Illustration" 
-              className="h-32 lg:h-36 object-contain rounded-2xl shadow-lg border border-white/10 aspect-[3/2] object-cover interactive-image"
-            />
+
+          {/* BIG PROMINENT SHOP CODE CARD */}
+          <div className="w-full lg:w-auto p-5 rounded-2xl bg-slate-950/50 backdrop-blur-xl border border-white/20 shadow-2xl flex items-center justify-between gap-6 shrink-0">
+            <div>
+              <span className="block text-[10px] font-extrabold uppercase tracking-widest text-indigo-300">
+                YOUR 6-CHARACTER SHOP CODE
+              </span>
+              <span className="text-3xl font-extrabold font-mono tracking-widest text-white drop-shadow-md">
+                {user?.shop_code || user?.owner_username || 'STK849'}
+              </span>
+            </div>
+            <button
+              onClick={() => {
+                navigator.clipboard.writeText(user?.shop_code || user?.owner_username || 'STK849');
+                setCopiedCode(true);
+                setTimeout(() => setCopiedCode(false), 2000);
+              }}
+              className="flex items-center gap-2 px-4 py-2.5 text-xs font-extrabold text-indigo-950 bg-white hover:bg-indigo-50 rounded-xl transition-all shadow-lg cursor-pointer active:scale-95 shrink-0"
+              title="Copy Shop Code"
+            >
+              {copiedCode ? <Check size={16} className="text-emerald-600" /> : <Copy size={16} />}
+              <span>{copiedCode ? 'Copied!' : 'Copy Code'}</span>
+            </button>
           </div>
         </div>
       </div>

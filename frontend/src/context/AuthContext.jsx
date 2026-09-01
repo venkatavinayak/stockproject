@@ -19,6 +19,8 @@ export const AuthProvider = ({ children }) => {
           const userData = {
             username: profile.username.includes(':') ? profile.username.split(':').slice(1).join(':') : profile.username,
             full_username: profile.username,
+            owner_username: profile.owner_username,
+            shop_code: profile.shop_code,
             role: profile.role,
             can_manage_stock: profile.can_manage_stock,
             can_view_expenses: profile.can_view_expenses,
