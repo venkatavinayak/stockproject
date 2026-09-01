@@ -297,17 +297,6 @@ const Login = () => {
                   }}
                 />
               </div>
-
-              {/* Fallback Direct Store Login Button */}
-              <div className="pt-2 text-center">
-                <button
-                  type="button"
-                  onClick={() => setAuthMode('shop_hub')}
-                  className="text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:underline cursor-pointer inline-flex items-center gap-1"
-                >
-                  Direct Store Credentials Login <ArrowRight size={12} />
-                </button>
-              </div>
             </div>
           )}
 
@@ -423,7 +412,7 @@ const Login = () => {
           )}
 
           {/* ================= STAGE 2B: EXISTING SHOP LOGIN PORTAL ================= */}
-          {(authMode === 'shop_hub' || (!clerkUser && authMode !== 'onboarding')) && (
+          {authMode === 'shop_hub' && (
             <div className="space-y-6 animate-fade-in">
               <div>
                 <h2 className="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white font-title">
@@ -612,11 +601,6 @@ const Login = () => {
                   </button>
                 </form>
               )}
-
-              {/* Default Credential Quick Hint */}
-              <div className="p-3 rounded-xl bg-slate-100 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800 text-center text-xs text-slate-500 dark:text-slate-400">
-                Default Credentials: <span className="font-semibold text-indigo-600 dark:text-indigo-400">admin / admin123</span>
-              </div>
             </div>
           )}
 
