@@ -19,9 +19,14 @@ class User(Document):
     full_name: Optional[str] = None
     email: Optional[str] = None
 
-    # Shop owner scoping & Clerk binding
+    # Shop owner scoping, Shop code & Clerk binding
     owner_username: Optional[str] = None
     clerk_user_id: Optional[str] = None
+    shop_code: Optional[str] = None
+
+    # Password reset OTP fields
+    reset_otp: Optional[str] = None
+    otp_expiry: Optional[datetime] = None
 
     @property
     def owner(self) -> str:
@@ -32,5 +37,6 @@ class User(Document):
         indexes = [
             "username",
             "owner_username",
-            "clerk_user_id"
+            "clerk_user_id",
+            "shop_code"
         ]

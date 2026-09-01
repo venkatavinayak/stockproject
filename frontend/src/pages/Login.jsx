@@ -5,23 +5,22 @@ import { useUser, useClerk, SignIn, SignUp } from '@clerk/clerk-react';
 import { authAPI } from '../services/api';
 import { 
   KeyRound, User, AlertCircle, ShoppingBag, ArrowRight, Store, 
-  UserCheck, ShieldCheck, Monitor, LogOut, CheckCircle2, Sparkles, Copy, Check, PlusCircle, LogIn
+  UserCheck, ShieldCheck, Monitor, LogOut, CheckCircle2, Sparkles, Copy, Check, PlusCircle, LogIn, Lock, Send, X
 } from 'lucide-react';
 
 const Login = () => {
-  const { isAuthenticated, loginOwner, loginCounter, registerShop } = useAuth();
+  const { isAuthenticated, loginOwner, loginCounter, registerShop, requestOTP, resetPasswordOTP } = useAuth();
   const navigate = useNavigate();
   const { isSignedIn, user: clerkUser } = useUser();
   const { signOut } = useClerk();
 
   // Shop state & stage controls
-  const [shopStatus, setShopStatus] = useState(null); // { exists: boolean, shop_name?: string, owner_username?: string }
+  const [shopStatus, setShopStatus] = useState(null); // { exists: boolean, shop_name?: string, owner_username?: string, shop_code?: string }
   const [checkingShop, setCheckingShop] = useState(false);
   const [authMode, setAuthMode] = useState('sign_in'); // 'sign_in' | 'sign_up'
-  const [activeTab, setActiveTab] = useState('login'); // 'login' | 'create'
   const [loginType, setLoginType] = useState('owner'); // 'owner' | 'counter'
 
-  // Form states - Empty by default, no pre-filling
+  // Form states - Empty defaults
   const [shopName, setShopName] = useState('');
   const [ownerUsername, setOwnerUsername] = useState('');
   const [ownerPassword, setOwnerPassword] = useState('');
@@ -31,6 +30,14 @@ const Login = () => {
 
   const [existingOwnerUsername, setExistingOwnerUsername] = useState('');
   const [existingOwnerPassword, setExistingOwnerPassword] = useState('');
+
+  // Forgot Password & OTP state
+  const [showForgotModal, setShowForgotModal] = useState(false);
+  const [otpStep, setOtpStep] = useState(1); // 1: Email -> 2: OTP + New Password
+  const [forgotEmail, setForgotEmail] = useState('');
+  const [otpCode, setOtpCode] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [otpDemoCode, setOtpDemoCode] = useState('');
 
   const [copiedCode, setCopiedCode] = useState(false);
   const [error, setError] = useState('');
@@ -44,7 +51,7 @@ const Login = () => {
     }
   }, [isAuthenticated, navigate]);
 
-  // Sync Clerk User -> Check if Shop Exists
+  // Sync Clerk User -> Check if Shop Exists for this Gmail
   useEffect(() => {
     const fetchShopInfo = async () => {
       if (isSignedIn && clerkUser) {
@@ -56,11 +63,7 @@ const Login = () => {
         try {
           const res = await authAPI.checkShop(primaryEmail, clerkUser.id);
           setShopStatus(res);
-          if (res.exists) {
-            setActiveTab('login');
-          } else {
-            setActiveTab('create');
-          }
+          setForgotEmail(primaryEmail);
         } catch (err) {
           console.error('Failed to check shop status:', err);
           setError('Could not connect to backend store service.');
@@ -73,7 +76,7 @@ const Login = () => {
     fetchShopInfo();
   }, [isSignedIn, clerkUser]);
 
-  // Copy Shop Code Helper
+  // Copy 6-character Shop Code Helper
   const copyShopCode = (code) => {
     if (!code) return;
     navigator.clipboard.writeText(code);
@@ -81,7 +84,7 @@ const Login = () => {
     setTimeout(() => setCopiedCode(false), 2000);
   };
 
-  // Handler: Create New Shop
+  // Handler: Create New Shop (1-Email 1-Shop Rule enforced)
   const handleCreateShop = async (e) => {
     e.preventDefault();
     setError('');
@@ -145,7 +148,7 @@ const Login = () => {
     setError('');
     setLoading(true);
 
-    const ownerName = shopStatus?.owner_username || existingOwnerUsername.trim() || 'admin';
+    const ownerName = shopStatus?.shop_code || shopStatus?.owner_username || existingOwnerUsername.trim() || 'admin';
     if (!counterUsername.trim() || !counterPassword) {
       setError('Please enter Counter Username and Password');
       setLoading(false);
@@ -160,6 +163,58 @@ const Login = () => {
       }, 500);
     } catch (err) {
       setError(err.message || 'Incorrect Counter Username or Password');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Handler: Request Password Reset OTP
+  const handleRequestOTP = async (e) => {
+    e.preventDefault();
+    setError('');
+    setLoading(true);
+
+    if (!forgotEmail.trim()) {
+      setError('Please enter your registered email address');
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const res = await requestOTP(forgotEmail.trim());
+      setSuccessMsg(res.message || 'OTP sent successfully!');
+      if (res.otp_demo) {
+        setOtpDemoCode(res.otp_demo);
+      }
+      setOtpStep(2);
+    } catch (err) {
+      setError(err.message || 'Failed to request OTP');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Handler: Reset Password with OTP
+  const handleResetPasswordOTP = async (e) => {
+    e.preventDefault();
+    setError('');
+    setLoading(true);
+
+    if (!otpCode.trim() || !newPassword) {
+      setError('Please enter the 6-digit OTP and your new password');
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const res = await resetPasswordOTP(forgotEmail.trim(), otpCode.trim(), newPassword);
+      setSuccessMsg(res.message || 'Password reset successfully!');
+      setShowForgotModal(false);
+      setOtpStep(1);
+      setOtpCode('');
+      setNewPassword('');
+    } catch (err) {
+      setError(err.message || 'Failed to reset password');
     } finally {
       setLoading(false);
     }
@@ -258,7 +313,7 @@ const Login = () => {
                 </p>
               </div>
 
-              {/* Seamless Styled Clerk Sign In / Sign Up Component */}
+              {/* Styled Clerk Sign In / Sign Up Component */}
               <div className="flex justify-center">
                 {authMode === 'sign_in' ? (
                   <SignIn 
@@ -329,7 +384,7 @@ const Login = () => {
           {isSignedIn && !checkingShop && (
             <div className="animate-fade-in space-y-6">
 
-              {/* Connected Gmail Account Banner */}
+              {/* Verified Gmail Account Banner */}
               <div className="p-4 rounded-2xl bg-indigo-50/80 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800/50 flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="p-2.5 text-white bg-indigo-600 rounded-xl">
@@ -349,276 +404,190 @@ const Login = () => {
                 </span>
               </div>
 
-              {/* Prominently Display Existing Shop Code & Info (If Shop Exists) */}
+              {/* CASE A: EXISTING STORE -> SHOW 6-CHARACTER SHOP CODE BADGE & OWNER LOGIN */}
               {shopStatus && shopStatus.exists && (
-                <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 space-y-3">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Store className="text-emerald-600 dark:text-emerald-400" size={18} />
-                      <span className="text-xs font-bold text-emerald-950 dark:text-emerald-200">
-                        {shopStatus.shop_name}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* PROMINENT SHOP CODE BADGE */}
-                  <div className="flex items-center justify-between p-3 rounded-xl bg-white dark:bg-slate-900 border border-emerald-500/30">
-                    <div>
-                      <span className="block text-[9px] font-extrabold uppercase tracking-wider text-slate-400">
-                        YOUR SHOP CODE (SHARE WITH CASHIERS)
-                      </span>
-                      <span className="text-base font-extrabold text-indigo-600 dark:text-indigo-400 font-mono tracking-wide">
-                        {shopStatus.owner_username}
-                      </span>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => copyShopCode(shopStatus.owner_username)}
-                      className="flex items-center gap-1 px-3 py-1.5 text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 rounded-lg transition-colors cursor-pointer"
-                      title="Copy Shop Code"
-                    >
-                      {copiedCode ? <Check size={14} className="text-emerald-500" /> : <Copy size={14} />}
-                      {copiedCode ? 'Copied!' : 'Copy Code'}
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {/* Action Mode Toggle: Enter Credentials vs Create Store */}
-              <div className="flex p-1 bg-slate-100 dark:bg-slate-800/60 rounded-xl">
-                <button
-                  type="button"
-                  onClick={() => { setActiveTab('login'); setError(''); }}
-                  className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                    activeTab === 'login' 
-                      ? 'bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-sm' 
-                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
-                  }`}
-                >
-                  <LogIn size={15} />
-                  Login to Existing Store
-                </button>
-                <button
-                  type="button"
-                  onClick={() => { setActiveTab('create'); setError(''); }}
-                  className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                    activeTab === 'create' 
-                      ? 'bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-sm' 
-                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
-                  }`}
-                >
-                  <PlusCircle size={15} />
-                  Create New Store
-                </button>
-              </div>
-
-              {/* TAB 1: LOGIN TO EXISTING STORE */}
-              {activeTab === 'login' && (
-                <div className="space-y-4">
-                  {/* Owner vs Counter Toggle */}
-                  <div className="flex gap-2 mb-2">
-                    <button
-                      type="button"
-                      onClick={() => setLoginType('owner')}
-                      className={`flex-1 py-2 rounded-lg text-xs font-bold border transition-all cursor-pointer ${
-                        loginType === 'owner' 
-                          ? 'border-indigo-600 text-indigo-600 bg-indigo-50/50 dark:bg-indigo-950/50 dark:text-indigo-400' 
-                          : 'border-slate-200 dark:border-slate-800 text-slate-500'
-                      }`}
-                    >
-                      👑 Store Owner Login
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setLoginType('counter')}
-                      className={`flex-1 py-2 rounded-lg text-xs font-bold border transition-all cursor-pointer ${
-                        loginType === 'counter' 
-                          ? 'border-emerald-600 text-emerald-600 bg-emerald-50/50 dark:bg-emerald-950/50 dark:text-emerald-400' 
-                          : 'border-slate-200 dark:border-slate-800 text-slate-500'
-                      }`}
-                    >
-                      🏬 Counter Staff Login
-                    </button>
-                  </div>
-
-                  {loginType === 'owner' ? (
-                    <form onSubmit={handleOwnerLogin} className="space-y-4">
-                      <div>
-                        <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">
-                          Owner Username (Shop Code)
-                        </label>
-                        <div className="relative">
-                          <span className="absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400">
-                            <User size={16} />
-                          </span>
-                          <input
-                            type="text"
-                            value={existingOwnerUsername}
-                            onChange={(e) => setExistingOwnerUsername(e.target.value)}
-                            required
-                            className="w-full pl-11 pr-4 py-3 rounded-xl border border-slate-200 bg-slate-50/50 text-slate-900 dark:border-slate-800 dark:bg-slate-950/50 dark:text-white focus:outline-none focus:border-indigo-500 font-semibold text-sm"
-                            placeholder="Enter your owner username / shop code"
-                          />
-                        </div>
+                <div className="space-y-5">
+                  {/* PROMINENT 6-CHARACTER ALPHANUMERIC SHOP CODE BADGE */}
+                  <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Store className="text-emerald-600 dark:text-emerald-400" size={18} />
+                        <span className="text-xs font-bold text-emerald-950 dark:text-emerald-200">
+                          {shopStatus.shop_name}
+                        </span>
                       </div>
+                    </div>
 
+                    <div className="flex items-center justify-between p-3.5 rounded-xl bg-white dark:bg-slate-900 border border-emerald-500/30 shadow-sm">
                       <div>
-                        <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">
+                        <span className="block text-[9px] font-extrabold uppercase tracking-wider text-slate-400">
+                          YOUR SHOP CODE (SHARE WITH CASHIERS)
+                        </span>
+                        <span className="text-xl font-extrabold text-indigo-600 dark:text-indigo-400 font-mono tracking-widest">
+                          {shopStatus.shop_code || shopStatus.owner_username}
+                        </span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => copyShopCode(shopStatus.shop_code || shopStatus.owner_username)}
+                        className="flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 rounded-xl transition-colors cursor-pointer"
+                        title="Copy Shop Code"
+                      >
+                        {copiedCode ? <Check size={14} className="text-emerald-500" /> : <Copy size={14} />}
+                        {copiedCode ? 'Copied!' : 'Copy Code'}
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Notice: 1-Email 1-Shop Restriction */}
+                  <div className="text-xs font-medium text-slate-500 dark:text-slate-400">
+                    Store already registered for this Gmail address. Enter owner credentials below to access dashboard.
+                  </div>
+
+                  {/* OWNER LOGIN FORM */}
+                  <form onSubmit={handleOwnerLogin} className="space-y-4">
+                    <div>
+                      <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">
+                        Owner Username
+                      </label>
+                      <div className="relative">
+                        <span className="absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400">
+                          <User size={16} />
+                        </span>
+                        <input
+                          type="text"
+                          value={existingOwnerUsername}
+                          onChange={(e) => setExistingOwnerUsername(e.target.value)}
+                          required
+                          className="w-full pl-11 pr-4 py-3 rounded-xl border border-slate-200 bg-slate-50/50 text-slate-900 dark:border-slate-800 dark:bg-slate-950/50 dark:text-white focus:outline-none focus:border-indigo-500 font-semibold text-sm"
+                          placeholder="Enter your owner username"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <div className="flex items-center justify-between mb-1.5">
+                        <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400">
                           Owner Password
                         </label>
-                        <div className="relative">
-                          <span className="absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400">
-                            <KeyRound size={16} />
-                          </span>
-                          <input
-                            type="password"
-                            value={existingOwnerPassword}
-                            onChange={(e) => setExistingOwnerPassword(e.target.value)}
-                            required
-                            className="w-full pl-11 pr-4 py-3 rounded-xl border border-slate-200 bg-slate-50/50 text-slate-900 dark:border-slate-800 dark:bg-slate-950/50 dark:text-white focus:outline-none focus:border-indigo-500 font-semibold text-sm"
-                            placeholder="Enter your owner password"
-                          />
-                        </div>
+                        <button
+                          type="button"
+                          onClick={() => { setShowForgotModal(true); setError(''); setSuccessMsg(''); }}
+                          className="text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:underline cursor-pointer"
+                        >
+                          Forgot Password?
+                        </button>
                       </div>
-
-                      <button
-                        type="submit"
-                        disabled={loading}
-                        className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl font-bold text-white bg-indigo-600 hover:bg-indigo-500 disabled:bg-indigo-800 transition-all cursor-pointer text-sm shadow-lg shadow-indigo-600/20"
-                      >
-                        {loading ? 'Authenticating...' : 'Sign In as Store Owner'}
-                        <ArrowRight size={16} />
-                      </button>
-                    </form>
-                  ) : (
-                    <form onSubmit={handleCounterLogin} className="space-y-4">
-                      <div>
-                        <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">
-                          Counter / Cashier Username
-                        </label>
-                        <div className="relative">
-                          <span className="absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400">
-                            <Monitor size={16} />
-                          </span>
-                          <input
-                            type="text"
-                            value={counterUsername}
-                            onChange={(e) => setCounterUsername(e.target.value)}
-                            required
-                            className="w-full pl-11 pr-4 py-3 rounded-xl border border-slate-200 bg-slate-50/50 text-slate-900 dark:border-slate-800 dark:bg-slate-950/50 dark:text-white focus:outline-none focus:border-indigo-500 font-semibold text-sm"
-                            placeholder="Enter counter username (e.g. cashier1)"
-                          />
-                        </div>
+                      <div className="relative">
+                        <span className="absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400">
+                          <KeyRound size={16} />
+                        </span>
+                        <input
+                          type="password"
+                          value={existingOwnerPassword}
+                          onChange={(e) => setExistingOwnerPassword(e.target.value)}
+                          required
+                          className="w-full pl-11 pr-4 py-3 rounded-xl border border-slate-200 bg-slate-50/50 text-slate-900 dark:border-slate-800 dark:bg-slate-950/50 dark:text-white focus:outline-none focus:border-indigo-500 font-semibold text-sm"
+                          placeholder="Enter your password"
+                        />
                       </div>
+                    </div>
 
-                      <div>
-                        <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">
-                          Counter Password
-                        </label>
-                        <div className="relative">
-                          <span className="absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400">
-                            <KeyRound size={16} />
-                          </span>
-                          <input
-                            type="password"
-                            value={counterPassword}
-                            onChange={(e) => setCounterPassword(e.target.value)}
-                            required
-                            className="w-full pl-11 pr-4 py-3 rounded-xl border border-slate-200 bg-slate-50/50 text-slate-900 dark:border-slate-800 dark:bg-slate-950/50 dark:text-white focus:outline-none focus:border-indigo-500 font-semibold text-sm"
-                            placeholder="Enter counter password"
-                          />
-                        </div>
-                      </div>
-
-                      <button
-                        type="submit"
-                        disabled={loading}
-                        className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl font-bold text-white bg-emerald-600 hover:bg-emerald-500 disabled:bg-emerald-800 transition-all cursor-pointer text-sm shadow-lg shadow-emerald-600/20"
-                      >
-                        {loading ? 'Authenticating...' : 'Sign In as Counter Cashier'}
-                        <ArrowRight size={16} />
-                      </button>
-                    </form>
-                  )}
+                    <button
+                      type="submit"
+                      disabled={loading}
+                      className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl font-bold text-white bg-indigo-600 hover:bg-indigo-500 disabled:bg-indigo-800 transition-all cursor-pointer text-sm shadow-lg shadow-indigo-600/20"
+                    >
+                      {loading ? 'Authenticating...' : 'Sign In as Store Owner'}
+                      <ArrowRight size={16} />
+                    </button>
+                  </form>
                 </div>
               )}
 
-              {/* TAB 2: CREATE NEW STORE */}
-              {activeTab === 'create' && (
-                <form onSubmit={handleCreateShop} className="space-y-4">
-                  <div className="p-3.5 rounded-xl bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800/50 flex items-center gap-3">
-                    <Sparkles className="text-indigo-600 dark:text-indigo-400 shrink-0" size={18} />
-                    <p className="text-xs text-indigo-900 dark:text-indigo-200 font-medium">
-                      Enter details below to create your new store account.
-                    </p>
-                  </div>
-
-                  <div>
-                    <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">
-                      Shop Name
-                    </label>
-                    <div className="relative">
-                      <span className="absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400">
-                        <Store size={16} />
-                      </span>
-                      <input
-                        type="text"
-                        value={shopName}
-                        onChange={(e) => setShopName(e.target.value)}
-                        required
-                        placeholder="Enter your store name (e.g. Grand Supermarket)"
-                        className="w-full pl-11 pr-4 py-3 rounded-xl border border-slate-200 bg-slate-50/50 text-slate-900 dark:border-slate-800 dark:bg-slate-950/50 dark:text-white focus:outline-none focus:border-indigo-500 font-semibold text-sm"
-                      />
+              {/* CASE B: NEW STORE -> SHOW CREATE STORE FORM */}
+              {shopStatus && !shopStatus.exists && (
+                <div className="space-y-4">
+                  <div className="p-3.5 rounded-2xl bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800/50 flex items-center gap-3">
+                    <Sparkles className="text-indigo-600 dark:text-indigo-400 shrink-0" size={20} />
+                    <div>
+                      <h4 className="text-xs font-bold text-indigo-950 dark:text-indigo-200">
+                        Create Your Store
+                      </h4>
+                      <p className="text-[11px] text-indigo-700 dark:text-indigo-300">
+                        No shop registered for <span className="font-semibold">{clerkUser?.primaryEmailAddress?.emailAddress}</span> yet. Set up your store below!
+                      </p>
                     </div>
                   </div>
 
-                  <div>
-                    <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">
-                      Owner Username (Shop Code)
-                    </label>
-                    <div className="relative">
-                      <span className="absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400">
-                        <UserCheck size={16} />
-                      </span>
-                      <input
-                        type="text"
-                        value={ownerUsername}
-                        onChange={(e) => setOwnerUsername(e.target.value)}
-                        required
-                        placeholder="Enter desired owner username / shop code"
-                        className="w-full pl-11 pr-4 py-3 rounded-xl border border-slate-200 bg-slate-50/50 text-slate-900 dark:border-slate-800 dark:bg-slate-950/50 dark:text-white focus:outline-none focus:border-indigo-500 font-semibold text-sm"
-                      />
+                  <form onSubmit={handleCreateShop} className="space-y-4">
+                    <div>
+                      <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">
+                        Shop Name
+                      </label>
+                      <div className="relative">
+                        <span className="absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400">
+                          <Store size={16} />
+                        </span>
+                        <input
+                          type="text"
+                          value={shopName}
+                          onChange={(e) => setShopName(e.target.value)}
+                          required
+                          placeholder="Enter your store name (e.g. Grand Supermarket)"
+                          className="w-full pl-11 pr-4 py-3 rounded-xl border border-slate-200 bg-slate-50/50 text-slate-900 dark:border-slate-800 dark:bg-slate-950/50 dark:text-white focus:outline-none focus:border-indigo-500 font-semibold text-sm"
+                        />
+                      </div>
                     </div>
-                  </div>
 
-                  <div>
-                    <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">
-                      Owner Password
-                    </label>
-                    <div className="relative">
-                      <span className="absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400">
-                        <KeyRound size={16} />
-                      </span>
-                      <input
-                        type="password"
-                        value={ownerPassword}
-                        onChange={(e) => setOwnerPassword(e.target.value)}
-                        required
-                        placeholder="Choose a strong password"
-                        className="w-full pl-11 pr-4 py-3 rounded-xl border border-slate-200 bg-slate-50/50 text-slate-900 dark:border-slate-800 dark:bg-slate-950/50 dark:text-white focus:outline-none focus:border-indigo-500 font-semibold text-sm"
-                      />
+                    <div>
+                      <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">
+                        Owner Username
+                      </label>
+                      <div className="relative">
+                        <span className="absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400">
+                          <UserCheck size={16} />
+                        </span>
+                        <input
+                          type="text"
+                          value={ownerUsername}
+                          onChange={(e) => setOwnerUsername(e.target.value)}
+                          required
+                          placeholder="Enter your owner username"
+                          className="w-full pl-11 pr-4 py-3 rounded-xl border border-slate-200 bg-slate-50/50 text-slate-900 dark:border-slate-800 dark:bg-slate-950/50 dark:text-white focus:outline-none focus:border-indigo-500 font-semibold text-sm"
+                        />
+                      </div>
                     </div>
-                  </div>
 
-                  <button
-                    type="submit"
-                    disabled={loading}
-                    className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl font-bold text-white bg-indigo-600 hover:bg-indigo-500 disabled:bg-indigo-800 transition-all cursor-pointer text-sm shadow-lg shadow-indigo-600/20"
-                  >
-                    {loading ? 'Creating Store...' : 'Create & Enter Store'}
-                    <ArrowRight size={16} />
-                  </button>
-                </form>
+                    <div>
+                      <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">
+                        Owner Password
+                      </label>
+                      <div className="relative">
+                        <span className="absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400">
+                          <KeyRound size={16} />
+                        </span>
+                        <input
+                          type="password"
+                          value={ownerPassword}
+                          onChange={(e) => setOwnerPassword(e.target.value)}
+                          required
+                          placeholder="Choose a strong password"
+                          className="w-full pl-11 pr-4 py-3 rounded-xl border border-slate-200 bg-slate-50/50 text-slate-900 dark:border-slate-800 dark:bg-slate-950/50 dark:text-white focus:outline-none focus:border-indigo-500 font-semibold text-sm"
+                        />
+                      </div>
+                    </div>
+
+                    <button
+                      type="submit"
+                      disabled={loading}
+                      className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl font-bold text-white bg-indigo-600 hover:bg-indigo-500 disabled:bg-indigo-800 transition-all cursor-pointer text-sm shadow-lg shadow-indigo-600/20"
+                    >
+                      {loading ? 'Generating Shop Code & Creating...' : 'Create Store & Generate Code'}
+                      <ArrowRight size={16} />
+                    </button>
+                  </form>
+                </div>
               )}
             </div>
           )}
@@ -640,7 +609,7 @@ const Login = () => {
           </h3>
           
           <p className="text-slate-600 dark:text-slate-400 mt-4 text-sm leading-relaxed max-w-sm mx-auto">
-            Powered by real-world Clerk authentication. Manage multiple store branches, assign counter worker accounts, and oversee billing & stock analytics seamlessly.
+            Powered by real-world Clerk authentication. Generate 6-character shop codes, assign counter worker accounts, and oversee billing & stock analytics seamlessly.
           </p>
 
           <div className="mt-8 grid grid-cols-2 gap-3 text-left">
@@ -651,12 +620,132 @@ const Login = () => {
             </div>
             <div className="p-4 rounded-xl bg-white/60 dark:bg-slate-900/60 border border-slate-200/50 dark:border-slate-800/50 backdrop-blur-md">
               <Monitor className="text-emerald-600 dark:text-emerald-400 mb-2" size={20} />
-              <h4 className="text-xs font-bold text-slate-900 dark:text-white">Counter Billing</h4>
-              <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">Fast checkout billing & POS transactions for cashiers.</p>
+              <h4 className="text-xs font-bold text-slate-900 dark:text-white">Counter POS (/pos)</h4>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">Fast cashier billing using 6-character shop code.</p>
             </div>
           </div>
         </div>
       </div>
+
+      {/* FORGOT PASSWORD OTP MODAL */}
+      {showForgotModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm animate-fade-in">
+          <div className="w-full max-w-md p-6 bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl space-y-5 relative">
+            <button
+              onClick={() => { setShowForgotModal(false); setOtpStep(1); setError(''); setSuccessMsg(''); }}
+              className="absolute top-4 right-4 p-2 text-slate-400 hover:text-slate-600 dark:hover:text-white transition-colors"
+            >
+              <X size={20} />
+            </button>
+
+            <div className="flex items-center gap-3">
+              <div className="p-3 text-white bg-indigo-600 rounded-2xl shadow-md">
+                <Lock size={20} />
+              </div>
+              <div>
+                <h3 className="text-lg font-extrabold text-slate-900 dark:text-white font-title">
+                  Reset Password via OTP
+                </h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  {otpStep === 1 ? 'Enter your registered email' : 'Verify OTP & set new password'}
+                </p>
+              </div>
+            </div>
+
+            {/* STEP 1: REQUEST OTP */}
+            {otpStep === 1 ? (
+              <form onSubmit={handleRequestOTP} className="space-y-4">
+                <div>
+                  <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">
+                    Registered Gmail / Email
+                  </label>
+                  <div className="relative">
+                    <span className="absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400">
+                      <User size={16} />
+                    </span>
+                    <input
+                      type="email"
+                      value={forgotEmail}
+                      onChange={(e) => setForgotEmail(e.target.value)}
+                      required
+                      className="w-full pl-11 pr-4 py-3 rounded-xl border border-slate-200 bg-slate-50/50 text-slate-900 dark:border-slate-800 dark:bg-slate-950/50 dark:text-white focus:outline-none focus:border-indigo-500 font-semibold text-sm"
+                      placeholder="e.g. name@gmail.com"
+                    />
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full flex items-center justify-center gap-2 py-3 rounded-xl font-bold text-white bg-indigo-600 hover:bg-indigo-500 disabled:bg-indigo-800 transition-all cursor-pointer text-sm shadow-md shadow-indigo-600/20"
+                >
+                  {loading ? 'Sending OTP...' : 'Send 6-Digit OTP'}
+                  <Send size={14} />
+                </button>
+              </form>
+            ) : (
+              /* STEP 2: VERIFY OTP & RESET PASSWORD */
+              <form onSubmit={handleResetPasswordOTP} className="space-y-4">
+                {otpDemoCode && (
+                  <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs font-semibold text-amber-700 dark:text-amber-400 flex items-center justify-between">
+                    <span>Demo OTP Code: <strong className="font-mono text-sm">{otpDemoCode}</strong></span>
+                    <button 
+                      type="button" 
+                      onClick={() => setOtpCode(otpDemoCode)}
+                      className="underline text-[11px] cursor-pointer"
+                    >
+                      Auto-fill
+                    </button>
+                  </div>
+                )}
+
+                <div>
+                  <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">
+                    6-Digit OTP Code
+                  </label>
+                  <input
+                    type="text"
+                    value={otpCode}
+                    onChange={(e) => setOtpCode(e.target.value)}
+                    required
+                    maxLength={6}
+                    className="w-full text-center tracking-widest font-mono text-lg py-3 rounded-xl border border-slate-200 bg-slate-50/50 text-slate-900 dark:border-slate-800 dark:bg-slate-950/50 dark:text-white focus:outline-none focus:border-indigo-500 font-bold"
+                    placeholder="123456"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">
+                    New Password
+                  </label>
+                  <div className="relative">
+                    <span className="absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400">
+                      <KeyRound size={16} />
+                    </span>
+                    <input
+                      type="password"
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      required
+                      className="w-full pl-11 pr-4 py-3 rounded-xl border border-slate-200 bg-slate-50/50 text-slate-900 dark:border-slate-800 dark:bg-slate-950/50 dark:text-white focus:outline-none focus:border-indigo-500 font-semibold text-sm"
+                      placeholder="Enter new strong password"
+                    />
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full flex items-center justify-center gap-2 py-3 rounded-xl font-bold text-white bg-emerald-600 hover:bg-emerald-500 disabled:bg-emerald-800 transition-all cursor-pointer text-sm shadow-md shadow-emerald-600/20"
+                >
+                  {loading ? 'Resetting Password...' : 'Reset Password'}
+                  <CheckCircle2 size={16} />
+                </button>
+              </form>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 };

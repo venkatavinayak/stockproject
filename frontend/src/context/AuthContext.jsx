@@ -168,6 +168,24 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const requestOTP = async (email) => {
+    try {
+      const data = await authAPI.requestOTP(email);
+      return data;
+    } catch (err) {
+      throw new Error(err.response?.data?.detail || 'Failed to request OTP');
+    }
+  };
+
+  const resetPasswordOTP = async (email, otp, new_password) => {
+    try {
+      const data = await authAPI.resetPasswordOTP(email, otp, new_password);
+      return data;
+    } catch (err) {
+      throw new Error(err.response?.data?.detail || 'Failed to reset password');
+    }
+  };
+
   const logout = () => {
     localStorage.removeItem('smartstock_token');
     localStorage.removeItem('smartstock_user');
@@ -177,7 +195,7 @@ export const AuthProvider = ({ children }) => {
 
   return (
     <AuthContext.Provider value={{
-      token, setToken, user, setUser, login, loginOwner, loginCounter, loginCounterDirect, registerShop, logout, isAuthenticated: !!token, loading
+      token, setToken, user, setUser, login, loginOwner, loginCounter, loginCounterDirect, registerShop, requestOTP, resetPasswordOTP, logout, isAuthenticated: !!token, loading
     }}>
       {children}
     </AuthContext.Provider>

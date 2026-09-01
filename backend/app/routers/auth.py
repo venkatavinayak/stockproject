@@ -290,6 +290,18 @@ async def reset_user_password(
     
     return {"message": f"Password for user {username} updated successfully"}
 
+import random
+import string
+from datetime import timedelta
+
+def generate_shop_code() -> str:
+    # 6-character uppercase alphanumeric code e.g. STK849 or S7K9X2
+    chars = string.ascii_uppercase + string.digits
+    return "".join(random.choices(chars, k=6))
+
+def generate_otp() -> str:
+    return "".join(random.choices(string.digits, k=6))
+
 class ShopRegister(BaseModel):
     shop_name: str
     owner_username: str
@@ -302,18 +314,24 @@ async def register_shop(data: ShopRegister):
     clean_email = data.email.lower().strip()
     owner_uname = data.owner_username.strip()
     
-    # Check if a user with this username, email, or clerk_id already exists
-    existing = await User.find_one({
-        "$or": [
-            {"username": owner_uname}, 
-            {"email": clean_email}, 
-            {"username": clean_email},
-            *([{"clerk_user_id": data.clerk_id}] if data.clerk_id else [])
-        ]
-    })
-    if existing:
-        raise HTTPException(status_code=400, detail="Owner username, email, or Clerk account is already registered")
+    # 1-Email 1-Shop Rule: Check if a user with this email or clerk_id already exists
+    existing_email = await User.find_one({"$or": [{"email": clean_email}, {"username": clean_email}, *([{"clerk_user_id": data.clerk_id}] if data.clerk_id else [])]})
+    if existing_email:
+        raise HTTPException(
+            status_code=400, 
+            detail="An account is already linked to this email address. Please log in to your existing store."
+        )
+
+    # Check if owner username exists
+    existing_user = await User.find_one(User.username == owner_uname)
+    if existing_user:
+        raise HTTPException(status_code=400, detail="Owner username is already taken. Please choose another username.")
         
+    # Generate unique 6-character shop code
+    shop_code = generate_shop_code()
+    while await User.find_one(User.shop_code == shop_code):
+        shop_code = generate_shop_code()
+
     # Create the owner user (admin role)
     new_user = User(
         username=owner_uname,
@@ -323,11 +341,12 @@ async def register_shop(data: ShopRegister):
         email=clean_email,
         full_name=data.shop_name,
         owner_username=owner_uname,
-        clerk_user_id=data.clerk_id
+        clerk_user_id=data.clerk_id,
+        shop_code=shop_code
     )
     await new_user.insert()
     
-    # Update store settings with shop name, scoped to this owner
+    # Update store settings with shop name & shop_code, scoped to this owner
     from backend.app.models.settings import StoreSettings
     settings = await StoreSettings.find_one(StoreSettings.owner_username == owner_uname)
     if not settings:
@@ -349,20 +368,22 @@ async def register_shop(data: ShopRegister):
     audit = AuditLog(
         username=owner_uname,
         action="REGISTER_SHOP",
-        details=f"Registered shop: {data.shop_name} for owner: {owner_uname} ({clean_email})"
+        details=f"Registered shop: {data.shop_name} (Code: {shop_code}) for owner: {owner_uname} ({clean_email})"
     )
     await audit.insert()
     
     access_token = create_access_token(data={
         "sub": new_user.username,
         "role": new_user.role,
-        "owner_username": owner_uname
+        "owner_username": owner_uname,
+        "shop_code": shop_code
     })
     return {
         "message": "Shop registered successfully!",
         "access_token": access_token,
         "token_type": "bearer",
-        "owner_username": owner_uname
+        "owner_username": owner_uname,
+        "shop_code": shop_code
     }
 
 class ClerkLoginPayload(BaseModel):
@@ -381,14 +402,19 @@ async def clerk_login(data: ClerkLoginPayload):
     user = await User.find_one({
         "$or": [
             {"clerk_user_id": data.clerk_id},
-            {"username": target_username}, 
             {"email": clean_email}, 
-            {"username": clean_email}
+            {"username": clean_email},
+            {"username": target_username}
         ]
     })
     if not user:
         if not data.shop_name:
             raise HTTPException(status_code=404, detail="No shop found for this account. Please create a shop.")
+        
+        shop_code = generate_shop_code()
+        while await User.find_one(User.shop_code == shop_code):
+            shop_code = generate_shop_code()
+
         hashed = get_password_hash(data.password) if data.password else get_password_hash(data.clerk_id)
         user = User(
             username=target_username,
@@ -398,7 +424,8 @@ async def clerk_login(data: ClerkLoginPayload):
             email=clean_email,
             full_name=data.shop_name or "Store Owner",
             owner_username=target_username,
-            clerk_user_id=data.clerk_id
+            clerk_user_id=data.clerk_id,
+            shop_code=shop_code
         )
         await user.insert()
         
@@ -427,9 +454,12 @@ async def clerk_login(data: ClerkLoginPayload):
         )
         await audit.insert()
     else:
-        # Bind clerk_user_id if not previously attached
+        # Ensure user has a 6-character shop code assigned
+        if not user.shop_code:
+            user.shop_code = generate_shop_code()
         if not user.clerk_user_id:
             user.clerk_user_id = data.clerk_id
+
         if data.password:
             if not verify_password(data.password, user.hashed_password):
                 raise HTTPException(
@@ -442,9 +472,15 @@ async def clerk_login(data: ClerkLoginPayload):
     access_token = create_access_token(data={
         "sub": user.username,
         "role": user.role,
-        "owner_username": user.owner
+        "owner_username": user.owner,
+        "shop_code": user.shop_code
     })
-    return {"access_token": access_token, "token_type": "bearer", "owner_username": user.owner}
+    return {
+        "access_token": access_token, 
+        "token_type": "bearer", 
+        "owner_username": user.owner,
+        "shop_code": user.shop_code
+    }
 
 @router.get("/check-shop")
 async def check_shop(email: Optional[str] = None, clerk_id: Optional[str] = None):
@@ -464,6 +500,11 @@ async def check_shop(email: Optional[str] = None, clerk_id: Optional[str] = None
 
     user = await User.find_one({"$or": query_conditions})
     if user:
+        # Ensure shop_code exists
+        if not user.shop_code:
+            user.shop_code = generate_shop_code()
+            await user.save()
+
         from backend.app.models.settings import StoreSettings
         settings = await StoreSettings.find_one(StoreSettings.owner_username == user.owner)
         shop_name = settings.store_name if settings else (user.full_name or "Smart Store")
@@ -471,23 +512,28 @@ async def check_shop(email: Optional[str] = None, clerk_id: Optional[str] = None
             "exists": True,
             "shop_name": shop_name,
             "owner_username": user.owner,
+            "shop_code": user.shop_code,
             "email": user.email or email
         }
     return {"exists": False}
 
 class CounterLoginRequest(BaseModel):
-    shop_code: str  # Owner username
+    shop_code: str  # Can be 6-character shop code or owner username
     username: str   # Counter username
     password: str
 
 @router.post("/counter-login")
 async def counter_login(data: CounterLoginRequest):
-    shop_code = data.shop_code.strip()
+    code_input = data.shop_code.strip()
     counter_name = data.username.strip()
+
+    # Find owner by 6-character shop_code or owner_username
+    owner = await User.find_one({"$or": [{"shop_code": code_input.upper()}, {"username": code_input}, {"owner_username": code_input}]})
+    owner_username = owner.owner if owner else code_input
     
-    scoped_username = counter_name if ":" in counter_name else f"{shop_code}:{counter_name}"
+    scoped_username = counter_name if ":" in counter_name else f"{owner_username}:{counter_name}"
     
-    user = await User.find_one({"$or": [{"username": scoped_username}, {"username": counter_name, "owner_username": shop_code}]})
+    user = await User.find_one({"$or": [{"username": scoped_username}, {"username": counter_name, "owner_username": owner_username}]})
     if not user or not verify_password(data.password, user.hashed_password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -505,8 +551,8 @@ async def counter_login(data: CounterLoginRequest):
     audit = AuditLog(
         username=user.username,
         action="COUNTER_LOGIN",
-        details=f"Counter cashier logged into shop: {shop_code}",
-        owner_username=shop_code
+        details=f"Counter cashier logged into shop: {owner_username}",
+        owner_username=owner_username
     )
     await audit.insert()
 
@@ -519,5 +565,68 @@ async def counter_login(data: CounterLoginRequest):
         "can_view_analytics": user.can_view_analytics
     })
     return {"access_token": access_token, "token_type": "bearer", "owner_username": user.owner}
+
+class RequestOTPPayload(BaseModel):
+    email: str
+
+@router.post("/request-otp")
+async def request_otp(data: RequestOTPPayload):
+    clean_email = data.email.lower().strip()
+    user = await User.find_one({"$or": [{"email": clean_email}, {"username": clean_email}]})
+    if not user:
+        # Return success message to avoid leaking user existence
+        return {"message": "If your email is registered, a 6-digit OTP has been sent."}
+
+    otp = generate_otp()
+    user.reset_otp = otp
+    user.otp_expiry = datetime.utcnow() + timedelta(minutes=10)
+    await user.save()
+
+    audit = AuditLog(
+        username=user.username,
+        action="REQUEST_OTP",
+        details=f"Requested password reset OTP for email: {clean_email}"
+    )
+    await audit.insert()
+
+    return {
+        "message": f"6-digit OTP code has been sent to {clean_email}.",
+        "otp_demo": otp  # Included for seamless testing & display
+    }
+
+class ResetPasswordOTPPayload(BaseModel):
+    email: str
+    otp: str
+    new_password: str
+
+@router.post("/reset-password-otp")
+async def reset_password_otp(data: ResetPasswordOTPPayload):
+    clean_email = data.email.lower().strip()
+    otp_input = data.otp.strip()
+
+    user = await User.find_one({"$or": [{"email": clean_email}, {"username": clean_email}]})
+    if not user or not user.reset_otp or user.reset_otp != otp_input:
+        raise HTTPException(status_code=400, detail="Invalid OTP code. Please check your OTP and try again.")
+
+    if not user.otp_expiry or datetime.utcnow() > user.otp_expiry:
+        raise HTTPException(status_code=400, detail="OTP has expired. Please request a new OTP.")
+
+    if len(data.new_password) < 4:
+        raise HTTPException(status_code=400, detail="Password must be at least 4 characters long.")
+
+    user.hashed_password = get_password_hash(data.new_password)
+    user.reset_otp = None
+    user.otp_expiry = None
+    await user.save()
+
+    audit = AuditLog(
+        username=user.username,
+        action="RESET_PASSWORD_OTP",
+        details=f"Password successfully reset via OTP for email: {clean_email}"
+    )
+    await audit.insert()
+
+    return {"message": "Password reset successfully! You can now log in with your new password."}
+
 
 

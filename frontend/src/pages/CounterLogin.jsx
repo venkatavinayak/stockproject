@@ -7,8 +7,8 @@ const CounterLogin = () => {
   const { isAuthenticated, loginCounterDirect } = useAuth();
   const navigate = useNavigate();
 
-  const [shopCode, setShopCode] = useState('admin');
-  const [username, setUsername] = useState('cashier1');
+  const [shopCode, setShopCode] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   
   const [error, setError] = useState('');
@@ -75,7 +75,7 @@ const CounterLogin = () => {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">
-                Shop Code / Owner Username
+                6-Character Shop Code / Owner Username
               </label>
               <div className="relative">
                 <span className="absolute inset-y-0 left-0 flex items-center pl-4 text-slate-500">
@@ -86,8 +86,8 @@ const CounterLogin = () => {
                   value={shopCode}
                   onChange={(e) => setShopCode(e.target.value)}
                   required
-                  placeholder="e.g. admin or myfreshmart"
-                  className="w-full pl-11 pr-4 py-3 rounded-xl border border-slate-800 bg-slate-900 text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 font-semibold text-sm"
+                  placeholder="e.g. STK849 or admin"
+                  className="w-full pl-11 pr-4 py-3 rounded-xl border border-slate-800 bg-slate-900 text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 font-semibold text-sm uppercase tracking-wider"
                 />
               </div>
             </div>
