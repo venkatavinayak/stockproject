@@ -271,7 +271,7 @@ const Login = () => {
     <div className="flex min-h-screen bg-slate-50 dark:bg-slate-950 transition-colors duration-300">
       {/* Left Container */}
       <div className="flex flex-col justify-center w-full lg:w-1/2 p-6 md:p-12 lg:p-14 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800">
-        <div className="w-full max-w-md mx-auto">
+        <div className={`w-full ${!isSignedIn ? 'max-w-3xl' : 'max-w-md'} mx-auto transition-all`}>
           
           {/* Header Brand */}
           <div className="flex items-center justify-between mb-6">
@@ -320,68 +320,103 @@ const Login = () => {
           {/* STAGE 1: NOT SIGNED IN WITH CLERK */}
           {!isSignedIn && (
             <div className="animate-fade-in space-y-6">
-              <div className="text-center mb-2">
-                <h2 className="text-xl font-extrabold text-slate-900 dark:text-white font-title">
-                  Sign in with Gmail
+              <div className="text-center mb-6">
+                <h2 className="text-2xl font-extrabold text-slate-900 dark:text-white font-title">
+                  Store Access Portals
                 </h2>
                 <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                  Authenticate using your Google/Gmail account to access your store or set up a new one.
+                  Choose your login portal below to access store ERP management or counter cashier POS.
                 </p>
               </div>
 
-              {/* Styled Clerk Sign In / Sign Up Component */}
-              <div className="flex justify-center">
-                {authMode === 'sign_in' ? (
-                  <SignIn 
-                    routing="virtual"
-                    afterSignInUrl="/login"
-                    appearance={clerkAppearance}
-                  />
-                ) : (
-                  <SignUp 
-                    routing="virtual"
-                    afterSignUpUrl="/login"
-                    appearance={clerkAppearance}
-                  />
-                )}
-              </div>
+              {/* SIDE-BY-SIDE CARDS GRID */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch w-full">
+                
+                {/* PORTAL 1: STORE OWNER SIGN IN (CLERK GMAIL SSO) */}
+                <div className="flex flex-col justify-between p-6 rounded-3xl bg-white dark:bg-slate-900 border border-indigo-100 dark:border-slate-800 shadow-xl shadow-indigo-600/5 transition-all hover:border-indigo-300">
+                  <div>
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="px-2.5 py-0.5 rounded-full bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 text-[10px] font-extrabold uppercase tracking-wider">
+                        Store Owner
+                      </span>
+                    </div>
+                    <h3 className="text-lg font-extrabold text-slate-900 dark:text-white font-title">
+                      Owner Gmail Sign In
+                    </h3>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                      Sign in with Google/Gmail to access store setup, inventory & analytics.
+                    </p>
+                  </div>
 
-              <div className="flex justify-center text-xs text-slate-500">
-                {authMode === 'sign_in' ? (
-                  <p>
-                    Need a new Clerk account?{' '}
-                    <button 
-                      onClick={() => setAuthMode('sign_up')} 
-                      className="font-bold text-indigo-600 dark:text-indigo-400 hover:underline cursor-pointer"
-                    >
-                      Sign Up with Clerk
-                    </button>
-                  </p>
-                ) : (
-                  <p>
-                    Already registered?{' '}
-                    <button 
-                      onClick={() => setAuthMode('sign_in')} 
-                      className="font-bold text-indigo-600 dark:text-indigo-400 hover:underline cursor-pointer"
-                    >
-                      Sign In
-                    </button>
-                  </p>
-                )}
-              </div>
+                  <div className="my-4 flex justify-center">
+                    {authMode === 'sign_in' ? (
+                      <SignIn 
+                        routing="virtual"
+                        afterSignInUrl="/login"
+                        appearance={clerkAppearance}
+                      />
+                    ) : (
+                      <SignUp 
+                        routing="virtual"
+                        afterSignUpUrl="/login"
+                        appearance={clerkAppearance}
+                      />
+                    )}
+                  </div>
+                </div>
 
-              {/* Direct POS Cashier Login Banner */}
-              <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-center">
-                <p className="text-xs font-semibold text-emerald-800 dark:text-emerald-300">
-                  Are you a Cashier or Counter Staff?
-                </p>
-                <Link
-                  to="/pos"
-                  className="mt-2.5 inline-flex items-center justify-center gap-2 px-5 py-2.5 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-500 rounded-xl transition-all shadow-md shadow-emerald-600/20"
-                >
-                  <Monitor size={14} />
-                  Open Counter POS Login (/pos)
-                </Link>
+                {/* PORTAL 2: CASHIER & COUNTER POS LOGIN (/pos) */}
+                <div className="flex flex-col justify-between p-6 rounded-3xl bg-gradient-to-b from-slate-900 to-slate-950 text-white border border-emerald-500/30 shadow-xl shadow-emerald-600/10 relative overflow-hidden group hover:border-emerald-500/50 transition-all">
+                  <div className="absolute top-0 right-0 w-36 h-36 bg-emerald-500/10 rounded-full blur-2xl pointer-events-none"></div>
+                  
+                  <div>
+                    <div className="flex items-center gap-2 mb-3">
+                      <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 text-[10px] font-extrabold uppercase tracking-wider border border-emerald-500/30">
+                        Counter Cashier
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className="p-2.5 bg-emerald-500/20 text-emerald-400 rounded-2xl border border-emerald-500/30">
+                        <Monitor size={24} />
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-extrabold text-white font-title">
+                          Counter POS Terminal
+                        </h3>
+                        <p className="text-[11px] text-emerald-400 font-medium">
+                          Dedicated Billing Portal
+                        </p>
+                      </div>
+                    </div>
+
+                    <p className="text-xs text-slate-300 mt-3 leading-relaxed">
+                      Are you a Cashier or Counter Staff? Log into your assigned billing terminal directly using your store's 6-character Shop Code.
+                    </p>
+
+                    <div className="mt-5 p-4 rounded-2xl bg-white/5 border border-white/10 space-y-2">
+                      <div className="flex items-center gap-2 text-xs text-emerald-300 font-bold">
+                        <ShieldCheck size={16} />
+                        <span>No Gmail Account Needed</span>
+                      </div>
+                      <p className="text-[11px] text-slate-400">
+                        Counter staff log in directly at <strong className="text-white font-mono">/pos</strong> with Shop Code + Cashier Password.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="mt-6 pt-4 border-t border-slate-800/80">
+                    <Link
+                      to="/pos"
+                      className="w-full inline-flex items-center justify-center gap-2.5 py-3.5 px-5 rounded-xl font-extrabold text-white bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 shadow-lg shadow-emerald-600/25 text-sm transition-all transform active:scale-95 cursor-pointer"
+                    >
+                      <Monitor size={18} />
+                      <span>Open Counter POS Login (/pos)</span>
+                      <ArrowRight size={16} />
+                    </Link>
+                  </div>
+                </div>
+
               </div>
             </div>
           )}
