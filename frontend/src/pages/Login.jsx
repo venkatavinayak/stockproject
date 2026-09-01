@@ -231,23 +231,38 @@ const Login = () => {
     setExistingOwnerPassword('');
   };
 
-  // Modern Clerk Appearance Configuration
+  // Customized Clerk Theme matching Web App Color Palette & UI
   const clerkAppearance = {
+    layout: {
+      socialButtonsVariant: "blockButton",
+      showOptionalFields: false
+    },
+    variables: {
+      colorPrimary: "#7c3aed",
+      colorText: "#1c1917",
+      colorTextSecondary: "#78716c",
+      colorBackground: "#ffffff",
+      colorInputBackground: "#f5f5f4",
+      colorInputText: "#1c1917",
+      colorBorder: "#e7e5e4",
+      borderRadius: "1rem",
+      fontFamily: "'Plus Jakarta Sans', sans-serif"
+    },
     elements: {
       rootBox: "w-full flex justify-center",
-      cardBox: "w-full max-w-md shadow-2xl rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 transition-all",
-      card: "shadow-none bg-transparent p-6 sm:p-8 w-full",
-      headerTitle: "text-xl font-extrabold text-slate-900 dark:text-white font-title text-center tracking-tight",
-      headerSubtitle: "text-xs text-slate-500 dark:text-slate-400 text-center mt-1",
-      socialButtonsBlockButton: "rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white hover:bg-indigo-50 dark:hover:bg-indigo-950/50 font-bold py-3 transition-all cursor-pointer shadow-sm flex items-center justify-center gap-2",
-      socialButtonsBlockButtonText: "font-bold text-sm text-slate-800 dark:text-slate-200",
+      cardBox: "w-full max-w-md shadow-2xl rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 transition-all backdrop-blur-xl overflow-hidden",
+      card: "shadow-none bg-transparent p-6 sm:p-8 w-full border-none",
+      headerTitle: "text-2xl font-extrabold text-slate-900 dark:text-white font-title text-center tracking-tight",
+      headerSubtitle: "text-xs text-slate-500 dark:text-slate-400 text-center mt-1 font-medium",
+      socialButtonsBlockButton: "w-full rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white hover:bg-indigo-50 dark:hover:bg-indigo-950/60 font-bold py-3.5 px-4 transition-all cursor-pointer shadow-sm flex items-center justify-center gap-3 hover:border-indigo-500 hover:shadow-indigo-500/10",
+      socialButtonsBlockButtonText: "font-extrabold text-sm text-slate-800 dark:text-slate-200",
       dividerLine: "bg-slate-200 dark:bg-slate-800",
-      dividerText: "text-[10px] text-slate-400 uppercase font-bold tracking-wider bg-white dark:bg-slate-900 px-3",
-      formFieldLabel: "text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-400 mb-1.5",
-      formFieldInput: "w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white focus:outline-none focus:border-indigo-500 font-semibold text-sm transition-all",
-      formButtonPrimary: "w-full py-3.5 rounded-xl font-bold text-white bg-indigo-600 hover:bg-indigo-500 shadow-lg shadow-indigo-600/20 text-sm transition-all cursor-pointer",
+      dividerText: "text-[10px] text-slate-400 uppercase font-extrabold tracking-widest bg-white dark:bg-slate-900 px-3 py-0.5 rounded-full border border-slate-100 dark:border-slate-800",
+      formFieldLabel: "text-[10px] font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5",
+      formFieldInput: "w-full px-4 py-3.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 font-semibold text-sm transition-all shadow-inner",
+      formButtonPrimary: "w-full py-3.5 rounded-xl font-extrabold text-white bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 shadow-lg shadow-indigo-600/30 text-sm transition-all cursor-pointer transform active:scale-98 border-none mt-2",
       footerActionLink: "font-bold text-indigo-600 dark:text-indigo-400 hover:underline",
-      footer: "bg-slate-50/50 dark:bg-slate-950/50 border-t border-slate-200 dark:border-slate-800 p-4 rounded-b-3xl text-center"
+      footer: "bg-slate-50/80 dark:bg-slate-950/80 border-t border-slate-200 dark:border-slate-800 p-4 rounded-b-3xl text-center text-xs text-slate-500 dark:text-slate-400"
     }
   };
 
