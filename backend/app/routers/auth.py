@@ -390,6 +390,12 @@ async def clerk_login(data: ClerkLoginPayload):
         )
         await audit.insert()
     else:
+        # Enforce password verification for existing owner logins
+        if not data.password or not verify_password(data.password, user.hashed_password):
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Incorrect store owner password"
+            )
         user.last_login = datetime.utcnow()
         await user.save()
         

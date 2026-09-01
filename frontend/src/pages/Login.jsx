@@ -130,16 +130,16 @@ const Login = () => {
       } else {
         // Step 2: Login for existing shop
         if (portal === 'owner') {
-          // Passwordless Owner launch since Google Mail is verified!
+          // Owner login requiring store owner password authentication
           try {
-            const localAuth = await authAPI.clerkLogin(email, user.id, null, 'admin');
+            const localAuth = await authAPI.clerkLogin(email, user.id, null, 'admin', password);
             localStorage.setItem('smartstock_token', localAuth.access_token);
             localStorage.setItem('smartstock_user', JSON.stringify({ username: email, role: 'admin' }));
             setToken(localAuth.access_token);
             setUser({ username: email, role: 'admin' });
             navigate('/');
           } catch (err) {
-            setError(err.message || 'Launch failed');
+            setError(err.response?.data?.detail || err.message || 'Launch failed');
           } finally {
             setLoading(false);
           }
@@ -261,20 +261,35 @@ const Login = () => {
                   </div>
 
                   {portal === 'owner' ? (
-                    /* Owner Passwordless Launcher */
-                    <div className="space-y-4">
-                      <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed text-center">
-                        Launch your owner console. You are automatically authorized using your verified Google Mail account.
-                      </p>
+                    /* Owner Password Authentication Form */
+                    <form onSubmit={handleSubmit} className="space-y-5">
+                      <div>
+                        <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">
+                          Store Owner Password
+                        </label>
+                        <div className="relative">
+                          <span className="absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400 dark:text-slate-500">
+                            <Lock size={16} />
+                          </span>
+                          <input
+                            type="password"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            required
+                            className="w-full pl-11 pr-4 py-3 rounded-xl border border-slate-200 bg-slate-50/50 text-slate-900 dark:border-slate-800 dark:bg-slate-950/50 dark:text-white placeholder-slate-400 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 transition-all font-sans text-sm font-semibold"
+                            placeholder="Enter your owner password"
+                          />
+                        </div>
+                      </div>
                       <button
-                        onClick={handleSubmit}
+                        type="submit"
                         disabled={loading}
                         className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl font-bold text-white bg-indigo-600 hover:bg-indigo-500 disabled:bg-indigo-800 transition-all cursor-pointer text-sm shadow-lg shadow-indigo-600/15"
                       >
                         {loading ? 'Launching Dashboard...' : 'Launch Owner Dashboard'}
                         <ArrowRight size={16} />
                       </button>
-                    </div>
+                    </form>
                   ) : (
                     /* Counter Cashier Credentials Form */
                     <form onSubmit={handleSubmit} className="space-y-5">
