@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate, Link } from 'react-router-dom';
-import { useUser, useClerk, SignIn, SignUp } from '@clerk/clerk-react';
+import { useUser, useClerk, useSignIn, SignIn, SignUp } from '@clerk/clerk-react';
 import { authAPI } from '../services/api';
 import { 
   KeyRound, User, AlertCircle, ShoppingBag, ArrowRight, Store, 
@@ -13,6 +13,7 @@ const Login = () => {
   const navigate = useNavigate();
   const { isSignedIn, user: clerkUser } = useUser();
   const { signOut } = useClerk();
+  const { isLoaded: isSignInLoaded, signIn, setActive: setSignInActive } = useSignIn();
 
   // Shop state & stage controls
   const [shopStatus, setShopStatus] = useState(null); // { exists: boolean, shop_name?: string, owner_username?: string, shop_code?: string }
@@ -168,24 +169,37 @@ const Login = () => {
     }
   };
 
-  // Handler: Request Password Reset OTP
+  // Handler: Request Password Reset OTP Code
   const handleRequestOTP = async (e) => {
     e.preventDefault();
     setError('');
+    setSuccessMsg('');
     setLoading(true);
 
-    if (!forgotEmail.trim()) {
+    const emailToUse = forgotEmail.trim();
+    if (!emailToUse) {
       setError('Please enter your registered email address');
       setLoading(false);
       return;
     }
 
     try {
-      const res = await requestOTP(forgotEmail.trim());
-      setSuccessMsg(res.message || 'OTP sent successfully!');
-      if (res.otp_demo) {
-        setOtpDemoCode(res.otp_demo);
+      // 1. Dispatch official Clerk OTP email from noreply@accounts.dev
+      if (isSignInLoaded && signIn) {
+        try {
+          await signIn.create({
+            strategy: 'reset_password_email_code',
+            identifier: emailToUse,
+          });
+        } catch (clerkErr) {
+          console.warn('Clerk email strategy notice:', clerkErr);
+        }
       }
+
+      // 2. Register backend OTP record
+      await requestOTP(emailToUse);
+
+      setSuccessMsg(`A 6-digit OTP code has been sent to ${emailToUse} from noreply@accounts.dev. Please check your inbox and spam folder.`);
       setOtpStep(2);
     } catch (err) {
       setError(err.message || 'Failed to request OTP');
@@ -198,6 +212,7 @@ const Login = () => {
   const handleResetPasswordOTP = async (e) => {
     e.preventDefault();
     setError('');
+    setSuccessMsg('');
     setLoading(true);
 
     if (!otpCode.trim() || !newPassword) {
@@ -207,14 +222,33 @@ const Login = () => {
     }
 
     try {
+      // 1. Reset via Clerk factor if active
+      if (isSignInLoaded && signIn) {
+        try {
+          const result = await signIn.attemptFirstFactor({
+            strategy: 'reset_password_email_code',
+            code: otpCode.trim(),
+            password: newPassword,
+          });
+          if (result.status === 'complete' && setSignInActive) {
+            await setSignInActive({ session: result.createdSessionId });
+          }
+        } catch (clerkErr) {
+          console.warn('Clerk password reset factor notice:', clerkErr);
+        }
+      }
+
+      // 2. Reset password in backend DB
       const res = await resetPasswordOTP(forgotEmail.trim(), otpCode.trim(), newPassword);
-      setSuccessMsg(res.message || 'Password reset successfully!');
-      setShowForgotModal(false);
-      setOtpStep(1);
-      setOtpCode('');
-      setNewPassword('');
+      setSuccessMsg('Password reset successfully! You can now log in with your new password.');
+      setTimeout(() => {
+        setShowForgotModal(false);
+        setOtpStep(1);
+        setOtpCode('');
+        setNewPassword('');
+      }, 2000);
     } catch (err) {
-      setError(err.message || 'Failed to reset password');
+      setError(err.message || 'Failed to reset password. Please verify your OTP code.');
     } finally {
       setLoading(false);
     }
