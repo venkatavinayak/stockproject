@@ -44,8 +44,8 @@ const Navbar = ({ toggleSidebar, isSidebarCollapsed }) => {
 
   useEffect(() => {
     fetchNotifications();
-    // Poll every 20 seconds for low stock / backup alerts
-    const poll = setInterval(fetchNotifications, 20000);
+    // Poll every 60 seconds for low stock / backup alerts to optimize performance
+    const poll = setInterval(fetchNotifications, 60000);
     return () => clearInterval(poll);
   }, []);
 
