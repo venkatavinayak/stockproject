@@ -699,4 +699,49 @@ async def reset_password_otp(data: ResetPasswordOTPPayload):
     return {"message": "Password reset successfully! You can now log in with your new password."}
 
 
+@router.delete("/delete-account")
+async def delete_account(
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Permanently deletes the Store Owner's account, all cashier counter worker accounts,
+    and all associated store data (Products, Categories, Billing Transactions, Expenses, AuditLogs, Settings).
+    """
+    if current_user.role != "admin":
+        raise HTTPException(
+            status_code=403,
+            detail="Only Store Owners can delete a store account."
+        )
+
+    owner_uname = current_user.owner
+    user_email = current_user.email or current_user.username
+
+    # 1. Delete all associated store data models
+    from backend.app.models.product import Product
+    from backend.app.models.category import Category
+    from backend.app.models.transaction import Transaction
+    from backend.app.models.expense import Expense
+    from backend.app.models.supplier import Supplier
+    from backend.app.models.settings import StoreSettings
+    from backend.app.models.audit import AuditLog
+
+    await Product.find(Product.owner_username == owner_uname).delete()
+    await Category.find(Category.owner_username == owner_uname).delete()
+    await Transaction.find(Transaction.owner_username == owner_uname).delete()
+    await Expense.find(Expense.owner_username == owner_uname).delete()
+    await Supplier.find(Supplier.owner_username == owner_uname).delete()
+    await StoreSettings.find(StoreSettings.owner_username == owner_uname).delete()
+    await AuditLog.find(AuditLog.owner_username == owner_uname).delete()
+
+    # 2. Delete all counter worker accounts linked to this owner
+    await User.find(User.owner_username == owner_uname).delete()
+
+    # 3. Delete the owner user account itself if not already deleted
+    owner_doc = await User.find_one(User.username == current_user.username)
+    if owner_doc:
+        await owner_doc.delete()
+
+    return {"message": f"Store account ({user_email}) and all associated store data have been permanently deleted."}
+
+
 

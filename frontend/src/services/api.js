@@ -61,6 +61,10 @@ export const authAPI = {
     const response = await api.post('/auth/reset-password-otp', { email, otp, new_password });
     return response.data;
   },
+  deleteAccount: async () => {
+    const response = await api.delete('/auth/delete-account');
+    return response.data;
+  },
   login: async (username, password) => {
     // OAuth2PasswordRequestForm expects urlencoded payload
     const params = new URLSearchParams();

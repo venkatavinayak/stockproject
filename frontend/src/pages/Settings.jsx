@@ -1,12 +1,22 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useClerk } from '@clerk/clerk-react';
+import { useAuth } from '../context/AuthContext';
 import { settingsAPI, backupAPI, authAPI } from '../services/api';
 import { 
   Settings, Database, Save, Plus, 
   Download, RefreshCw, CheckCircle2, 
-  AlertTriangle, Lock, KeyRound, X
+  AlertTriangle, Lock, KeyRound, X, Trash2, AlertOctagon
 } from 'lucide-react';
 
 const SettingsPage = () => {
+  const { deleteAccount, user } = useAuth();
+  const { signOut } = useClerk();
+  const navigate = useNavigate();
+
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteConfirmInput, setDeleteConfirmInput] = useState('');
   // Store Settings (Admin Only)
   const [formData, setFormData] = useState({
     store_name: 'Smart Store Ai Store',
@@ -492,6 +502,106 @@ const SettingsPage = () => {
               >
                 <KeyRound size={14} /> {passSaving ? 'Resetting...' : 'Change Password'}
               </button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* DANGER ZONE: DELETE STORE ACCOUNT */}
+      <div className="p-6 mt-8 rounded-3xl bg-rose-500/5 border border-rose-500/20 text-rose-900 dark:text-rose-200">
+        <div className="flex items-center justify-between flex-wrap gap-4">
+          <div className="flex items-center gap-3">
+            <div className="p-3 rounded-2xl bg-rose-500/10 text-rose-600 dark:text-rose-400">
+              <Trash2 size={24} />
+            </div>
+            <div>
+              <h3 className="text-base font-extrabold text-rose-700 dark:text-rose-400 font-title">
+                Delete Store Account
+              </h3>
+              <p className="text-xs text-rose-600/80 dark:text-rose-300/80 mt-0.5 max-w-xl">
+                Permanently delete your store account, products, categories, transactions, cashier accounts, and settings. This action cannot be undone.
+              </p>
+            </div>
+          </div>
+
+          <button
+            onClick={() => { setShowDeleteModal(true); setDeleteConfirmInput(''); }}
+            className="px-5 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-extrabold text-xs transition-all shadow-md shadow-rose-600/20 cursor-pointer flex items-center gap-2"
+          >
+            <Trash2 size={14} />
+            <span>Delete Store Account</span>
+          </button>
+        </div>
+      </div>
+
+      {/* DELETE ACCOUNT CONFIRMATION MODAL */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm animate-fade-in">
+          <div className="w-full max-w-md p-6 bg-white dark:bg-slate-900 rounded-3xl border border-rose-500/30 shadow-2xl space-y-5 relative">
+            <button
+              onClick={() => setShowDeleteModal(false)}
+              className="absolute top-4 right-4 p-2 text-slate-400 hover:text-slate-600 dark:hover:text-white transition-colors"
+            >
+              <X size={20} />
+            </button>
+
+            <div className="flex items-center gap-3">
+              <div className="p-3 text-white bg-rose-600 rounded-2xl shadow-md">
+                <AlertOctagon size={24} />
+              </div>
+              <div>
+                <h3 className="text-lg font-extrabold text-slate-900 dark:text-white font-title">
+                  Permanently Delete Account?
+                </h3>
+                <p className="text-xs text-rose-600 dark:text-rose-400 font-semibold">
+                  Warning: All store data will be deleted immediately.
+                </p>
+              </div>
+            </div>
+
+            <div className="p-4 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-xs text-rose-700 dark:text-rose-300 space-y-2">
+              <p className="font-bold">This operation will permanently remove:</p>
+              <ul className="list-disc list-inside space-y-1 text-[11px] opacity-90">
+                <li>Store owner account & credentials</li>
+                <li>All counter cashier staff accounts</li>
+                <li>All product inventory catalog items</li>
+                <li>All sales history, invoices, & billing records</li>
+                <li>All store expenses & ERP settings</li>
+              </ul>
+            </div>
+
+            <form onSubmit={handleDeleteStoreAccount} className="space-y-4">
+              <div>
+                <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">
+                  Type <strong className="text-rose-600 dark:text-rose-400">DELETE</strong> to confirm
+                </label>
+                <input
+                  type="text"
+                  value={deleteConfirmInput}
+                  onChange={(e) => setDeleteConfirmInput(e.target.value)}
+                  required
+                  placeholder="Type DELETE"
+                  className="w-full text-center font-mono font-bold uppercase py-3 rounded-xl border border-rose-300 dark:border-rose-800 bg-rose-50/50 dark:bg-rose-950/30 text-rose-900 dark:text-rose-100 focus:outline-none focus:border-rose-600"
+                />
+              </div>
+
+              <div className="flex gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowDeleteModal(false)}
+                  className="w-1/2 py-3 rounded-xl font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-200 text-xs transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={deleting || deleteConfirmInput.trim().toUpperCase() !== 'DELETE'}
+                  className="w-1/2 py-3 rounded-xl font-bold text-white bg-rose-600 hover:bg-rose-500 disabled:bg-rose-900 transition-all cursor-pointer text-xs shadow-md shadow-rose-600/20 flex items-center justify-center gap-1.5"
+                >
+                  <Trash2 size={14} />
+                  <span>{deleting ? 'Deleting...' : 'Delete Permanently'}</span>
+                </button>
+              </div>
             </form>
           </div>
         </div>

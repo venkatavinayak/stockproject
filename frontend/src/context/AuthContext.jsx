@@ -188,6 +188,16 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const deleteAccount = async () => {
+    try {
+      const data = await authAPI.deleteAccount();
+      logout();
+      return data;
+    } catch (err) {
+      throw new Error(err.response?.data?.detail || 'Failed to delete store account');
+    }
+  };
+
   const logout = () => {
     localStorage.removeItem('smartstock_token');
     localStorage.removeItem('smartstock_user');
@@ -197,7 +207,7 @@ export const AuthProvider = ({ children }) => {
 
   return (
     <AuthContext.Provider value={{
-      token, setToken, user, setUser, login, loginOwner, loginCounter, loginCounterDirect, registerShop, requestOTP, resetPasswordOTP, logout, isAuthenticated: !!token, loading
+      token, setToken, user, setUser, login, loginOwner, loginCounter, loginCounterDirect, registerShop, requestOTP, resetPasswordOTP, deleteAccount, logout, isAuthenticated: !!token, loading
     }}>
       {children}
     </AuthContext.Provider>
