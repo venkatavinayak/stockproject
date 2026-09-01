@@ -184,22 +184,8 @@ const Login = () => {
     }
 
     try {
-      // 1. Dispatch official Clerk OTP email from noreply@accounts.dev
-      if (isSignInLoaded && signIn) {
-        try {
-          await signIn.create({
-            strategy: 'reset_password_email_code',
-            identifier: emailToUse,
-          });
-        } catch (clerkErr) {
-          console.warn('Clerk email strategy notice:', clerkErr);
-        }
-      }
-
-      // 2. Register backend OTP record
-      await requestOTP(emailToUse);
-
-      setSuccessMsg(`A 6-digit OTP code has been sent to ${emailToUse} from noreply@accounts.dev. Please check your inbox and spam folder.`);
+      const res = await requestOTP(emailToUse);
+      setSuccessMsg(res.message || `A 6-digit OTP code has been sent to ${emailToUse}. Please check your inbox and spam folder.`);
       setOtpStep(2);
     } catch (err) {
       setError(err.message || 'Failed to request OTP');
@@ -222,25 +208,8 @@ const Login = () => {
     }
 
     try {
-      // 1. Reset via Clerk factor if active
-      if (isSignInLoaded && signIn) {
-        try {
-          const result = await signIn.attemptFirstFactor({
-            strategy: 'reset_password_email_code',
-            code: otpCode.trim(),
-            password: newPassword,
-          });
-          if (result.status === 'complete' && setSignInActive) {
-            await setSignInActive({ session: result.createdSessionId });
-          }
-        } catch (clerkErr) {
-          console.warn('Clerk password reset factor notice:', clerkErr);
-        }
-      }
-
-      // 2. Reset password in backend DB
       const res = await resetPasswordOTP(forgotEmail.trim(), otpCode.trim(), newPassword);
-      setSuccessMsg('Password reset successfully! You can now log in with your new password.');
+      setSuccessMsg(res.message || 'Password reset successfully! You can now log in with your new password.');
       setTimeout(() => {
         setShowForgotModal(false);
         setOtpStep(1);
@@ -248,7 +217,7 @@ const Login = () => {
         setNewPassword('');
       }, 2000);
     } catch (err) {
-      setError(err.message || 'Failed to reset password. Please verify your OTP code.');
+      setError(err.message || 'Failed to reset password. Please check your OTP code.');
     } finally {
       setLoading(false);
     }

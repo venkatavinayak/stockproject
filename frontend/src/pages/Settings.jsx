@@ -147,6 +147,26 @@ const SettingsPage = () => {
     }
   };
 
+  const handleDeleteStoreAccount = async (e) => {
+    e.preventDefault();
+    if (deleteConfirmInput.trim().toUpperCase() !== 'DELETE') return;
+
+    setDeleting(true);
+    try {
+      await deleteAccount();
+      alert('Your store account and all associated data have been permanently deleted.');
+      try {
+        if (signOut) await signOut();
+      } catch (err) {
+        console.warn('Clerk signout notice:', err);
+      }
+      navigate('/login');
+    } catch (err) {
+      alert(err.response?.data?.detail || err.message || 'Failed to delete store account');
+      setDeleting(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px] text-slate-400 text-xs">
