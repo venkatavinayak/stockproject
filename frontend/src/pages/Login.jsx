@@ -64,7 +64,7 @@ const Login = () => {
         setCheckingShop(true);
         setError('');
         try {
-          const email = user.primaryEmailAddress.emailAddress;
+          const email = user.primaryEmailAddress.emailAddress.toLowerCase().trim();
           const res = await authAPI.checkShop(email);
           if (res.exists) {
             setShopExists(true);
@@ -86,12 +86,19 @@ const Login = () => {
       }
     };
     runCheck();
-  }, [isSignedIn, user]);
+  }, [isSignedIn, user, isAuthenticated]);
 
   const handleGoogleLogin = async () => {
     if (!clerkEnabled) return;
     setError('');
     setLoading(true);
+    
+    // Clear any stale local auth tokens so previous sessions don't trigger auto-redirects
+    localStorage.removeItem('smartstock_token');
+    localStorage.removeItem('smartstock_user');
+    setToken(null);
+    setUser(null);
+
     try {
       // Clear any previous Clerk session so Google prompts account selector
       if (clerkInstance && isSignedIn) {
@@ -123,6 +130,10 @@ const Login = () => {
   };
 
   const handleSignOutClerk = async () => {
+    localStorage.removeItem('smartstock_token');
+    localStorage.removeItem('smartstock_user');
+    setToken(null);
+    setUser(null);
     if (clerkInstance) {
       setLoading(true);
       await clerkInstance.signOut();

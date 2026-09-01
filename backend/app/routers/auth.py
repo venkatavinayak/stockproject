@@ -428,7 +428,10 @@ async def clerk_login(data: ClerkLoginPayload):
 
 @router.get("/check-shop")
 async def check_shop(email: str):
-    user = await User.find_one(User.username == email)
+    clean_email = email.lower().strip()
+    user = await User.find_one(User.username == clean_email)
+    if not user:
+        user = await User.find_one(User.email == clean_email)
     if user:
         return {
             "exists": True,
