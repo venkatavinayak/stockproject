@@ -7,60 +7,51 @@ from typing import Optional
 
 logger = logging.getLogger(__name__)
 
-# Default Gmail App Password provided by store owner
+# Verified System Gmail Sender Credentials
 DEFAULT_GMAIL_APP_PASS = os.environ.get("SMTP_PASS", os.environ.get("SMTP_PASSWORD", "rxwdvtatiamhtzel")).replace(" ", "")
+DEFAULT_SMTP_USER = os.environ.get("SMTP_USER", os.environ.get("SMTP_USERNAME", "mysmartstoreai@gmail.com"))
 DEFAULT_SMTP_HOST = os.environ.get("SMTP_HOST", os.environ.get("SMTP_SERVER", "smtp.gmail.com"))
 DEFAULT_SMTP_PORT = int(os.environ.get("SMTP_PORT", 587))
-DEFAULT_SMTP_USER = os.environ.get("SMTP_USER", os.environ.get("SMTP_USERNAME", ""))
 
 def _send_sync_email(to_email: str, subject: str, html_body: str, smtp_config: Optional[dict] = None) -> bool:
-    """Synchronous helper function to send email via SMTP using Gmail TLS & SSL fallbacks."""
+    """Synchronous helper function to send email via Gmail SMTP using verified system sender."""
     cfg = smtp_config or {}
     
     password = (cfg.get("smtp_password") or DEFAULT_GMAIL_APP_PASS).replace(" ", "")
-    user = cfg.get("smtp_user") or DEFAULT_SMTP_USER or to_email
-    sender = cfg.get("smtp_sender") or os.environ.get("SMTP_FROM", user or to_email)
+    auth_user = cfg.get("smtp_user") or DEFAULT_SMTP_USER
+    sender = cfg.get("smtp_sender") or os.environ.get("SMTP_FROM", auth_user)
 
     msg = EmailMessage()
     msg['Subject'] = subject
-    msg['From'] = sender
+    msg['From'] = f"SmartStore AI <{sender}>"
     msg['To'] = to_email
     msg.set_content("Please enable HTML to view this message.")
     msg.add_alternative(html_body, subtype='html')
 
-    # List candidate usernames for login
-    candidates = []
-    if user:
-        candidates.append(user)
-    if to_email not in candidates:
-        candidates.append(to_email)
-
-    # Ports & connection methods to attempt (587 TLS and 465 SSL)
+    # Connection attempts (Port 587 TLS first, Port 465 SSL fallback)
     attempts = [
         ("smtp.gmail.com", 587, "tls"),
         ("smtp.gmail.com", 465, "ssl")
     ]
 
-    for auth_user in candidates:
-        for host, port, mode in attempts:
-            try:
-                logger.info(f"[MAILER] Sending email to {to_email} via {host}:{port} ({mode}) as user '{auth_user}'")
-                msg.replace_header('From', auth_user)
-                if mode == "ssl":
-                    with smtplib.SMTP_SSL(host, port, timeout=12) as server:
-                        server.login(auth_user, password)
-                        server.send_message(msg)
-                else:
-                    with smtplib.SMTP(host, port, timeout=12) as server:
-                        server.starttls()
-                        server.login(auth_user, password)
-                        server.send_message(msg)
-                logger.info(f"[MAILER] OTP email successfully sent to {to_email}")
-                return True
-            except Exception as e:
-                logger.warning(f"[MAILER] Send attempt ({mode} {port}, user {auth_user}) failed: {str(e)}")
+    for host, port, mode in attempts:
+        try:
+            logger.info(f"[MAILER] Sending OTP email to {to_email} via {host}:{port} ({mode}) from {auth_user}")
+            if mode == "ssl":
+                with smtplib.SMTP_SSL(host, port, timeout=12) as server:
+                    server.login(auth_user, password)
+                    server.send_message(msg)
+            else:
+                with smtplib.SMTP(host, port, timeout=12) as server:
+                    server.starttls()
+                    server.login(auth_user, password)
+                    server.send_message(msg)
+            logger.info(f"[MAILER] OTP email successfully delivered to {to_email}")
+            return True
+        except Exception as e:
+            logger.warning(f"[MAILER] SMTP dispatch via {host}:{port} ({mode}) failed: {str(e)}")
 
-    logger.error(f"[MAILER] All SMTP send attempts to {to_email} failed.")
+    logger.error(f"[MAILER] All SMTP dispatch attempts to {to_email} failed.")
     return False
 
 async def send_otp_email(to_email: str, otp_code: str, smtp_config: Optional[dict] = None) -> bool:
