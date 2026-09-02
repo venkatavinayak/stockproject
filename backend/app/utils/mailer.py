@@ -25,6 +25,9 @@ def _send_sync_email(to_email: str, subject: str, html_body: str, smtp_config: O
     msg['Subject'] = subject
     msg['From'] = f"SmartStore AI <{sender}>"
     msg['To'] = to_email
+    msg['Reply-To'] = sender
+    msg['X-Mailer'] = "SmartStoreAI-ERP/2.0"
+    msg['Auto-Submitted'] = "auto-generated"
     msg.set_content("Please enable HTML to view this message.")
     msg.add_alternative(html_body, subtype='html')
 
