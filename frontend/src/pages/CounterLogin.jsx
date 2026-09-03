@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate, Link } from 'react-router-dom';
 import { Monitor, KeyRound, AlertCircle, ShoppingBag, ArrowRight, Store, UserCheck, ShieldCheck } from 'lucide-react';
+import BackgroundVideo from '../components/BackgroundVideo';
 
 const CounterLogin = () => {
   const { isAuthenticated, loginCounterDirect } = useAuth();
@@ -36,8 +37,10 @@ const CounterLogin = () => {
   };
 
   return (
-    <div className="flex min-h-screen bg-slate-900 text-white transition-colors duration-300">
-      <div className="flex flex-col justify-center w-full max-w-md mx-auto p-6 md:p-10">
+    <div className="flex min-h-screen relative bg-slate-950 text-white transition-colors duration-300 items-center justify-center p-4">
+      <BackgroundVideo />
+      <div className="relative z-10 flex flex-col justify-center w-full max-w-md mx-auto p-2">
+
         
         {/* Brand Logo */}
         <div className="flex items-center justify-center gap-3 mb-8">

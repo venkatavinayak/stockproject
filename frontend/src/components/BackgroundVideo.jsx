@@ -1,28 +1,45 @@
 import React from 'react';
+import { ShoppingBag } from 'lucide-react';
 
 const BackgroundVideo = () => {
   return (
     <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden bg-slate-950">
-      {/* Background Video Player */}
+      {/* Background Video */}
       <video
         autoPlay
         loop
         muted
         playsInline
-        className="absolute inset-0 w-full h-full object-cover scale-105 filter brightness-90 saturate-125 transition-opacity duration-1000"
+        className="absolute inset-0 w-full h-full object-cover opacity-65 filter brightness-95 contrast-105"
       >
-        <source src="https://v.ftcdn.net/06/18/74/42/700_F_618744229_oNf4JdFv23vGqO19qA2R0qE8M5tA6XbF_ST.mp4" type="video/mp4" />
-        <source src="https://assets.mixkit.co/videos/preview/mixkit-digital-network-nodes-connection-loop-41559-large.mp4" type="video/mp4" />
+        <source src="/login-bg.mp4" type="video/mp4" />
       </video>
 
-      {/* Vibrant Shifting Ambient Overlay matching Web UI palette */}
-      <div className="absolute inset-0 bg-gradient-to-tr from-slate-950/85 via-indigo-950/60 to-slate-900/80 backdrop-blur-[2px]" />
-      
-      {/* Soft Radial Gradient Highlights */}
-      <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-indigo-600/20 rounded-full blur-[120px] pointer-events-none animate-pulse" style={{ animationDuration: '6s' }} />
-      <div className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] bg-emerald-500/15 rounded-full blur-[120px] pointer-events-none animate-pulse" style={{ animationDuration: '8s' }} />
+      {/* Overlay to ensure crisp contrast for login UI */}
+      <div className="absolute inset-0 bg-gradient-to-br from-slate-950/60 via-indigo-950/40 to-slate-950/70 backdrop-blur-[1px]" />
+
+      {/* ELEGANT WATERMARK BADGE */}
+      <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none select-none opacity-[0.06] transform -rotate-3 scale-110">
+        <div className="relative flex items-center justify-center">
+          <div className="w-[440px] h-[440px] rounded-full border-2 border-indigo-400 animate-ping" style={{ animationDuration: '6s' }}></div>
+          <div className="absolute w-[350px] h-[350px] rounded-full border-4 border-dashed border-emerald-400 animate-spin" style={{ animationDuration: '35s' }}></div>
+          <div className="absolute p-8 bg-indigo-600 rounded-[3.5rem] shadow-xl text-white">
+            <ShoppingBag size={120} />
+          </div>
+        </div>
+
+        <div className="mt-8 text-center">
+          <h2 className="text-7xl sm:text-8xl font-black font-title tracking-widest text-white uppercase drop-shadow-sm">
+            SmartStore AI
+          </h2>
+          <p className="text-sm font-extrabold text-indigo-300 tracking-[0.4em] uppercase mt-2 font-title">
+            Cloud Multi-Tenant ERP System
+          </p>
+        </div>
+      </div>
     </div>
   );
 };
 
 export default BackgroundVideo;
+
