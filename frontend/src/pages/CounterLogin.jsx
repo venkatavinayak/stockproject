@@ -37,9 +37,10 @@ const CounterLogin = () => {
   };
 
   return (
-    <div className="flex min-h-screen relative bg-slate-950 text-white transition-colors duration-300 items-center justify-center p-4">
+    <div className="flex min-h-screen relative text-white items-center justify-center p-4">
       <BackgroundVideo />
       <div className="relative z-10 flex flex-col justify-center w-full max-w-md mx-auto p-2">
+
 
         
         {/* Brand Logo */}
