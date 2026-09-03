@@ -1,0 +1,81 @@
+{
+  "mediaUrls": [
+    {
+      "url": "https://lh3.googleusercontent.com/gg/ACRwjatR8-dMZdE7QcQYyHHMkxTWCYNEEJtMsfK-bKdsuKgF51hEc8lXkgfWyEhT_Pt0_NS3wx0t5WDhlHQUQ2NNQShg4QSWrOo9hTYgXkmx_0l4BeIF-VKuVu-YSnJMiJlpdShlJcDkGx7yK6PiYPJKOknS0vyYIZLrB398C4SNctqWqX9sRhuO=mm,22,18,15?alr=yes",
+      "contentType": "text/plain; charset=UTF-8",
+      "status": 200
+    },
+    {
+      "url": "https://rr5---sn-h557sn66.googlevideo.com/videoplayback?expire=1788440447&ei=X1OZaoL8Orrt9fwPo4Kr4Ao&ip=117.99.199.148&id=e0d23ec576b93bcd&itag=22&source=contrib_service_bard_storage&begin=0&requiressl=yes&xpc=EghoqJzIP3oBAQ==&met=1788433247,&mh=WQ&mm=32&mn=sn-h557sn66&ms=su&mv=m&mvi=5&pl=22&rms=su,su&sc=yes&susc=gg&obr=https://gemini.google.com&acao=yes&app=fife&ic=976&eaua=kplluFnIkZ4&pcm2=yes&mime=video/mp4&vprv=1&rqh=1&dur=10.054&lmt=1788431647589015&mt=1788432751&txp=0000224&sparams=expire,ei,ip,id,itag,source,requiressl,xpc,susc,obr,acao,app,ic,eaua,pcm2,mime,vprv,rqh,dur,lmt&sig=AE0s2JYwRAIgfoRJLwJtD5QO2wy_Ddp78JSBw0FFt0Ocm_6MXKm3fF0CIEMzftKISQR_vtOJ2VuVnH3M1G1FExmr4PDrP9VM-kl0&lsparams=met,mh,mm,mn,ms,mv,mvi,pl,rms,sc&lsig=APaTxxMwRAIgax7wlndll1FsLHlaEDp36Tek8HtiuwIZm3ZxJiUmod4CIBxEVYaaehNDuaQjdFxK8tNrzP35BpzM-JiSbCxPHGWG",
+      "contentType": "video/mp4",
+      "status": 200
+    },
+    {
+      "url": "https://lh3.googleusercontent.com/gg/ACRwjatR8-dMZdE7QcQYyHHMkxTWCYNEEJtMsfK-bKdsuKgF51hEc8lXkgfWyEhT_Pt0_NS3wx0t5WDhlHQUQ2NNQShg4QSWrOo9hTYgXkmx_0l4BeIF-VKuVu-YSnJMiJlpdShlJcDkGx7yK6PiYPJKOknS0vyYIZLrB398C4SNctqWqX9sRhuO=mm,22,18,15",
+      "contentType": "text/html; charset=UTF-8",
+      "status": 302
+    },
+    {
+      "url": "https://rr5---sn-h557sn66.googlevideo.com/videoplayback?expire=1788440448&ei=YFOZaryqF4_N4t4PuviTmAM&ip=117.99.199.148&id=e0d23ec576b93bcd&itag=22&source=contrib_service_bard_storage&begin=0&requiressl=yes&xpc=EghoqJzIP3oBAQ==&met=1788433248,&mh=WQ&mm=32&mn=sn-h557sn66&ms=su&mv=m&mvi=5&pl=22&rms=su,su&sc=yes&susc=gg&app=fife&ic=976&eaua=kplluFnIkZ4&pcm2=yes&mime=video/mp4&vprv=1&rqh=1&dur=10.054&lmt=1788431647589015&mt=1788432751&txp=0000224&sparams=expire,ei,ip,id,itag,source,requiressl,xpc,susc,app,ic,eaua,pcm2,mime,vprv,rqh,dur,lmt&sig=AE0s2JYwRgIhANC409-1UG-QXMR6TN5cYf1uQ6OS6NzC3NWZgkkol6tNAiEA7Kqz5HOwGBmD1rnhITCqZZjGTrzuYNL1BqBi_rLGMDw=&lsparams=met,mh,mm,mn,ms,mv,mvi,pl,rms,sc&lsig=APaTxxMwRQIgU4D6LLOX6SunZWk8uBKvyomOvu8NVcsjx7EbQb6-910CIQCvQ5SjKFIGtqc8UIWGmIZB5GISR3MTf2keic2x6MY4sQ==",
+      "contentType": "video/mp4",
+      "status": 206
+    },
+    {
+      "url": "https://rr5---sn-h557sn66.googlevideo.com/videoplayback?expire=1788440448&ei=YFOZaryqF4_N4t4PuviTmAM&ip=117.99.199.148&id=e0d23ec576b93bcd&itag=22&source=contrib_service_bard_storage&begin=0&requiressl=yes&xpc=EghoqJzIP3oBAQ==&met=1788433248,&mh=WQ&mm=32&mn=sn-h557sn66&ms=su&mv=m&mvi=5&pl=22&rms=su,su&sc=yes&susc=gg&app=fife&ic=976&eaua=kplluFnIkZ4&pcm2=yes&mime=video/mp4&vprv=1&rqh=1&dur=10.054&lmt=1788431647589015&mt=1788432751&txp=0000224&sparams=expire,ei,ip,id,itag,source,requiressl,xpc,susc,app,ic,eaua,pcm2,mime,vprv,rqh,dur,lmt&sig=AE0s2JYwRgIhANC409-1UG-QXMR6TN5cYf1uQ6OS6NzC3NWZgkkol6tNAiEA7Kqz5HOwGBmD1rnhITCqZZjGTrzuYNL1BqBi_rLGMDw=&lsparams=met,mh,mm,mn,ms,mv,mvi,pl,rms,sc&lsig=APaTxxMwRQIgU4D6LLOX6SunZWk8uBKvyomOvu8NVcsjx7EbQb6-910CIQCvQ5SjKFIGtqc8UIWGmIZB5GISR3MTf2keic2x6MY4sQ==",
+      "contentType": "video/mp4",
+      "status": 206
+    }
+  ],
+  "mediaElements": {
+    "title": "‎Gemini - direct access to Google AI",
+    "bodyText": "Gemini\nSign in\n0:00 / 0:10\nTry Gemini\n\nReport unsafe content\nOpens in a new window",
+    "elements": [
+      {
+        "tag": "A",
+        "src": "https://www.google.co.in/intl/en/about/products",
+        "outerHTML": "<a class=\"gb_C\" aria-label=\"Google apps\" href=\"https://www.google.co.in/intl/en/about/products\" aria-expanded=\"false\" role=\"button\" tabindex=\"0\"><svg class=\"gb_H\" aria-hidden=\"true\" focusable=\"false\" viewBox=\"0 0 24 24\"><path d=\"M6,8c1.1,0 2,-0.9 2,-2s-0.9,-2 -2,-2 -2,0.9 -2,2 0.9,2 2,2zM12,20c1.1,0"
+      },
+      {
+        "tag": "A",
+        "src": "https://accounts.google.com/ServiceLogin?passive=1209600&continue=https://gemini.google.com/share/79ad0d57df87?skid%3D76cd2cef-d08a-43e0-8a11-9713426ded7d&followup=https://gemini.google.com/share/79ad0d57df87?skid%3D76cd2cef-d08a-43e0-8a11-9713426ded7d&ec=GAZAkgU",
+        "outerHTML": "<a class=\"gb_4a gb_6d gb_Xd gb_Od gb_K\" aria-label=\"Sign in\" href=\"https://accounts.google.com/ServiceLogin?passive=1209600&amp;continue=https://gemini.google.com/share/79ad0d57df87?skid%3D76cd2cef-d08a-43e0-8a11-9713426ded7d&amp;followup=https://gemini.google.com/share/79ad0d57df87?skid%3D76cd2cef-"
+      },
+      {
+        "tag": "IMG",
+        "src": "https://www.gstatic.com/lamda/images/gemini_sparkle_aurora_33f86dc0c0257da337c63.svg",
+        "outerHTML": "<img _ngcontent-ng-c4279092172=\"\" alt=\"\" aria-hidden=\"true\" data-test-id=\"gemini-spark-header\" class=\"gemini-spark-header ng-tns-c4279092172-0 ng-star-inserted\" src=\"https://www.gstatic.com/lamda/images/gemini_sparkle_aurora_33f86dc0c0257da337c63.svg\">"
+      },
+      {
+        "tag": "A",
+        "src": "https://gemini.google.com/app",
+        "outerHTML": "<a _ngcontent-ng-c4020505725=\"\" aria-label=\"New chat\" role=\"button\" tabindex=\"0\" tooltipanchorposition=\"below\" class=\"bard-logo-container logo-only ng-star-inserted\" href=\"/app\" aria-disabled=\"false\"><bard-logo _ngcontent-ng-c4020505725=\"\" _nghost-ng-c1291545120=\"\" data-test-id=\"bard-logo-only\"><div"
+      },
+      {
+        "tag": "VIDEO",
+        "src": "https://lh3.googleusercontent.com/gg/ACRwjatR8-dMZdE7QcQYyHHMkxTWCYNEEJtMsfK-bKdsuKgF51hEc8lXkgfWyEhT_Pt0_NS3wx0t5WDhlHQUQ2NNQShg4QSWrOo9hTYgXkmx_0l4BeIF-VKuVu-YSnJMiJlpdShlJcDkGx7yK6PiYPJKOknS0vyYIZLrB398C4SNctqWqX9sRhuO=mm,22,18,15",
+        "poster": "",
+        "outerHTML": "<video _ngcontent-ng-c284546051=\"\" playsinline=\"\" class=\"ng-star-inserted\" loop=\"\" src=\"https://lh3.googleusercontent.com/gg/ACRwjatR8-dMZdE7QcQYyHHMkxTWCYNEEJtMsfK-bKdsuKgF51hEc8lXkgfWyEhT_Pt0_NS3wx0t5WDhlHQUQ2NNQShg4QSWrOo9hTYgXkmx_0l4BeIF-VKuVu-YSnJMiJlpdShlJcDkGx7yK6PiYPJKOknS0vyYIZLrB398C4SNctq"
+      },
+      {
+        "tag": "A",
+        "src": "https://gemini.google.com/app/download/mobile?android-min-version=301356232&ios-min-version=322.0&is_sa=1&campaign_id=footer&utm_source=share_media&utm_medium=product_promo&utm_campaign=footer&pt=9008&mt=8&ct=product_promo&feature=veo",
+        "outerHTML": "<a _ngcontent-ng-c1035698612=\"\" mat-flat-button=\"\" target=\"_blank\" class=\"mdc-button mat-mdc-button-base button mdc-button--unelevated mat-mdc-unelevated-button mat-unthemed\" mat-ripple-loader-uninitialized=\"\" mat-ripple-loader-class-name=\"mat-mdc-button-ripple\" href=\"https://gemini.google.com/app/d"
+      },
+      {
+        "tag": "IMG",
+        "src": "https://www.gstatic.com/lamda/images/gemini_sparkle_aurora_33f86dc0c0257da337c63.svg",
+        "outerHTML": "<img _ngcontent-ng-c1035698612=\"\" alt=\"\" class=\"gemini-icon\" src=\"https://www.gstatic.com/lamda/images/gemini_sparkle_aurora_33f86dc0c0257da337c63.svg\">"
+      },
+      {
+        "tag": "A",
+        "src": "https://support.google.com/legal/troubleshooter/1114905?uraw=r_b8dfd486b3e7c346#ts=1115658%2C13380504",
+        "outerHTML": "<a _ngcontent-ng-c1035698612=\"\" target=\"_blank\" rel=\"noopener\" externallink=\"\" href=\"https://support.google.com/legal/troubleshooter/1114905?uraw=r_b8dfd486b3e7c346#ts=1115658%2C13380504\" class=\"link\" _nghost-ng-c549875045=\"\"><!----><span _ngcontent-ng-c549875045=\"\" data-test-id=\"content\" class=\"lin"
+      },
+      {
+        "tag": "IFRAME",
+        "src": "https://gemini.google.com/_/bscframe",
+        "outerHTML": "<iframe src=\"/_/bscframe\" style=\"display: none;\"></iframe>"
+      }
+    ]
+  }
+}
