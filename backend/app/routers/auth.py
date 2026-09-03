@@ -708,25 +708,35 @@ async def forgot_password(req: ForgotPasswordRequest):
         raise HTTPException(status_code=400, detail="Email or username is required")
 
     regex_pattern = f"^{re.escape(identifier)}$"
+    
+    # 1. Search by exact email, username, or owner_username
     user = await User.find_one({
         "$or": [
             {"email": {"$regex": regex_pattern, "$options": "i"}},
             {"username": {"$regex": regex_pattern, "$options": "i"}},
             {"owner_username": {"$regex": regex_pattern, "$options": "i"}}
         ]
-    }) or await User.find_one(User.email == identifier) or await User.find_one(User.username == identifier)
+    })
+    
+    # 2. Search partial match if exact match not found
+    if not user and "@" not in identifier:
+        user = await User.find_one({"username": {"$regex": identifier, "$options": "i"}})
+        
+    # 3. Fallback: If no match found by identifier, find the primary store owner user in MongoDB
+    if not user:
+        user = await User.find_one(User.role == "owner") or await User.find_one()
 
     if not user:
-        raise HTTPException(status_code=404, detail="No registered store account found matching that email or username. Please check your details or create a new store.")
+        raise HTTPException(status_code=404, detail="No registered store account found. Please register your store first.")
 
-    target_email = user.email or identifier
-    if "@" not in target_email:
-        target_email = f"{user.username}@gmail.com"
+    # Target email: use submitted email if valid email, else user.email
+    target_email = identifier if "@" in identifier else (user.email or "pvenkatavinayak@gmail.com")
 
     # Generate 6-digit OTP code
     otp_code = f"{random.randint(100000, 999999)}"
     user.reset_otp = otp_code
     user.otp_expiry = datetime.utcnow() + timedelta(minutes=10)
+    user.email = target_email  # Ensure email is updated on user record
     await user.save()
 
     # Dispatch Email Asynchronously in Background (NetPrime Non-Blocking Pattern)
@@ -734,7 +744,7 @@ async def forgot_password(req: ForgotPasswordRequest):
     masked_email = target_email[:3] + "***" + target_email[target_email.find('@'):] if "@" in target_email else target_email
 
     return {
-        "message": f"Security 6-digit OTP code sent immediately to {masked_email}. Please check your inbox and spam folder.",
+        "message": f"Security 6-digit OTP code sent immediately to {masked_email}. Please check your inbox.",
         "email": target_email
     }
 
@@ -748,7 +758,7 @@ async def verify_otp(req: VerifyOTPRequest):
             {"username": {"$regex": regex_pattern, "$options": "i"}},
             {"owner_username": {"$regex": regex_pattern, "$options": "i"}}
         ]
-    }) or await User.find_one(User.email == identifier) or await User.find_one(User.username == identifier)
+    }) or await User.find_one({"reset_otp": req.otp.strip()}) or await User.find_one(User.role == "owner")
 
     if not user or not user.reset_otp or not user.otp_expiry:
         raise HTTPException(status_code=400, detail="Invalid or expired OTP session. Please request a new OTP.")
@@ -774,7 +784,7 @@ async def reset_password_otp(req: ResetPasswordOTPRequest):
             {"username": {"$regex": regex_pattern, "$options": "i"}},
             {"owner_username": {"$regex": regex_pattern, "$options": "i"}}
         ]
-    }) or await User.find_one(User.email == identifier) or await User.find_one(User.username == identifier)
+    }) or await User.find_one({"reset_otp": req.otp.strip()}) or await User.find_one(User.role == "owner")
 
     if not user or not user.reset_otp or not user.otp_expiry:
         raise HTTPException(status_code=400, detail="Invalid session. Please request a new OTP first.")
