@@ -641,6 +641,7 @@ async def delete_account(
     """
     Permanently deletes the Store Owner's account, all cashier counter worker accounts,
     and all associated store data (Products, Categories, Billing Transactions, Expenses, AuditLogs, Settings).
+    Frees up the username, email, and shop code so a new user can immediately register with them.
     """
     if current_user.role != "admin":
         raise HTTPException(
@@ -650,6 +651,7 @@ async def delete_account(
 
     owner_uname = current_user.owner
     user_email = current_user.email or current_user.username
+    clerk_id = getattr(current_user, "clerk_user_id", None)
 
     # 1. Delete all associated store data models
     from backend.app.models.product import Product
@@ -672,18 +674,24 @@ async def delete_account(
         # 2. Delete all counter worker accounts linked to this owner
         await User.find(User.owner_username == owner_uname).delete()
 
-        # 3. Delete the owner user account itself if not already deleted
+        # 3. Delete the owner user account document itself by email, clerk_user_id, or username
+        if current_user.email:
+            await User.find(User.email == current_user.email).delete()
+        if clerk_id:
+            await User.find(User.clerk_user_id == clerk_id).delete()
+
         owner_doc = await User.find_one(User.username == current_user.username)
         if owner_doc:
             await owner_doc.delete()
     except Exception as e:
-        print(f"Error during account deletion: {e}")
-        # Ensure owner is deleted even if ancillary deletion logs warning
+        logger.error(f"Error during comprehensive account deletion: {e}")
         owner_doc = await User.find_one(User.username == current_user.username)
         if owner_doc:
             await owner_doc.delete()
 
-    return {"message": f"Store account ({user_email}) and all associated store data have been permanently deleted."}
+    return {
+        "message": f"Store account ({user_email}) and all associated store data have been permanently deleted. Username '{owner_uname}' is now available for new registrations."
+    }
 
 import re
 
