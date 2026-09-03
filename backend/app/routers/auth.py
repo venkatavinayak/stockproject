@@ -734,7 +734,11 @@ async def forgot_password(req: ForgotPasswordRequest):
     masked_email = target_email[:3] + "***" + target_email[target_email.find('@'):] if "@" in target_email else target_email
 
     if not email_sent:
-        logger.warning(f"[AUTH] SMTP failed for {target_email}. Session OTP created for user {user.username}")
+        logger.error(f"[AUTH] Failed to send OTP email to {target_email}")
+        raise HTTPException(
+            status_code=500, 
+            detail=f"Failed to dispatch OTP email to {target_email}. Please check your email inbox server or try again."
+        )
 
     return {
         "message": f"Security OTP code sent to {masked_email}. Please check your email inbox and spam folder.",

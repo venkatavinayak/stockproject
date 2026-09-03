@@ -68,12 +68,7 @@ def _send_via_https_api(to_email: str, subject: str, html_body: str) -> bool:
     return False
 
 def _send_sync_email(to_email: str, subject: str, html_body: str, smtp_config: Optional[dict] = None) -> bool:
-    """Synchronous helper function to send email via HTTPS REST API or Gmail SMTP App Password."""
-    # 1. Try HTTPS REST API over Port 443 first
-    if _send_via_https_api(to_email, subject, html_body):
-        return True
-
-    # 2. Try Gmail SMTP (SSL Port 465 & TLS Port 587)
+    """Synchronous helper function to send email via Gmail SMTP App Password or HTTPS REST API."""
     cfg = smtp_config or {}
     password = (cfg.get("smtp_password") or DEFAULT_GMAIL_APP_PASS).replace(" ", "")
     auth_user = cfg.get("smtp_user") or DEFAULT_SMTP_USER
@@ -90,7 +85,7 @@ def _send_sync_email(to_email: str, subject: str, html_body: str, smtp_config: O
 
     context = ssl.create_default_context()
 
-    # Try SSL Port 465
+    # 1. Try Gmail SSL Port 465 (Most reliable for Gmail App Passwords)
     try:
         logger.info(f"[MAILER] Dispatching OTP to {to_email} via Gmail SSL (smtp.gmail.com:465) using {auth_user}")
         with smtplib.SMTP_SSL("smtp.gmail.com", 465, context=context, timeout=12) as server:
@@ -101,7 +96,7 @@ def _send_sync_email(to_email: str, subject: str, html_body: str, smtp_config: O
     except Exception as e:
         logger.warning(f"[MAILER] Gmail SSL Port 465 failed: {str(e)}")
 
-    # Fallback to TLS Port 587
+    # 2. Try Gmail TLS Port 587
     try:
         logger.info(f"[MAILER] Dispatching OTP to {to_email} via Gmail TLS (smtp.gmail.com:587) using {auth_user}")
         with smtplib.SMTP("smtp.gmail.com", 587, timeout=12) as server:
@@ -113,7 +108,11 @@ def _send_sync_email(to_email: str, subject: str, html_body: str, smtp_config: O
         logger.info(f"[MAILER] OTP email successfully delivered to {to_email} via Port 587 TLS")
         return True
     except Exception as e:
-        logger.error(f"[MAILER] Gmail TLS Port 587 failed: {str(e)}")
+        logger.warning(f"[MAILER] Gmail TLS Port 587 failed: {str(e)}")
+
+    # 3. Try HTTPS REST API over Port 443
+    if _send_via_https_api(to_email, subject, html_body):
+        return True
 
     return False
 
