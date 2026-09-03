@@ -10,17 +10,73 @@ from typing import Optional
 
 logger = logging.getLogger(__name__)
 
-# System Sender App Password & User Credentials
+# System Sender Credentials
 DEFAULT_GMAIL_APP_PASS = os.environ.get("SMTP_PASS", os.environ.get("SMTP_PASSWORD", "rxwdvtatiamhtzel")).replace(" ", "")
 DEFAULT_SMTP_USER = os.environ.get("SMTP_USER", os.environ.get("SMTP_USERNAME", "mysmartstoreai@gmail.com"))
 DEFAULT_SMTP_HOST = os.environ.get("SMTP_HOST", os.environ.get("SMTP_SERVER", "smtp.gmail.com"))
 
+RESEND_API_KEY = os.environ.get("RESEND_API_KEY", "")
+BREVO_API_KEY = os.environ.get("BREVO_API_KEY", "")
+
+def _send_via_https_api(to_email: str, subject: str, html_body: str) -> bool:
+    """Dispatches email via HTTPS REST API (Port 443) for 100% cloud deliverability on Render."""
+    resend_key = RESEND_API_KEY or os.environ.get("RESEND_API_KEY", "")
+    if resend_key:
+        try:
+            url = "https://api.resend.com/emails"
+            payload = {
+                "from": "SmartStore AI <onboarding@resend.dev>",
+                "to": [to_email],
+                "subject": subject,
+                "html": html_body
+            }
+            headers = {
+                "Authorization": f"Bearer {resend_key.strip()}",
+                "Content-Type": "application/json"
+            }
+            req = urllib.request.Request(url, data=json.dumps(payload).encode("utf-8"), headers=headers, method="POST")
+            with urllib.request.urlopen(req, timeout=10) as resp:
+                if resp.status in (200, 201, 202):
+                    logger.info(f"[MAILER] Resend HTTPS API delivered email to {to_email}")
+                    return True
+        except Exception as e:
+            logger.warning(f"[MAILER] Resend HTTPS API failed: {e}")
+
+    brevo_key = BREVO_API_KEY or os.environ.get("BREVO_API_KEY", "")
+    if brevo_key:
+        try:
+            url = "https://api.brevo.com/v3/smtp/email"
+            payload = {
+                "sender": {"name": "SmartStore AI", "email": "mysmartstoreai@gmail.com"},
+                "to": [{"email": to_email}],
+                "subject": subject,
+                "htmlContent": html_body
+            }
+            headers = {
+                "api-key": brevo_key.strip(),
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+            req = urllib.request.Request(url, data=json.dumps(payload).encode("utf-8"), headers=headers, method="POST")
+            with urllib.request.urlopen(req, timeout=10) as resp:
+                if resp.status in (200, 201, 202):
+                    logger.info(f"[MAILER] Brevo HTTPS API delivered email to {to_email}")
+                    return True
+        except Exception as e:
+            logger.warning(f"[MAILER] Brevo HTTPS API failed: {e}")
+
+    return False
+
 def _send_sync_email(to_email: str, subject: str, html_body: str, smtp_config: Optional[dict] = None) -> bool:
-    """Synchronous helper function to send email via Gmail SMTP App Password (SSL 465 / TLS 587)."""
+    """Synchronous helper function to send email via HTTPS REST API or Gmail SMTP App Password."""
+    # 1. Try HTTPS REST API over Port 443 first
+    if _send_via_https_api(to_email, subject, html_body):
+        return True
+
+    # 2. Try Gmail SMTP (SSL Port 465 & TLS Port 587)
     cfg = smtp_config or {}
     password = (cfg.get("smtp_password") or DEFAULT_GMAIL_APP_PASS).replace(" ", "")
     auth_user = cfg.get("smtp_user") or DEFAULT_SMTP_USER
-    sender = cfg.get("smtp_sender") or os.environ.get("SMTP_FROM", auth_user)
 
     msg = EmailMessage()
     msg['Subject'] = subject
@@ -34,10 +90,10 @@ def _send_sync_email(to_email: str, subject: str, html_body: str, smtp_config: O
 
     context = ssl.create_default_context()
 
-    # Try SSL Port 465 first (fastest & most reliable for Gmail App Passwords)
+    # Try SSL Port 465
     try:
         logger.info(f"[MAILER] Dispatching OTP to {to_email} via Gmail SSL (smtp.gmail.com:465) using {auth_user}")
-        with smtplib.SMTP_SSL("smtp.gmail.com", 465, context=context, timeout=15) as server:
+        with smtplib.SMTP_SSL("smtp.gmail.com", 465, context=context, timeout=12) as server:
             server.login(auth_user, password)
             server.send_message(msg)
         logger.info(f"[MAILER] OTP email successfully delivered to {to_email} via Port 465 SSL")
@@ -45,10 +101,10 @@ def _send_sync_email(to_email: str, subject: str, html_body: str, smtp_config: O
     except Exception as e:
         logger.warning(f"[MAILER] Gmail SSL Port 465 failed: {str(e)}")
 
-    # Fallback to TLS Port 587 with EHLO handshake
+    # Fallback to TLS Port 587
     try:
         logger.info(f"[MAILER] Dispatching OTP to {to_email} via Gmail TLS (smtp.gmail.com:587) using {auth_user}")
-        with smtplib.SMTP("smtp.gmail.com", 587, timeout=15) as server:
+        with smtplib.SMTP("smtp.gmail.com", 587, timeout=12) as server:
             server.ehlo()
             server.starttls(context=context)
             server.ehlo()

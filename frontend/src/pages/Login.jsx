@@ -3,13 +3,23 @@ import { useAuth } from '../context/AuthContext';
 import { useNavigate, Link } from 'react-router-dom';
 import { useUser, useClerk, useSignIn, SignIn, SignUp } from '@clerk/clerk-react';
 import { authAPI } from '../services/api';
+import BackgroundVideo from '../components/BackgroundVideo';
 import { 
   KeyRound, User, AlertCircle, ShoppingBag, ArrowRight, Store, 
   UserCheck, ShieldCheck, Monitor, CheckCircle2, Sparkles, Copy, Check, Lock, Send, X, Mail
 } from 'lucide-react';
 
 const Login = () => {
-  const { isAuthenticated, loginOwner, loginCounter, registerShop, requestOTP, verifyOTP, resetPasswordOTP } = useAuth();
+  const { 
+    isAuthenticated, 
+    loginOwner, 
+    loginCounter, 
+    loginCounterDirect, 
+    registerShop, 
+    requestOTP, 
+    verifyOTP, 
+    resetPasswordOTP 
+  } = useAuth();
   const navigate = useNavigate();
   const { isSignedIn, user: clerkUser } = useUser();
   const { signOut } = useClerk();
@@ -147,7 +157,7 @@ const Login = () => {
     }
   };
 
-  // Handler: Counter Login
+  // Handler: Counter Staff Login (Fixing Issue 2: Uses loginCounterDirect to resolve Shop Code correctly!)
   const handleCounterLoginSubmit = async (e) => {
     e.preventDefault();
     setError('');
@@ -161,7 +171,7 @@ const Login = () => {
     }
 
     try {
-      await loginCounter(shopCodeToUse, counterUsername.trim(), counterPassword);
+      await loginCounterDirect(shopCodeToUse, counterUsername.trim(), counterPassword);
       setSuccessMsg('Counter cashier login successful!');
       setTimeout(() => navigate('/'), 500);
     } catch (err) {
@@ -292,44 +302,25 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 relative flex flex-col justify-center items-center p-4 sm:p-6 font-sans overflow-hidden">
+    <div className="min-h-screen relative flex flex-col justify-center items-center p-4 sm:p-6 font-sans overflow-hidden">
       
-      {/* REALISTIC ANIMATED BACKDROP & COLORFUL MESH SHIMMER (Matching Web UI Palette: Indigo, Violet, Emerald, Cyan) */}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden z-0 flex items-center justify-center">
-        
-        {/* Pulsing Vibrant Mesh Gradient Orbs */}
-        <div className="absolute top-[-10%] left-[-10%] w-[600px] h-[600px] bg-gradient-to-br from-indigo-600/25 via-violet-600/20 to-pink-500/15 rounded-full blur-[120px] animate-pulse"></div>
-        <div className="absolute bottom-[-10%] right-[-10%] w-[600px] h-[600px] bg-gradient-to-tl from-emerald-500/25 via-teal-500/20 to-cyan-500/15 rounded-full blur-[120px] animate-pulse" style={{ animationDuration: '6s' }}></div>
-        <div className="absolute top-[30%] right-[20%] w-[400px] h-[400px] bg-indigo-400/15 rounded-full blur-[90px] animate-ping" style={{ animationDuration: '8s' }}></div>
-
-        {/* Realistic Intro Animation Watermark & Spinning Logo Ring */}
-        <div className="opacity-[0.04] select-none flex flex-col items-center justify-center transform -rotate-6 scale-125 transition-all">
-          <div className="relative flex items-center justify-center">
-            <div className="w-[420px] h-[420px] border-[14px] border-indigo-600 rounded-[5rem] animate-spin shadow-2xl" style={{ animationDuration: '40s' }}></div>
-            <div className="absolute inset-0 flex items-center justify-center animate-bounce" style={{ animationDuration: '6s' }}>
-              <ShoppingBag size={210} className="text-indigo-600" />
-            </div>
-          </div>
-          <span className="text-8xl font-black font-title tracking-widest text-indigo-950 mt-8 uppercase whitespace-nowrap drop-shadow-xl">
-            SmartStore AI
-          </span>
-        </div>
-      </div>
+      {/* VIBRANT DESIGNER MOTION-GRAPHICS BACKGROUND VIDEO / CANVAS */}
+      <BackgroundVideo />
 
       {/* Main Centered Box Container */}
       <div className="relative z-10 w-full max-w-md mx-auto space-y-4">
 
-        {/* Compact Animated Brand Badge with Shimmer Intro */}
+        {/* Compact Animated Brand Badge */}
         <div className="text-center">
-          <div className="inline-flex items-center gap-2.5 px-4 py-2 bg-white rounded-2xl border border-slate-200/90 shadow-lg shadow-indigo-600/5 transition-transform hover:scale-105">
-            <div className="p-2.5 bg-gradient-to-tr from-indigo-600 via-purple-600 to-indigo-500 text-white rounded-xl shadow-md animate-pulse">
+          <div className="inline-flex items-center gap-2.5 px-4 py-2 bg-white/95 backdrop-blur-md rounded-2xl border border-slate-200/90 shadow-xl shadow-indigo-600/10 transition-transform hover:scale-105">
+            <div className="p-2.5 bg-gradient-to-tr from-indigo-600 via-purple-600 to-emerald-500 text-white rounded-xl shadow-md animate-bounce" style={{ animationDuration: '4s' }}>
               <ShoppingBag size={22} />
             </div>
             <div className="text-left">
               <h1 className="text-lg font-extrabold text-slate-900 font-title tracking-tight leading-none">
                 SmartStore AI
               </h1>
-              <p className="text-[10px] font-bold bg-gradient-to-r from-indigo-600 to-emerald-600 bg-clip-text text-transparent uppercase tracking-wider mt-0.5 font-title">
+              <p className="text-[10px] font-extrabold bg-gradient-to-r from-indigo-600 via-purple-600 to-emerald-600 bg-clip-text text-transparent uppercase tracking-wider mt-0.5 font-title">
                 Cloud Multi-Tenant ERP
               </p>
             </div>
@@ -337,14 +328,14 @@ const Login = () => {
         </div>
 
         {/* Segmented Switcher Tabs */}
-        <div className="p-1 bg-slate-200/90 backdrop-blur-md rounded-2xl border border-slate-300/70 grid grid-cols-2 gap-1 shadow-inner">
+        <div className="p-1 bg-slate-900/80 backdrop-blur-xl rounded-2xl border border-slate-700/80 grid grid-cols-2 gap-1 shadow-2xl">
           <button
             type="button"
             onClick={() => setActiveTab('owner')}
             className={`flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl text-xs font-bold font-title transition-all cursor-pointer ${
               activeTab === 'owner'
                 ? 'bg-white text-indigo-600 shadow-md scale-[1.02]'
-                : 'text-slate-600 hover:text-slate-900'
+                : 'text-slate-300 hover:text-white'
             }`}
           >
             <ShieldCheck size={16} />
@@ -357,7 +348,7 @@ const Login = () => {
             className={`flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl text-xs font-bold font-title transition-all cursor-pointer ${
               activeTab === 'counter'
                 ? 'bg-white text-emerald-600 shadow-md scale-[1.02]'
-                : 'text-slate-600 hover:text-slate-900'
+                : 'text-slate-300 hover:text-white'
             }`}
           >
             <Monitor size={16} />
@@ -367,14 +358,14 @@ const Login = () => {
 
         {/* Feedback Banner Alerts */}
         {error && (
-          <div className="flex items-center gap-2.5 p-3.5 text-xs rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-600 font-semibold animate-shake">
+          <div className="flex items-center gap-2.5 p-3.5 text-xs rounded-xl bg-rose-500/10 backdrop-blur-md border border-rose-500/20 text-rose-600 font-semibold animate-shake shadow-lg">
             <AlertCircle size={16} className="shrink-0" />
             <span>{error}</span>
           </div>
         )}
 
         {successMsg && (
-          <div className="flex items-center gap-2.5 p-3.5 text-xs rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 font-semibold">
+          <div className="flex items-center gap-2.5 p-3.5 text-xs rounded-xl bg-emerald-500/10 backdrop-blur-md border border-emerald-500/20 text-emerald-600 font-semibold shadow-lg">
             <CheckCircle2 size={16} className="shrink-0" />
             <span>{successMsg}</span>
           </div>
@@ -636,7 +627,7 @@ const Login = () => {
             </div>
           )}
 
-          {/* TAB 2: COUNTER CASHIER POS PORTAL (ENHANCED BOX SIZE MATCHING OWNER BOX) */}
+          {/* TAB 2: COUNTER CASHIER POS PORTAL */}
           {activeTab === 'counter' && (
             <div className="space-y-4 sm:space-y-5">
               <div className="text-center pb-2.5 border-b border-slate-100">
