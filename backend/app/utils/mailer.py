@@ -2,21 +2,54 @@ import smtplib
 import os
 import logging
 import asyncio
+import urllib.request
+import json
 from email.message import EmailMessage
 from typing import Optional
 
 logger = logging.getLogger(__name__)
 
-# Verified System Gmail Sender Credentials
+# Verified System Sender Credentials
 DEFAULT_GMAIL_APP_PASS = os.environ.get("SMTP_PASS", os.environ.get("SMTP_PASSWORD", "rxwdvtatiamhtzel")).replace(" ", "")
 DEFAULT_SMTP_USER = os.environ.get("SMTP_USER", os.environ.get("SMTP_USERNAME", "mysmartstoreai@gmail.com"))
 DEFAULT_SMTP_HOST = os.environ.get("SMTP_HOST", os.environ.get("SMTP_SERVER", "smtp.gmail.com"))
 DEFAULT_SMTP_PORT = int(os.environ.get("SMTP_PORT", 587))
+RESEND_API_KEY = os.environ.get("RESEND_API_KEY", "")
+
+def _send_via_https_api(to_email: str, subject: str, html_body: str) -> bool:
+    """Dispatches email via HTTPS REST API (Port 443) for 100% cloud deliverability."""
+    if not RESEND_API_KEY:
+        return False
+    try:
+        url = "https://api.resend.com/emails"
+        payload = {
+            "from": "SmartStore AI <onboarding@resend.dev>",
+            "to": [to_email],
+            "subject": subject,
+            "html": html_body
+        }
+        headers = {
+            "Authorization": f"Bearer {RESEND_API_KEY}",
+            "Content-Type": "application/json",
+            "User-Agent": "SmartStoreAI-ERP/2.0"
+        }
+        req = urllib.request.Request(url, data=json.dumps(payload).encode("utf-8"), headers=headers, method="POST")
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            if resp.status in (200, 201, 202):
+                logger.info(f"[MAILER] HTTPS REST API successfully delivered email to {to_email}")
+                return True
+    except Exception as e:
+        logger.warning(f"[MAILER] HTTPS REST API dispatch failed: {str(e)}")
+    return False
 
 def _send_sync_email(to_email: str, subject: str, html_body: str, smtp_config: Optional[dict] = None) -> bool:
-    """Synchronous helper function to send email via Gmail SMTP using verified system sender."""
+    """Synchronous helper function to send email via HTTPS API or Gmail SMTP using system sender."""
+    # 1. Try HTTPS REST API first if API key configured
+    if _send_via_https_api(to_email, subject, html_body):
+        return True
+
+    # 2. Fallback to Gmail SMTP (Ports 587 & 465)
     cfg = smtp_config or {}
-    
     password = (cfg.get("smtp_password") or DEFAULT_GMAIL_APP_PASS).replace(" ", "")
     auth_user = cfg.get("smtp_user") or DEFAULT_SMTP_USER
     sender = cfg.get("smtp_sender") or os.environ.get("SMTP_FROM", auth_user)

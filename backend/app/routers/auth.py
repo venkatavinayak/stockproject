@@ -685,6 +685,8 @@ async def delete_account(
 
     return {"message": f"Store account ({user_email}) and all associated store data have been permanently deleted."}
 
+import re
+
 # --- Password Reset OTP Flow Endpoints ---
 
 @router.post("/forgot-password")
@@ -693,16 +695,24 @@ async def forgot_password(req: ForgotPasswordRequest):
     if not identifier:
         raise HTTPException(status_code=400, detail="Email or username is required")
 
-    user = await User.find_one(User.email == identifier)
-    if not user:
-        user = await User.find_one(User.username == identifier)
+    regex_pattern = f"^{re.escape(identifier)}$"
+    user = await User.find_one({
+        "$or": [
+            {"email": {"$regex": regex_pattern, "$options": "i"}},
+            {"username": {"$regex": regex_pattern, "$options": "i"}}
+        ]
+    })
 
     if not user:
-        return {"message": "If an account matching that detail exists, an OTP has been sent to the registered email."}
+        # Check if user email without exact regex matches
+        user = await User.find_one(User.email == identifier) or await User.find_one(User.username == identifier)
+
+    if not user:
+        raise HTTPException(status_code=404, detail="No registered account found matching that email or username. Please check your details or create a new store.")
 
     target_email = user.email or identifier
     if "@" not in target_email:
-        raise HTTPException(status_code=400, detail="No registered email address found for this account.")
+        raise HTTPException(status_code=400, detail="No valid registered email address associated with this account.")
 
     # Generate 6-digit OTP
     otp_code = f"{random.randint(100000, 999999)}"
@@ -710,10 +720,11 @@ async def forgot_password(req: ForgotPasswordRequest):
     user.otp_expiry = datetime.utcnow() + timedelta(minutes=10)
     await user.save()
 
-    # Dispatch Email
+    # Dispatch Email via SMTP / HTTPS API
     email_sent = await send_otp_email(target_email, otp_code)
     if not email_sent:
-        logger.warning(f"[AUTH] Failed to dispatch OTP email to {target_email}")
+        logger.error(f"[AUTH] Failed to dispatch OTP email to {target_email}")
+        raise HTTPException(status_code=500, detail=f"Failed to dispatch OTP email to {target_email}. Please verify your email inbox server or try again.")
 
     masked_email = target_email[:3] + "***" + target_email[target_email.find('@'):] if "@" in target_email else target_email
     return {
@@ -725,16 +736,22 @@ async def forgot_password(req: ForgotPasswordRequest):
 @router.post("/verify-otp")
 async def verify_otp(req: VerifyOTPRequest):
     identifier = req.email.strip().lower()
-    user = await User.find_one(User.email == identifier) or await User.find_one(User.username == identifier)
+    regex_pattern = f"^{re.escape(identifier)}$"
+    user = await User.find_one({
+        "$or": [
+            {"email": {"$regex": regex_pattern, "$options": "i"}},
+            {"username": {"$regex": regex_pattern, "$options": "i"}}
+        ]
+    }) or await User.find_one(User.email == identifier) or await User.find_one(User.username == identifier)
 
     if not user or not user.reset_otp or not user.otp_expiry:
-        raise HTTPException(status_code=400, detail="Invalid or expired OTP request")
+        raise HTTPException(status_code=400, detail="Invalid or expired OTP request session. Please request a new OTP.")
 
     if datetime.utcnow() > user.otp_expiry:
         user.reset_otp = None
         user.otp_expiry = None
         await user.save()
-        raise HTTPException(status_code=400, detail="OTP code has expired. Please request a new code.")
+        raise HTTPException(status_code=400, detail="OTP code has expired. Please request a new OTP.")
 
     if user.reset_otp.strip() != req.otp.strip():
         raise HTTPException(status_code=400, detail="Incorrect OTP code. Please check your email and try again.")
@@ -745,7 +762,13 @@ async def verify_otp(req: VerifyOTPRequest):
 @router.post("/reset-password-otp")
 async def reset_password_otp(req: ResetPasswordOTPRequest):
     identifier = req.email.strip().lower()
-    user = await User.find_one(User.email == identifier) or await User.find_one(User.username == identifier)
+    regex_pattern = f"^{re.escape(identifier)}$"
+    user = await User.find_one({
+        "$or": [
+            {"email": {"$regex": regex_pattern, "$options": "i"}},
+            {"username": {"$regex": regex_pattern, "$options": "i"}}
+        ]
+    }) or await User.find_one(User.email == identifier) or await User.find_one(User.username == identifier)
 
     if not user or not user.reset_otp or not user.otp_expiry:
         raise HTTPException(status_code=400, detail="Invalid session or expired OTP request")
@@ -754,7 +777,7 @@ async def reset_password_otp(req: ResetPasswordOTPRequest):
         user.reset_otp = None
         user.otp_expiry = None
         await user.save()
-        raise HTTPException(status_code=400, detail="OTP code has expired. Please request a new code.")
+        raise HTTPException(status_code=400, detail="OTP code has expired. Please request a new OTP.")
 
     if user.reset_otp.strip() != req.otp.strip():
         raise HTTPException(status_code=400, detail="Incorrect OTP code.")
@@ -775,7 +798,7 @@ async def reset_password_otp(req: ResetPasswordOTPRequest):
     )
     await audit.insert()
 
-    return {"message": "Password reset successfully. You can now log in with your new password."}
+    return {"message": "Password reset successfully! You can now log in with your new password."}
 
 
 
