@@ -53,14 +53,6 @@ export const authAPI = {
     const response = await api.post('/auth/counter-login', { shop_code, username, password });
     return response.data;
   },
-  requestOTP: async (email) => {
-    const response = await api.post('/auth/request-otp', { email });
-    return response.data;
-  },
-  resetPasswordOTP: async (email, otp, new_password) => {
-    const response = await api.post('/auth/reset-password-otp', { email, otp, new_password });
-    return response.data;
-  },
   deleteAccount: async () => {
     const response = await api.delete('/auth/delete-account');
     return response.data;

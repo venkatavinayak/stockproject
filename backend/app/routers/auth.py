@@ -631,88 +631,6 @@ async def counter_login(data: CounterLoginRequest):
         "shop_code": shop_code
     }
 
-from backend.app.utils.mailer import send_otp_email
-
-class RequestOTPPayload(BaseModel):
-    email: str
-
-@router.post("/request-otp")
-async def request_otp(data: RequestOTPPayload):
-    clean_email = data.email.lower().strip()
-    user = await User.find_one({"$or": [{"email": clean_email}, {"username": clean_email}]})
-    if not user:
-        # Return success message to avoid leaking user existence
-        return {"message": "If your email is registered, a 6-digit OTP code has been sent."}
-
-    otp = generate_otp()
-    user.reset_otp = otp
-    user.otp_expiry = datetime.utcnow() + timedelta(minutes=10)
-    await user.save()
-
-    # Dispatch real email via SMTP
-    target_email = user.email or clean_email
-    
-    # Check if custom store settings specify SMTP configuration
-    from backend.app.models.settings import StoreSettings
-    settings = await StoreSettings.find_one(StoreSettings.owner_username == user.owner)
-    smtp_cfg = None
-    if settings and settings.smtp_host and settings.smtp_password:
-        smtp_cfg = {
-            "smtp_host": settings.smtp_host,
-            "smtp_port": settings.smtp_port,
-            "smtp_user": settings.smtp_user,
-            "smtp_password": settings.smtp_password,
-            "smtp_sender": settings.smtp_sender
-        }
-
-    email_sent = await send_otp_email(target_email, otp, smtp_cfg)
-
-    audit = AuditLog(
-        username=user.username,
-        action="REQUEST_OTP",
-        details=f"Requested password reset OTP for email: {clean_email} (Sent: {email_sent})"
-    )
-    await audit.insert()
-
-    return {
-        "message": f"A 6-digit verification OTP code has been sent to your registered email address ({clean_email}). Please check your inbox and spam folder."
-    }
-
-class ResetPasswordOTPPayload(BaseModel):
-    email: str
-    otp: str
-    new_password: str
-
-@router.post("/reset-password-otp")
-async def reset_password_otp(data: ResetPasswordOTPPayload):
-    clean_email = data.email.lower().strip()
-    otp_input = data.otp.strip()
-
-    user = await User.find_one({"$or": [{"email": clean_email}, {"username": clean_email}]})
-    if not user or not user.reset_otp or user.reset_otp != otp_input:
-        raise HTTPException(status_code=400, detail="Invalid OTP code. Please check your OTP and try again.")
-
-    if not user.otp_expiry or datetime.utcnow() > user.otp_expiry:
-        raise HTTPException(status_code=400, detail="OTP has expired. Please request a new OTP.")
-
-    if len(data.new_password) < 4:
-        raise HTTPException(status_code=400, detail="Password must be at least 4 characters long.")
-
-    user.hashed_password = get_password_hash(data.new_password)
-    user.reset_otp = None
-    user.otp_expiry = None
-    await user.save()
-
-    audit = AuditLog(
-        username=user.username,
-        action="RESET_PASSWORD_OTP",
-        details=f"Password successfully reset via OTP for email: {clean_email}"
-    )
-    await audit.insert()
-
-    return {"message": "Password reset successfully! You can now log in with your new password."}
-
-
 @router.delete("/delete-account")
 async def delete_account(
     current_user: User = Depends(get_current_user)
@@ -737,23 +655,30 @@ async def delete_account(
     from backend.app.models.expense import Expense
     from backend.app.models.supplier import Supplier
     from backend.app.models.settings import StoreSettings
-    from backend.app.models.audit import AuditLog
+    from backend.app.models.audit_logs import AuditLog
 
-    await Product.find(Product.owner_username == owner_uname).delete()
-    await Category.find(Category.owner_username == owner_uname).delete()
-    await Transaction.find(Transaction.owner_username == owner_uname).delete()
-    await Expense.find(Expense.owner_username == owner_uname).delete()
-    await Supplier.find(Supplier.owner_username == owner_uname).delete()
-    await StoreSettings.find(StoreSettings.owner_username == owner_uname).delete()
-    await AuditLog.find(AuditLog.owner_username == owner_uname).delete()
+    try:
+        await Product.find(Product.owner_username == owner_uname).delete()
+        await Category.find(Category.owner_username == owner_uname).delete()
+        await Transaction.find(Transaction.owner_username == owner_uname).delete()
+        await Expense.find(Expense.owner_username == owner_uname).delete()
+        await Supplier.find(Supplier.owner_username == owner_uname).delete()
+        await StoreSettings.find(StoreSettings.owner_username == owner_uname).delete()
+        await AuditLog.find(AuditLog.owner_username == owner_uname).delete()
 
-    # 2. Delete all counter worker accounts linked to this owner
-    await User.find(User.owner_username == owner_uname).delete()
+        # 2. Delete all counter worker accounts linked to this owner
+        await User.find(User.owner_username == owner_uname).delete()
 
-    # 3. Delete the owner user account itself if not already deleted
-    owner_doc = await User.find_one(User.username == current_user.username)
-    if owner_doc:
-        await owner_doc.delete()
+        # 3. Delete the owner user account itself if not already deleted
+        owner_doc = await User.find_one(User.username == current_user.username)
+        if owner_doc:
+            await owner_doc.delete()
+    except Exception as e:
+        print(f"Error during account deletion: {e}")
+        # Ensure owner is deleted even if ancillary deletion logs warning
+        owner_doc = await User.find_one(User.username == current_user.username)
+        if owner_doc:
+            await owner_doc.delete()
 
     return {"message": f"Store account ({user_email}) and all associated store data have been permanently deleted."}
 

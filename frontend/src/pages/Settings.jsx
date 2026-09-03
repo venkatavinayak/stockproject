@@ -74,14 +74,6 @@ const SettingsPage = () => {
     setSaveSuccess(false);
     setSaving(true);
 
-    if (formData.email_enable) {
-      if (!formData.smtp_host?.trim() || !formData.smtp_user?.trim() || !formData.smtp_password?.trim()) {
-        alert("Please enter your SMTP Host, User Email, and App Password before saving with Active Dispatch enabled.");
-        setSaving(false);
-        return;
-      }
-    }
-
     try {
       const data = await settingsAPI.update(formData);
       setFormData(data);
@@ -289,82 +281,7 @@ const SettingsPage = () => {
               </div>
             </div>
 
-            {/* SMTP Settings */}
-            <div className="border-t pt-4 dark:border-slate-850 space-y-4">
-              <div className="flex items-center justify-between">
-                <h4 className="text-xs font-bold font-title text-indigo-500 uppercase tracking-wider">SMTP Email Billing Settings</h4>
-                <label className="relative inline-flex items-center cursor-pointer">
-                  <input 
-                    type="checkbox" 
-                    checked={formData.email_enable}
-                    onChange={(e) => setFormData({...formData, email_enable: e.target.checked})}
-                    className="sr-only peer"
-                  />
-                  <div className="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-800 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-slate-600 peer-checked:bg-indigo-655"></div>
-                  <span className="ml-2 text-[10px] font-bold text-slate-550">Active Dispatch</span>
-                </label>
-              </div>
 
-              {formData.email_enable && (
-                <div className="space-y-4 animate-fade-in text-[10px]">
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    <div className="sm:col-span-2">
-                      <label className="block font-bold text-slate-400 mb-1.5 uppercase tracking-wider text-[9px]">SMTP Server Host</label>
-                      <input
-                        type="text"
-                        value={formData.smtp_host || ''}
-                        onChange={(e) => setFormData({...formData, smtp_host: e.target.value})}
-                        placeholder="smtp.gmail.com"
-                        className="w-full p-2.5 rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 dark:border-slate-850 dark:bg-slate-900 transition-all font-semibold"
-                      />
-                    </div>
-                    <div>
-                      <label className="block font-bold text-slate-400 mb-1.5 uppercase tracking-wider text-[9px]">SMTP Port</label>
-                      <input
-                        type="number"
-                        value={formData.smtp_port || 587}
-                        onChange={(e) => setFormData({...formData, smtp_port: Number(e.target.value)})}
-                        className="w-full p-2.5 rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 dark:border-slate-850 dark:bg-slate-900 transition-all font-semibold"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block font-bold text-slate-400 mb-1.5 uppercase tracking-wider text-[9px]">SMTP User Email</label>
-                      <input
-                        type="text"
-                        value={formData.smtp_user || ''}
-                        onChange={(e) => setFormData({...formData, smtp_user: e.target.value})}
-                        placeholder="yourstore@gmail.com"
-                        className="w-full p-2.5 rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 dark:border-slate-850 dark:bg-slate-900 transition-all font-semibold"
-                      />
-                    </div>
-                    <div>
-                      <label className="block font-bold text-slate-400 mb-1.5 uppercase tracking-wider text-[9px]">SMTP App Password (16-char)</label>
-                      <input
-                        type="password"
-                        value={formData.smtp_password || ''}
-                        onChange={(e) => setFormData({...formData, smtp_password: e.target.value})}
-                        placeholder="Gmail App Password"
-                        className="w-full p-2.5 rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 dark:border-slate-850 dark:bg-slate-900 transition-all font-semibold"
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block font-bold text-slate-400 mb-1.5 uppercase tracking-wider text-[9px]">Sender Email Address (Optional)</label>
-                    <input
-                      type="text"
-                      value={formData.smtp_sender || ''}
-                      onChange={(e) => setFormData({...formData, smtp_sender: e.target.value})}
-                      placeholder="Same as SMTP user if empty"
-                      className="w-full p-2.5 rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 dark:border-slate-850 dark:bg-slate-900 transition-all font-semibold"
-                    />
-                  </div>
-                </div>
-              )}
-            </div>
 
             <button
               type="submit"

@@ -32,14 +32,6 @@ const Login = () => {
   const [existingOwnerUsername, setExistingOwnerUsername] = useState('');
   const [existingOwnerPassword, setExistingOwnerPassword] = useState('');
 
-  // Forgot Password & OTP state
-  const [showForgotModal, setShowForgotModal] = useState(false);
-  const [otpStep, setOtpStep] = useState(1); // 1: Email -> 2: OTP + New Password
-  const [forgotEmail, setForgotEmail] = useState('');
-  const [otpCode, setOtpCode] = useState('');
-  const [newPassword, setNewPassword] = useState('');
-  const [otpDemoCode, setOtpDemoCode] = useState('');
-
   const [copiedCode, setCopiedCode] = useState(false);
   const [error, setError] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
@@ -169,59 +161,6 @@ const Login = () => {
     }
   };
 
-  // Handler: Request Password Reset OTP Code
-  const handleRequestOTP = async (e) => {
-    e.preventDefault();
-    setError('');
-    setSuccessMsg('');
-    setLoading(true);
-
-    const emailToUse = forgotEmail.trim();
-    if (!emailToUse) {
-      setError('Please enter your registered email address');
-      setLoading(false);
-      return;
-    }
-
-    try {
-      const res = await requestOTP(emailToUse);
-      setSuccessMsg(res.message || `A 6-digit OTP code has been sent to ${emailToUse}. Please check your inbox and spam folder.`);
-      setOtpStep(2);
-    } catch (err) {
-      setError(err.message || 'Failed to request OTP');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Handler: Reset Password with OTP
-  const handleResetPasswordOTP = async (e) => {
-    e.preventDefault();
-    setError('');
-    setSuccessMsg('');
-    setLoading(true);
-
-    if (!otpCode.trim() || !newPassword) {
-      setError('Please enter the 6-digit OTP and your new password');
-      setLoading(false);
-      return;
-    }
-
-    try {
-      const res = await resetPasswordOTP(forgotEmail.trim(), otpCode.trim(), newPassword);
-      setSuccessMsg(res.message || 'Password reset successfully! You can now log in with your new password.');
-      setTimeout(() => {
-        setShowForgotModal(false);
-        setOtpStep(1);
-        setOtpCode('');
-        setNewPassword('');
-      }, 2000);
-    } catch (err) {
-      setError(err.message || 'Failed to reset password. Please check your OTP code.');
-    } finally {
-      setLoading(false);
-    }
-  };
 
   // Handler: Clerk Sign Out
   const handleClerkSignOut = () => {
@@ -508,18 +447,9 @@ const Login = () => {
                     </div>
 
                     <div>
-                      <div className="flex items-center justify-between mb-1.5">
-                        <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                          Owner Password
-                        </label>
-                        <button
-                          type="button"
-                          onClick={() => { setShowForgotModal(true); setError(''); setSuccessMsg(''); }}
-                          className="text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:underline cursor-pointer"
-                        >
-                          Forgot Password?
-                        </button>
-                      </div>
+                      <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">
+                        Owner Password
+                      </label>
                       <div className="relative">
                         <span className="absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400">
                           <KeyRound size={16} />
@@ -668,133 +598,6 @@ const Login = () => {
           </div>
         </div>
       </div>
-
-      {/* FORGOT PASSWORD OTP MODAL */}
-      {showForgotModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm animate-fade-in">
-          <div className="w-full max-w-md p-6 bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl space-y-5 relative">
-            <button
-              onClick={() => { setShowForgotModal(false); setOtpStep(1); setError(''); setSuccessMsg(''); }}
-              className="absolute top-4 right-4 p-2 text-slate-400 hover:text-slate-600 dark:hover:text-white transition-colors"
-            >
-              <X size={20} />
-            </button>
-
-            <div className="flex items-center gap-3">
-              <div className="p-3 text-white bg-indigo-600 rounded-2xl shadow-md">
-                <Lock size={20} />
-              </div>
-              <div>
-                <h3 className="text-lg font-extrabold text-slate-900 dark:text-white font-title">
-                  Reset Password via OTP
-                </h3>
-                <p className="text-xs text-slate-500 dark:text-slate-400">
-                  {otpStep === 1 ? 'Enter your registered email' : 'Verify OTP & set new password'}
-                </p>
-              </div>
-            </div>
-
-            {/* Modal Error Banner */}
-            {error && (
-              <div className="flex items-center gap-2.5 p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-xs font-semibold text-rose-600 dark:text-rose-400">
-                <AlertCircle size={16} className="shrink-0" />
-                <span>{error}</span>
-              </div>
-            )}
-
-            {/* STEP 1: REQUEST OTP */}
-            {otpStep === 1 ? (
-              <form onSubmit={handleRequestOTP} className="space-y-4">
-                <div>
-                  <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">
-                    Registered Gmail / Email
-                  </label>
-                  <div className="relative">
-                    <span className="absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400">
-                      <User size={16} />
-                    </span>
-                    <input
-                      type="email"
-                      value={forgotEmail}
-                      onChange={(e) => setForgotEmail(e.target.value)}
-                      required
-                      className="w-full pl-11 pr-4 py-3 rounded-xl border border-slate-200 bg-slate-50/50 text-slate-900 dark:border-slate-800 dark:bg-slate-950/50 dark:text-white focus:outline-none focus:border-indigo-500 font-semibold text-sm"
-                      placeholder="e.g. name@gmail.com"
-                    />
-                  </div>
-                </div>
-
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="w-full flex items-center justify-center gap-2 py-3 rounded-xl font-bold text-white bg-indigo-600 hover:bg-indigo-500 disabled:bg-indigo-800 transition-all cursor-pointer text-sm shadow-md shadow-indigo-600/20"
-                >
-                  {loading ? 'Sending OTP...' : 'Send 6-Digit OTP'}
-                  <Send size={14} />
-                </button>
-              </form>
-            ) : (
-              /* STEP 2: VERIFY OTP & RESET PASSWORD */
-              <form onSubmit={handleResetPasswordOTP} className="space-y-4">
-                <div className="p-3.5 rounded-2xl bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800 text-xs font-medium text-indigo-900 dark:text-indigo-300 flex items-center gap-3">
-                  <Mail size={20} className="shrink-0 text-indigo-600 dark:text-indigo-400" />
-                  <div>
-                    <span className="block text-slate-900 dark:text-white font-bold">
-                      Check Your Email Inbox
-                    </span>
-                    <span className="text-[11px] text-slate-500 dark:text-slate-400">
-                      A 6-digit OTP code has been sent to <strong className="font-semibold text-slate-900 dark:text-white font-mono">{forgotEmail}</strong>. Please check your inbox and spam folder.
-                    </span>
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">
-                    6-Digit OTP Code
-                  </label>
-                  <input
-                    type="text"
-                    value={otpCode}
-                    onChange={(e) => setOtpCode(e.target.value)}
-                    required
-                    maxLength={6}
-                    className="w-full text-center tracking-widest font-mono text-lg py-3 rounded-xl border border-slate-200 bg-slate-50/50 text-slate-900 dark:border-slate-800 dark:bg-slate-950/50 dark:text-white focus:outline-none focus:border-indigo-500 font-bold"
-                    placeholder="123456"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">
-                    New Password
-                  </label>
-                  <div className="relative">
-                    <span className="absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400">
-                      <KeyRound size={16} />
-                    </span>
-                    <input
-                      type="password"
-                      value={newPassword}
-                      onChange={(e) => setNewPassword(e.target.value)}
-                      required
-                      className="w-full pl-11 pr-4 py-3 rounded-xl border border-slate-200 bg-slate-50/50 text-slate-900 dark:border-slate-800 dark:bg-slate-950/50 dark:text-white focus:outline-none focus:border-indigo-500 font-semibold text-sm"
-                      placeholder="Enter new strong password"
-                    />
-                  </div>
-                </div>
-
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="w-full flex items-center justify-center gap-2 py-3 rounded-xl font-bold text-white bg-emerald-600 hover:bg-emerald-500 disabled:bg-emerald-800 transition-all cursor-pointer text-sm shadow-md shadow-emerald-600/20"
-                >
-                  {loading ? 'Resetting Password...' : 'Reset Password'}
-                  <CheckCircle2 size={16} />
-                </button>
-              </form>
-            )}
-          </div>
-        </div>
-      )}
     </div>
   );
 };
