@@ -53,6 +53,10 @@ export const authAPI = {
     const response = await api.post('/auth/reset-password-otp', { email, otp, new_password });
     return response.data;
   },
+  resetPasswordDirect: async (email, new_password) => {
+    const response = await api.post('/auth/reset-password-direct', { email, new_password });
+    return response.data;
+  },
   clerkLogin: async (email, clerk_id, shop_name = null, role = 'admin', password = null, owner_username = null) => {
 
     const response = await api.post('/auth/clerk-login', { email, clerk_id, shop_name, role, password, owner_username });

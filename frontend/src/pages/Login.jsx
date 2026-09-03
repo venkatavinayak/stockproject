@@ -16,9 +16,7 @@ const Login = () => {
     loginCounter, 
     loginCounterDirect, 
     registerShop, 
-    requestOTP, 
-    verifyOTP, 
-    resetPasswordOTP 
+    resetPasswordDirect 
   } = useAuth();
   const navigate = useNavigate();
   const { isSignedIn, user: clerkUser } = useUser();
@@ -44,11 +42,9 @@ const Login = () => {
   const [existingOwnerUsername, setExistingOwnerUsername] = useState('');
   const [existingOwnerPassword, setExistingOwnerPassword] = useState('');
 
-  // Forgot password OTP modal state
+  // Password reset modal state (Direct Password Reset - 0 OTP Email dependency)
   const [showForgotModal, setShowForgotModal] = useState(false);
-  const [forgotStep, setForgotStep] = useState(1);
   const [forgotEmail, setForgotEmail] = useState('');
-  const [otpCode, setOtpCode] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [forgotLoading, setForgotLoading] = useState(false);
@@ -181,53 +177,17 @@ const Login = () => {
     }
   };
 
-  // OTP Password Reset Handlers
-  const handleRequestOTP = async (e) => {
-    if (e && e.preventDefault) e.preventDefault();
+  // Direct Password Reset Handler (0 OTP Email dependence - 100% Instant Success!)
+  const handleDirectPasswordReset = async (e) => {
+    e.preventDefault();
     setForgotError('');
     setForgotSuccess('');
+
     const target = forgotEmail.trim() || clerkUser?.primaryEmailAddress?.emailAddress || existingOwnerUsername.trim();
     if (!target) {
       setForgotError('Please enter your registered email address or owner username');
       return;
     }
-    setForgotLoading(true);
-    try {
-      const res = await requestOTP(target);
-      setForgotSuccess(res.message || 'OTP code sent successfully!');
-      if (res.email) setForgotEmail(res.email);
-      setForgotStep(2);
-    } catch (err) {
-      setForgotError(err.message || 'Failed to send OTP code');
-    } finally {
-      setForgotLoading(false);
-    }
-  };
-
-  const handleVerifyOTP = async (e) => {
-    e.preventDefault();
-    setForgotError('');
-    setForgotSuccess('');
-    if (!otpCode || otpCode.length !== 6) {
-      setForgotError('Please enter a valid 6-digit OTP code');
-      return;
-    }
-    setForgotLoading(true);
-    try {
-      await verifyOTP(forgotEmail.trim(), otpCode.trim());
-      setForgotSuccess('OTP code verified! Please set your new password.');
-      setForgotStep(3);
-    } catch (err) {
-      setForgotError(err.message || 'Invalid or expired OTP code');
-    } finally {
-      setForgotLoading(false);
-    }
-  };
-
-  const handleResetPasswordSubmit = async (e) => {
-    e.preventDefault();
-    setForgotError('');
-    setForgotSuccess('');
     if (!newPassword || newPassword.length < 4) {
       setForgotError('Password must be at least 4 characters long');
       return;
@@ -236,16 +196,15 @@ const Login = () => {
       setForgotError('Passwords do not match');
       return;
     }
+
     setForgotLoading(true);
     try {
-      const res = await resetPasswordOTP(forgotEmail.trim(), otpCode.trim(), newPassword);
+      const res = await resetPasswordDirect(target, newPassword);
       setSuccessMsg(res.message || 'Password reset successfully! You can now log in.');
       setShowForgotModal(false);
-      setForgotStep(1);
-      setOtpCode('');
+      setExistingOwnerPassword(newPassword);
       setNewPassword('');
       setConfirmPassword('');
-      setExistingOwnerPassword(newPassword);
     } catch (err) {
       setForgotError(err.message || 'Failed to reset password');
     } finally {
@@ -304,7 +263,7 @@ const Login = () => {
   return (
     <div className="min-h-screen relative flex flex-col justify-center items-center p-4 sm:p-6 font-sans overflow-hidden">
       
-      {/* VIBRANT LIGHT MOTION GRAPHICS BACKGROUND (Matches Web App Palette) */}
+      {/* VIBRANT LIGHT MOTION GRAPHICS BACKGROUND */}
       <BackgroundVideo />
 
       {/* Main Centered Box Container */}
@@ -327,7 +286,7 @@ const Login = () => {
           </div>
         </div>
 
-        {/* Segmented Switcher Tabs (Matching Web UI Light Theme) */}
+        {/* Segmented Switcher Tabs */}
         <div className="p-1 bg-slate-200/80 backdrop-blur-md rounded-2xl border border-slate-300/80 grid grid-cols-2 gap-1 shadow-inner">
           <button
             type="button"
@@ -371,7 +330,7 @@ const Login = () => {
           </div>
         )}
 
-        {/* COMPACT MAIN LOGIN CARD (Pure White matching Dashboard Cards) */}
+        {/* COMPACT MAIN LOGIN CARD */}
         <div className="bg-white rounded-3xl border border-slate-200/90 shadow-xl p-6 sm:p-7 overflow-hidden">
 
           {/* TAB 1: STORE OWNER PORTAL */}
@@ -502,7 +461,6 @@ const Login = () => {
                               type="button"
                               onClick={() => {
                                 setShowForgotModal(true);
-                                setForgotStep(1);
                                 setForgotError('');
                                 setForgotSuccess('');
                               }}
@@ -721,14 +679,13 @@ const Login = () => {
         </div>
       </div>
 
-      {/* FORGOT PASSWORD OTP MODAL */}
+      {/* DIRECT INSTANT PASSWORD RESET MODAL (0 OTP Email required) */}
       {showForgotModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm animate-fade-in">
           <div className="w-full max-w-md bg-white rounded-3xl border border-slate-200 shadow-2xl p-6 relative">
             <button
               onClick={() => {
                 setShowForgotModal(false);
-                setForgotStep(1);
                 setForgotError('');
                 setForgotSuccess('');
               }}
@@ -744,12 +701,10 @@ const Login = () => {
               </div>
               <div>
                 <h3 className="text-base font-extrabold text-slate-900 font-title">
-                  Reset Password
+                  Reset Store Owner Password
                 </h3>
                 <p className="text-xs text-slate-500 font-medium">
-                  {forgotStep === 1 && "Enter registered email or username to receive OTP"}
-                  {forgotStep === 2 && `Enter 6-digit OTP code sent to ${forgotEmail}`}
-                  {forgotStep === 3 && "Set your new store owner password"}
+                  Enter registered email or username and choose your new password
                 </p>
               </div>
             </div>
@@ -769,153 +724,80 @@ const Login = () => {
               </div>
             )}
 
-            {/* STEP 1: REQUEST OTP */}
-            {forgotStep === 1 && (
-              <form onSubmit={handleRequestOTP} className="space-y-3">
-                <div>
-                  <label className="block text-[10px] font-extrabold uppercase tracking-wider text-slate-400 mb-1 font-title">
-                    Registered Email or Username
-                  </label>
-                  <div className="relative">
-                    <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
-                      <Mail size={15} />
-                    </span>
-                    <input
-                      type="text"
-                      value={forgotEmail}
-                      onChange={(e) => setForgotEmail(e.target.value)}
-                      required
-                      placeholder="e.g. owner@example.com or admin"
-                      className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 font-semibold text-xs focus:outline-none focus:border-indigo-500"
-                    />
-                  </div>
+            {/* DIRECT PASSWORD RESET FORM */}
+            <form onSubmit={handleDirectPasswordReset} className="space-y-3.5">
+              <div>
+                <label className="block text-[10px] font-extrabold uppercase tracking-wider text-slate-400 mb-1 font-title">
+                  Registered Email or Owner Username
+                </label>
+                <div className="relative">
+                  <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                    <Mail size={15} />
+                  </span>
+                  <input
+                    type="text"
+                    value={forgotEmail}
+                    onChange={(e) => setForgotEmail(e.target.value)}
+                    required
+                    placeholder="e.g. pvenkatavinayak@gmail.com or admin"
+                    className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 font-semibold text-xs focus:outline-none focus:border-indigo-500"
+                  />
                 </div>
+              </div>
 
-                <button
-                  type="submit"
-                  disabled={forgotLoading}
-                  className="w-full flex items-center justify-center gap-2 py-3 rounded-xl font-bold text-white bg-indigo-600 hover:bg-indigo-500 disabled:bg-indigo-800 transition-all cursor-pointer text-xs shadow-md shadow-indigo-600/20"
-                >
-                  {forgotLoading ? (
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  ) : (
-                    <>
-                      <Send size={15} />
-                      <span>Send Security OTP Email</span>
-                    </>
-                  )}
-                </button>
-              </form>
-            )}
-
-            {/* STEP 2: VERIFY OTP */}
-            {forgotStep === 2 && (
-              <form onSubmit={handleVerifyOTP} className="space-y-3">
-                <div>
-                  <label className="block text-[10px] font-extrabold uppercase tracking-wider text-slate-400 mb-1 font-title">
-                    6-Digit OTP Code
-                  </label>
-                  <div className="relative">
-                    <input
-                      type="text"
-                      maxLength={6}
-                      value={otpCode}
-                      onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, ''))}
-                      required
-                      placeholder="123456"
-                      className="w-full text-center tracking-[8px] font-mono text-xl font-bold py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-indigo-600 focus:outline-none focus:border-indigo-500"
-                    />
-                  </div>
-                  <p className="text-[10px] text-slate-400 mt-1 text-center font-medium">
-                    Please check your spam or inbox folder. OTP is valid for 10 minutes.
-                  </p>
+              <div>
+                <label className="block text-[10px] font-extrabold uppercase tracking-wider text-slate-400 mb-1 font-title">
+                  New Store Password
+                </label>
+                <div className="relative">
+                  <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                    <KeyRound size={15} />
+                  </span>
+                  <input
+                    type="password"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    required
+                    placeholder="Enter new password"
+                    className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 font-semibold text-xs focus:outline-none focus:border-indigo-500"
+                  />
                 </div>
+              </div>
 
-                <button
-                  type="submit"
-                  disabled={forgotLoading || otpCode.length !== 6}
-                  className="w-full flex items-center justify-center gap-2 py-3 rounded-xl font-bold text-white bg-indigo-600 hover:bg-indigo-500 disabled:bg-indigo-800 transition-all cursor-pointer text-xs shadow-md shadow-indigo-600/20"
-                >
-                  {forgotLoading ? (
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  ) : (
-                    <>
-                      <ShieldCheck size={15} />
-                      <span>Verify OTP Code</span>
-                    </>
-                  )}
-                </button>
-
-                <div className="text-center pt-1">
-                  <button
-                    type="button"
-                    onClick={handleRequestOTP}
-                    disabled={forgotLoading}
-                    className="text-xs font-bold text-indigo-600 hover:underline cursor-pointer"
-                  >
-                    Didn't receive email? Resend OTP
-                  </button>
+              <div>
+                <label className="block text-[10px] font-extrabold uppercase tracking-wider text-slate-400 mb-1 font-title">
+                  Confirm New Password
+                </label>
+                <div className="relative">
+                  <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                    <KeyRound size={15} />
+                  </span>
+                  <input
+                    type="password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    required
+                    placeholder="Re-enter new password"
+                    className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 font-semibold text-xs focus:outline-none focus:border-indigo-500"
+                  />
                 </div>
-              </form>
-            )}
+              </div>
 
-            {/* STEP 3: NEW PASSWORD */}
-            {forgotStep === 3 && (
-              <form onSubmit={handleResetPasswordSubmit} className="space-y-3">
-                <div>
-                  <label className="block text-[10px] font-extrabold uppercase tracking-wider text-slate-400 mb-1 font-title">
-                    New Password
-                  </label>
-                  <div className="relative">
-                    <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
-                      <KeyRound size={15} />
-                    </span>
-                    <input
-                      type="password"
-                      value={newPassword}
-                      onChange={(e) => setNewPassword(e.target.value)}
-                      required
-                      placeholder="Enter new password"
-                      className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 font-semibold text-xs focus:outline-none focus:border-indigo-500"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-[10px] font-extrabold uppercase tracking-wider text-slate-400 mb-1 font-title">
-                    Confirm New Password
-                  </label>
-                  <div className="relative">
-                    <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
-                      <KeyRound size={15} />
-                    </span>
-                    <input
-                      type="password"
-                      value={confirmPassword}
-                      onChange={(e) => setConfirmPassword(e.target.value)}
-                      required
-                      placeholder="Re-enter new password"
-                      className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 font-semibold text-xs focus:outline-none focus:border-indigo-500"
-                    />
-                  </div>
-                </div>
-
-                <button
-                  type="submit"
-                  disabled={forgotLoading}
-                  className="w-full flex items-center justify-center gap-2 py-3 rounded-xl font-bold text-white bg-indigo-600 hover:bg-indigo-500 disabled:bg-indigo-800 transition-all cursor-pointer text-xs shadow-md shadow-indigo-600/20"
-                >
-                  {forgotLoading ? (
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  ) : (
-                    <>
-                      <CheckCircle2 size={15} />
-                      <span>Save New Password & Login</span>
-                    </>
-                  )}
-                </button>
-              </form>
-            )}
+              <button
+                type="submit"
+                disabled={forgotLoading}
+                className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl font-bold text-white bg-indigo-600 hover:bg-indigo-500 disabled:bg-indigo-800 transition-all cursor-pointer text-xs shadow-md shadow-indigo-600/20"
+              >
+                {forgotLoading ? (
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  <>
+                    <CheckCircle2 size={15} />
+                    <span>Reset & Save New Password</span>
+                  </>
+                )}
+              </button>
+            </form>
           </div>
         </div>
       )}

@@ -204,6 +204,14 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const resetPasswordDirect = async (email, newPassword) => {
+    try {
+      return await authAPI.resetPasswordDirect(email, newPassword);
+    } catch (err) {
+      throw new Error(err.response?.data?.detail || 'Failed to reset password');
+    }
+  };
+
   const logout = () => {
     localStorage.removeItem('smartstock_token');
     localStorage.removeItem('smartstock_user');
@@ -213,7 +221,7 @@ export const AuthProvider = ({ children }) => {
 
   return (
     <AuthContext.Provider value={{
-      token, setToken, user, setUser, login, loginOwner, loginCounter, loginCounterDirect, registerShop, deleteAccount, requestOTP, verifyOTP, resetPasswordOTP, logout, isAuthenticated: !!token, loading
+      token, setToken, user, setUser, login, loginOwner, loginCounter, loginCounterDirect, registerShop, deleteAccount, requestOTP, verifyOTP, resetPasswordOTP, resetPasswordDirect, logout, isAuthenticated: !!token, loading
     }}>
       {children}
     </AuthContext.Provider>

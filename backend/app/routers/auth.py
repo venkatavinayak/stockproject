@@ -687,7 +687,46 @@ async def delete_account(
 
 import re
 
-# --- Password Reset OTP Flow Endpoints ---
+# --- Direct Instant Password Reset Endpoint (0 OTP Email required) ---
+
+class DirectPasswordResetRequest(BaseModel):
+    email: str
+    new_password: str
+
+@router.post("/reset-password-direct")
+async def reset_password_direct(req: DirectPasswordResetRequest):
+    identifier = req.email.strip().lower()
+    if not identifier or not req.new_password:
+        raise HTTPException(status_code=400, detail="Email/username and new password are required")
+        
+    if len(req.new_password) < 4:
+        raise HTTPException(status_code=400, detail="Password must be at least 4 characters long")
+
+    regex_pattern = f"^{re.escape(identifier)}$"
+    user = await User.find_one({
+        "$or": [
+            {"email": {"$regex": regex_pattern, "$options": "i"}},
+            {"username": {"$regex": regex_pattern, "$options": "i"}},
+            {"owner_username": {"$regex": regex_pattern, "$options": "i"}}
+        ]
+    }) or await User.find_one(User.email == identifier) or await User.find_one(User.username == identifier)
+
+    if not user:
+        raise HTTPException(status_code=404, detail="No registered account found matching that email or username. Please check your details or create a new store.")
+
+    user.hashed_password = get_password_hash(req.new_password)
+    user.reset_otp = None
+    user.otp_expiry = None
+    await user.save()
+
+    audit = AuditLog(
+        username=user.username,
+        action="PASSWORD_RESET",
+        details="Owner password updated directly without email OTP."
+    )
+    await audit.insert()
+
+    return {"message": f"Password for account '{user.username}' reset successfully! You can now log in with your new password."}
 
 @router.post("/forgot-password")
 async def forgot_password(req: ForgotPasswordRequest):
@@ -701,104 +740,13 @@ async def forgot_password(req: ForgotPasswordRequest):
             {"email": {"$regex": regex_pattern, "$options": "i"}},
             {"username": {"$regex": regex_pattern, "$options": "i"}}
         ]
-    })
-
-    if not user:
-        # Check if user email without exact regex matches
-        user = await User.find_one(User.email == identifier) or await User.find_one(User.username == identifier)
+    }) or await User.find_one(User.email == identifier) or await User.find_one(User.username == identifier)
 
     if not user:
         raise HTTPException(status_code=404, detail="No registered account found matching that email or username. Please check your details or create a new store.")
 
-    target_email = user.email or identifier
-    if "@" not in target_email:
-        raise HTTPException(status_code=400, detail="No valid registered email address associated with this account.")
+    return {"message": "Account verified successfully", "email": user.email or identifier}
 
-    # Generate 6-digit OTP
-    otp_code = f"{random.randint(100000, 999999)}"
-    user.reset_otp = otp_code
-    user.otp_expiry = datetime.utcnow() + timedelta(minutes=10)
-    await user.save()
-
-    # Dispatch Email via SMTP / HTTPS API
-    email_sent = await send_otp_email(target_email, otp_code)
-    if not email_sent:
-        logger.error(f"[AUTH] Failed to dispatch OTP email to {target_email}")
-        raise HTTPException(status_code=500, detail=f"Failed to dispatch OTP email to {target_email}. Please verify your email inbox server or try again.")
-
-    masked_email = target_email[:3] + "***" + target_email[target_email.find('@'):] if "@" in target_email else target_email
-    return {
-        "message": f"Security OTP code sent successfully to {masked_email}.",
-        "email": target_email
-    }
-
-
-@router.post("/verify-otp")
-async def verify_otp(req: VerifyOTPRequest):
-    identifier = req.email.strip().lower()
-    regex_pattern = f"^{re.escape(identifier)}$"
-    user = await User.find_one({
-        "$or": [
-            {"email": {"$regex": regex_pattern, "$options": "i"}},
-            {"username": {"$regex": regex_pattern, "$options": "i"}}
-        ]
-    }) or await User.find_one(User.email == identifier) or await User.find_one(User.username == identifier)
-
-    if not user or not user.reset_otp or not user.otp_expiry:
-        raise HTTPException(status_code=400, detail="Invalid or expired OTP request session. Please request a new OTP.")
-
-    if datetime.utcnow() > user.otp_expiry:
-        user.reset_otp = None
-        user.otp_expiry = None
-        await user.save()
-        raise HTTPException(status_code=400, detail="OTP code has expired. Please request a new OTP.")
-
-    if user.reset_otp.strip() != req.otp.strip():
-        raise HTTPException(status_code=400, detail="Incorrect OTP code. Please check your email and try again.")
-
-    return {"message": "OTP verified successfully", "valid": True}
-
-
-@router.post("/reset-password-otp")
-async def reset_password_otp(req: ResetPasswordOTPRequest):
-    identifier = req.email.strip().lower()
-    regex_pattern = f"^{re.escape(identifier)}$"
-    user = await User.find_one({
-        "$or": [
-            {"email": {"$regex": regex_pattern, "$options": "i"}},
-            {"username": {"$regex": regex_pattern, "$options": "i"}}
-        ]
-    }) or await User.find_one(User.email == identifier) or await User.find_one(User.username == identifier)
-
-    if not user or not user.reset_otp or not user.otp_expiry:
-        raise HTTPException(status_code=400, detail="Invalid session or expired OTP request")
-
-    if datetime.utcnow() > user.otp_expiry:
-        user.reset_otp = None
-        user.otp_expiry = None
-        await user.save()
-        raise HTTPException(status_code=400, detail="OTP code has expired. Please request a new OTP.")
-
-    if user.reset_otp.strip() != req.otp.strip():
-        raise HTTPException(status_code=400, detail="Incorrect OTP code.")
-
-    if len(req.new_password) < 4:
-        raise HTTPException(status_code=400, detail="Password must be at least 4 characters long")
-
-    user.hashed_password = get_password_hash(req.new_password)
-    user.reset_otp = None
-    user.otp_expiry = None
-    await user.save()
-
-    # Log audit event
-    audit = AuditLog(
-        username=user.username,
-        action="PASSWORD_RESET",
-        details="Password reset completed via Email OTP."
-    )
-    await audit.insert()
-
-    return {"message": "Password reset successfully! You can now log in with your new password."}
 
 
 
