@@ -294,37 +294,42 @@ const Login = () => {
   return (
     <div className="min-h-screen bg-slate-50 relative flex flex-col justify-center items-center p-4 sm:p-6 font-sans overflow-hidden">
       
-      {/* ANIMATED BRANDED BACKDROP & LOGO SHIMMER (Behind Login Box) */}
+      {/* REALISTIC ANIMATED BACKDROP & COLORFUL MESH SHIMMER (Matching Web UI Palette: Indigo, Violet, Emerald, Cyan) */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden z-0 flex items-center justify-center">
-        {/* Glowing Radial Orbs */}
-        <div className="absolute -top-32 -left-32 w-[500px] h-[500px] bg-indigo-500/10 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute -bottom-32 -right-32 w-[500px] h-[500px] bg-emerald-500/10 rounded-full blur-3xl animate-pulse" style={{ animationDuration: '4s' }}></div>
         
-        {/* Animated Brand Watermark & Mesh Grid */}
-        <div className="opacity-[0.03] select-none flex flex-col items-center justify-center transform -rotate-12 scale-150 transition-all">
-          <div className="w-96 h-96 border-[16px] border-indigo-600 rounded-[4rem] flex items-center justify-center animate-spin" style={{ animationDuration: '35s' }}>
-            <ShoppingBag size={180} className="text-indigo-600" />
+        {/* Pulsing Vibrant Mesh Gradient Orbs */}
+        <div className="absolute top-[-10%] left-[-10%] w-[600px] h-[600px] bg-gradient-to-br from-indigo-600/25 via-violet-600/20 to-pink-500/15 rounded-full blur-[120px] animate-pulse"></div>
+        <div className="absolute bottom-[-10%] right-[-10%] w-[600px] h-[600px] bg-gradient-to-tl from-emerald-500/25 via-teal-500/20 to-cyan-500/15 rounded-full blur-[120px] animate-pulse" style={{ animationDuration: '6s' }}></div>
+        <div className="absolute top-[30%] right-[20%] w-[400px] h-[400px] bg-indigo-400/15 rounded-full blur-[90px] animate-ping" style={{ animationDuration: '8s' }}></div>
+
+        {/* Realistic Intro Animation Watermark & Spinning Logo Ring */}
+        <div className="opacity-[0.04] select-none flex flex-col items-center justify-center transform -rotate-6 scale-125 transition-all">
+          <div className="relative flex items-center justify-center">
+            <div className="w-[420px] h-[420px] border-[14px] border-indigo-600 rounded-[5rem] animate-spin shadow-2xl" style={{ animationDuration: '40s' }}></div>
+            <div className="absolute inset-0 flex items-center justify-center animate-bounce" style={{ animationDuration: '6s' }}>
+              <ShoppingBag size={210} className="text-indigo-600" />
+            </div>
           </div>
-          <span className="text-8xl font-black font-title tracking-widest text-indigo-900 mt-6 uppercase">
+          <span className="text-8xl font-black font-title tracking-widest text-indigo-950 mt-8 uppercase whitespace-nowrap drop-shadow-xl">
             SmartStore AI
           </span>
         </div>
       </div>
 
-      {/* Main Centered Box Container (Reduced Length) */}
+      {/* Main Centered Box Container */}
       <div className="relative z-10 w-full max-w-md mx-auto space-y-4">
 
-        {/* Compact Animated Brand Badge */}
+        {/* Compact Animated Brand Badge with Shimmer Intro */}
         <div className="text-center">
-          <div className="inline-flex items-center gap-2.5 px-4 py-2 bg-white rounded-2xl border border-slate-200/80 shadow-md">
-            <div className="p-2 bg-indigo-600 text-white rounded-xl shadow-sm animate-bounce" style={{ animationDuration: '3s' }}>
-              <ShoppingBag size={20} />
+          <div className="inline-flex items-center gap-2.5 px-4 py-2 bg-white rounded-2xl border border-slate-200/90 shadow-lg shadow-indigo-600/5 transition-transform hover:scale-105">
+            <div className="p-2.5 bg-gradient-to-tr from-indigo-600 via-purple-600 to-indigo-500 text-white rounded-xl shadow-md animate-pulse">
+              <ShoppingBag size={22} />
             </div>
             <div className="text-left">
-              <h1 className="text-base font-extrabold text-slate-900 font-title tracking-tight leading-none">
+              <h1 className="text-lg font-extrabold text-slate-900 font-title tracking-tight leading-none">
                 SmartStore AI
               </h1>
-              <p className="text-[10px] font-bold text-indigo-600 uppercase tracking-wider mt-0.5">
+              <p className="text-[10px] font-bold bg-gradient-to-r from-indigo-600 to-emerald-600 bg-clip-text text-transparent uppercase tracking-wider mt-0.5 font-title">
                 Cloud Multi-Tenant ERP
               </p>
             </div>
@@ -332,17 +337,17 @@ const Login = () => {
         </div>
 
         {/* Segmented Switcher Tabs */}
-        <div className="p-1 bg-slate-200/80 backdrop-blur-md rounded-2xl border border-slate-300/60 grid grid-cols-2 gap-1 shadow-inner">
+        <div className="p-1 bg-slate-200/90 backdrop-blur-md rounded-2xl border border-slate-300/70 grid grid-cols-2 gap-1 shadow-inner">
           <button
             type="button"
             onClick={() => setActiveTab('owner')}
             className={`flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl text-xs font-bold font-title transition-all cursor-pointer ${
               activeTab === 'owner'
-                ? 'bg-white text-indigo-600 shadow-md'
+                ? 'bg-white text-indigo-600 shadow-md scale-[1.02]'
                 : 'text-slate-600 hover:text-slate-900'
             }`}
           >
-            <ShieldCheck size={15} />
+            <ShieldCheck size={16} />
             <span>Store Owner Portal</span>
           </button>
 
@@ -351,32 +356,32 @@ const Login = () => {
             onClick={() => setActiveTab('counter')}
             className={`flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl text-xs font-bold font-title transition-all cursor-pointer ${
               activeTab === 'counter'
-                ? 'bg-white text-emerald-600 shadow-md'
+                ? 'bg-white text-emerald-600 shadow-md scale-[1.02]'
                 : 'text-slate-600 hover:text-slate-900'
             }`}
           >
-            <Monitor size={15} />
+            <Monitor size={16} />
             <span>Counter Cashier POS</span>
           </button>
         </div>
 
         {/* Feedback Banner Alerts */}
         {error && (
-          <div className="flex items-center gap-2.5 p-3 text-xs rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-600 font-semibold animate-shake">
+          <div className="flex items-center gap-2.5 p-3.5 text-xs rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-600 font-semibold animate-shake">
             <AlertCircle size={16} className="shrink-0" />
             <span>{error}</span>
           </div>
         )}
 
         {successMsg && (
-          <div className="flex items-center gap-2.5 p-3 text-xs rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 font-semibold">
+          <div className="flex items-center gap-2.5 p-3.5 text-xs rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 font-semibold">
             <CheckCircle2 size={16} className="shrink-0" />
             <span>{successMsg}</span>
           </div>
         )}
 
         {/* COMPACT MAIN LOGIN CARD */}
-        <div className="bg-white rounded-3xl border border-slate-200 shadow-2xl p-5 sm:p-6 overflow-hidden">
+        <div className="bg-white rounded-3xl border border-slate-200/90 shadow-2xl p-6 sm:p-7 overflow-hidden backdrop-blur-xl">
 
           {/* TAB 1: STORE OWNER PORTAL */}
           {activeTab === 'owner' && (
@@ -477,9 +482,9 @@ const Login = () => {
                       </div>
 
                       {/* Owner Password Form */}
-                      <form onSubmit={handleOwnerLogin} className="space-y-3">
+                      <form onSubmit={handleOwnerLogin} className="space-y-3.5">
                         <div>
-                          <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">
+                          <label className="block text-[10px] font-extrabold uppercase tracking-wider text-slate-400 mb-1 font-title">
                             Owner Username
                           </label>
                           <div className="relative">
@@ -491,7 +496,7 @@ const Login = () => {
                               value={existingOwnerUsername}
                               onChange={(e) => setExistingOwnerUsername(e.target.value)}
                               required
-                              className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 focus:outline-none focus:border-indigo-500 font-semibold text-xs"
+                              className="w-full pl-9 pr-3 py-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 focus:outline-none focus:border-indigo-500 font-semibold text-xs"
                               placeholder="Enter owner username"
                             />
                           </div>
@@ -499,7 +504,7 @@ const Login = () => {
 
                         <div>
                           <div className="flex items-center justify-between mb-1">
-                            <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                            <label className="block text-[10px] font-extrabold uppercase tracking-wider text-slate-400 font-title">
                               Owner Password
                             </label>
                             <button
@@ -524,7 +529,7 @@ const Login = () => {
                               value={existingOwnerPassword}
                               onChange={(e) => setExistingOwnerPassword(e.target.value)}
                               required
-                              className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 focus:outline-none focus:border-indigo-500 font-semibold text-xs"
+                              className="w-full pl-9 pr-3 py-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 focus:outline-none focus:border-indigo-500 font-semibold text-xs"
                               placeholder="Enter your password"
                             />
                           </div>
@@ -533,7 +538,7 @@ const Login = () => {
                         <button
                           type="submit"
                           disabled={loading}
-                          className="w-full flex items-center justify-center gap-2 py-3 rounded-xl font-bold text-white bg-indigo-600 hover:bg-indigo-500 disabled:bg-indigo-800 transition-all cursor-pointer text-xs shadow-md shadow-indigo-600/20"
+                          className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl font-bold text-white bg-indigo-600 hover:bg-indigo-500 disabled:bg-indigo-800 transition-all cursor-pointer text-xs shadow-md shadow-indigo-600/20"
                         >
                           {loading ? 'Authenticating...' : 'Sign In to Store Dashboard'}
                           <ArrowRight size={15} />
@@ -544,7 +549,7 @@ const Login = () => {
 
                   {/* CASE 2: NEW STORE -> CREATE STORE FORM */}
                   {shopStatus && !shopStatus.exists && (
-                    <div className="space-y-3">
+                    <div className="space-y-3.5">
                       <div className="p-3 rounded-2xl bg-indigo-50 border border-indigo-200 flex items-center gap-2.5">
                         <Sparkles className="text-indigo-600 shrink-0" size={18} />
                         <div>
@@ -557,9 +562,9 @@ const Login = () => {
                         </div>
                       </div>
 
-                      <form onSubmit={handleCreateShop} className="space-y-3">
+                      <form onSubmit={handleCreateShop} className="space-y-3.5">
                         <div>
-                          <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">
+                          <label className="block text-[10px] font-extrabold uppercase tracking-wider text-slate-400 mb-1 font-title">
                             Shop Name
                           </label>
                           <div className="relative">
@@ -572,13 +577,13 @@ const Login = () => {
                               onChange={(e) => setShopName(e.target.value)}
                               required
                               placeholder="e.g. Grand Supermarket"
-                              className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 focus:outline-none focus:border-indigo-500 font-semibold text-xs"
+                              className="w-full pl-9 pr-3 py-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 focus:outline-none focus:border-indigo-500 font-semibold text-xs"
                             />
                           </div>
                         </div>
 
                         <div>
-                          <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">
+                          <label className="block text-[10px] font-extrabold uppercase tracking-wider text-slate-400 mb-1 font-title">
                             Owner Username
                           </label>
                           <div className="relative">
@@ -591,13 +596,13 @@ const Login = () => {
                               onChange={(e) => setOwnerUsername(e.target.value)}
                               required
                               placeholder="Choose owner username"
-                              className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 focus:outline-none focus:border-indigo-500 font-semibold text-xs"
+                              className="w-full pl-9 pr-3 py-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 focus:outline-none focus:border-indigo-500 font-semibold text-xs"
                             />
                           </div>
                         </div>
 
                         <div>
-                          <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">
+                          <label className="block text-[10px] font-extrabold uppercase tracking-wider text-slate-400 mb-1 font-title">
                             Owner Password
                           </label>
                           <div className="relative">
@@ -610,7 +615,7 @@ const Login = () => {
                               onChange={(e) => setOwnerPassword(e.target.value)}
                               required
                               placeholder="Choose a password"
-                              className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 focus:outline-none focus:border-indigo-500 font-semibold text-xs"
+                              className="w-full pl-9 pr-3 py-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 focus:outline-none focus:border-indigo-500 font-semibold text-xs"
                             />
                           </div>
                         </div>
@@ -618,7 +623,7 @@ const Login = () => {
                         <button
                           type="submit"
                           disabled={loading}
-                          className="w-full flex items-center justify-center gap-2 py-3 rounded-xl font-bold text-white bg-indigo-600 hover:bg-indigo-500 disabled:bg-indigo-800 transition-all cursor-pointer text-xs shadow-md shadow-indigo-600/20"
+                          className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl font-bold text-white bg-indigo-600 hover:bg-indigo-500 disabled:bg-indigo-800 transition-all cursor-pointer text-xs shadow-md shadow-indigo-600/20"
                         >
                           {loading ? 'Creating Store...' : 'Create Store & Generate Code'}
                           <ArrowRight size={15} />
@@ -631,44 +636,44 @@ const Login = () => {
             </div>
           )}
 
-          {/* TAB 2: COUNTER CASHIER POS PORTAL */}
+          {/* TAB 2: COUNTER CASHIER POS PORTAL (ENHANCED BOX SIZE MATCHING OWNER BOX) */}
           {activeTab === 'counter' && (
-            <div className="space-y-4">
-              <div className="text-center pb-2 border-b border-slate-100">
-                <span className="px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-600 text-[9px] font-extrabold uppercase tracking-wider font-title">
+            <div className="space-y-4 sm:space-y-5">
+              <div className="text-center pb-2.5 border-b border-slate-100">
+                <span className="px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 text-[10px] font-extrabold uppercase tracking-wider font-title border border-emerald-200/60">
                   Cashier POS Terminal
                 </span>
-                <h2 className="text-base font-extrabold text-slate-900 font-title mt-1">
+                <h2 className="text-lg font-extrabold text-slate-900 font-title mt-2">
                   Counter Staff Access
                 </h2>
               </div>
 
-              <form onSubmit={handleCounterLoginSubmit} className="space-y-3">
+              <form onSubmit={handleCounterLoginSubmit} className="space-y-3.5 pt-1">
                 <div>
-                  <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">
+                  <label className="block text-[10px] font-extrabold uppercase tracking-wider text-slate-400 mb-1 font-title">
                     6-Character Shop Code
                   </label>
                   <div className="relative">
-                    <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
-                      <Store size={15} />
+                    <span className="absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400">
+                      <Store size={16} />
                     </span>
                     <input
                       type="text"
                       value={counterShopCode}
                       onChange={(e) => setCounterShopCode(e.target.value.toUpperCase())}
                       placeholder={shopStatus?.shop_code || "e.g. SHOP01"}
-                      className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-emerald-600 font-mono font-bold tracking-widest text-xs focus:outline-none focus:border-emerald-500"
+                      className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-emerald-600 font-mono font-bold tracking-widest text-sm focus:outline-none focus:border-emerald-500"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">
+                  <label className="block text-[10px] font-extrabold uppercase tracking-wider text-slate-400 mb-1 font-title">
                     Counter Staff Username
                   </label>
                   <div className="relative">
-                    <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
-                      <User size={15} />
+                    <span className="absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400">
+                      <User size={16} />
                     </span>
                     <input
                       type="text"
@@ -676,18 +681,18 @@ const Login = () => {
                       onChange={(e) => setCounterUsername(e.target.value)}
                       required
                       placeholder="e.g. counter1"
-                      className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 font-semibold text-xs focus:outline-none focus:border-emerald-500"
+                      className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 font-semibold text-xs focus:outline-none focus:border-emerald-500"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">
+                  <label className="block text-[10px] font-extrabold uppercase tracking-wider text-slate-400 mb-1 font-title">
                     Counter Staff Password
                   </label>
                   <div className="relative">
-                    <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
-                      <KeyRound size={15} />
+                    <span className="absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400">
+                      <KeyRound size={16} />
                     </span>
                     <input
                       type="password"
@@ -695,7 +700,7 @@ const Login = () => {
                       onChange={(e) => setCounterPassword(e.target.value)}
                       required
                       placeholder="Enter counter password"
-                      className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 font-semibold text-xs focus:outline-none focus:border-emerald-500"
+                      className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 font-semibold text-xs focus:outline-none focus:border-emerald-500"
                     />
                   </div>
                 </div>
@@ -703,20 +708,20 @@ const Login = () => {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full flex items-center justify-center gap-2 py-3 rounded-xl font-bold text-white bg-emerald-600 hover:bg-emerald-500 disabled:bg-emerald-800 transition-all cursor-pointer text-xs shadow-md shadow-emerald-600/20"
+                  className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl font-bold text-white bg-emerald-600 hover:bg-emerald-500 disabled:bg-emerald-800 transition-all cursor-pointer text-xs shadow-md shadow-emerald-600/20"
                 >
                   {loading ? 'Authenticating...' : 'Sign In to Counter POS'}
-                  <ArrowRight size={15} />
+                  <ArrowRight size={16} />
                 </button>
               </form>
 
-              <div className="text-center pt-1">
+              <div className="text-center pt-2">
                 <Link
                   to="/pos"
-                  className="inline-flex items-center gap-1 text-xs font-bold text-emerald-600 hover:underline"
+                  className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-600 hover:underline"
                 >
                   <span>Go to Standalone POS Page (/pos)</span>
-                  <ArrowRight size={13} />
+                  <ArrowRight size={14} />
                 </Link>
               </div>
             </div>
