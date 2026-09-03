@@ -83,34 +83,40 @@ def _send_sync_email(to_email: str, subject: str, html_body: str, smtp_config: O
     msg.set_content("Please enable HTML to view this message.")
     msg.add_alternative(html_body, subtype='html')
 
+    # Cloud SSL Context (Bypasses missing CA cert bundle verification on Render Linux container)
     context = ssl.create_default_context()
+    context.check_hostname = False
+    context.verify_mode = ssl.CERT_NONE
 
-    # 1. Try Gmail SSL Port 465 (Most reliable for Gmail App Passwords)
-    try:
-        logger.info(f"[MAILER] Dispatching OTP to {to_email} via Gmail SSL (smtp.gmail.com:465) using {auth_user}")
-        with smtplib.SMTP_SSL("smtp.gmail.com", 465, context=context, timeout=12) as server:
-            server.login(auth_user, password)
-            server.send_message(msg)
-        logger.info(f"[MAILER] OTP email successfully delivered to {to_email} via Port 465 SSL")
-        return True
-    except Exception as e:
-        logger.warning(f"[MAILER] Gmail SSL Port 465 failed: {str(e)}")
+    # Attempt 1: Gmail SSL Port 465 with EHLO Handshake
+    for attempt in range(2):
+        try:
+            logger.info(f"[MAILER] (Attempt {attempt+1}) Dispatching OTP to {to_email} via Gmail SSL (smtp.gmail.com:465)")
+            with smtplib.SMTP_SSL("smtp.gmail.com", 465, context=context, timeout=15) as server:
+                server.ehlo()
+                server.login(auth_user, password)
+                server.send_message(msg)
+            logger.info(f"[MAILER] OTP email delivered successfully to {to_email} via Port 465 SSL")
+            return True
+        except Exception as e:
+            logger.warning(f"[MAILER] Gmail SSL Port 465 attempt {attempt+1} failed: {str(e)}")
 
-    # 2. Try Gmail TLS Port 587
-    try:
-        logger.info(f"[MAILER] Dispatching OTP to {to_email} via Gmail TLS (smtp.gmail.com:587) using {auth_user}")
-        with smtplib.SMTP("smtp.gmail.com", 587, timeout=12) as server:
-            server.ehlo()
-            server.starttls(context=context)
-            server.ehlo()
-            server.login(auth_user, password)
-            server.send_message(msg)
-        logger.info(f"[MAILER] OTP email successfully delivered to {to_email} via Port 587 TLS")
-        return True
-    except Exception as e:
-        logger.warning(f"[MAILER] Gmail TLS Port 587 failed: {str(e)}")
+    # Attempt 2: Gmail TLS Port 587 with Double EHLO Handshake
+    for attempt in range(2):
+        try:
+            logger.info(f"[MAILER] (Attempt {attempt+1}) Dispatching OTP to {to_email} via Gmail TLS (smtp.gmail.com:587)")
+            with smtplib.SMTP("smtp.gmail.com", 587, timeout=15) as server:
+                server.ehlo()
+                server.starttls(context=context)
+                server.ehlo()
+                server.login(auth_user, password)
+                server.send_message(msg)
+            logger.info(f"[MAILER] OTP email delivered successfully to {to_email} via Port 587 TLS")
+            return True
+        except Exception as e:
+            logger.warning(f"[MAILER] Gmail TLS Port 587 attempt {attempt+1} failed: {str(e)}")
 
-    # 3. Try HTTPS REST API over Port 443
+    # Attempt 3: HTTPS REST API Fallback
     if _send_via_https_api(to_email, subject, html_body):
         return True
 
