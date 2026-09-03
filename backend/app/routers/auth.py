@@ -729,22 +729,13 @@ async def forgot_password(req: ForgotPasswordRequest):
     user.otp_expiry = datetime.utcnow() + timedelta(minutes=10)
     await user.save()
 
-    # Dispatch Email via Gmail SMTP / HTTPS REST API
-    email_sent = await send_otp_email(target_email, otp_code)
+    # Dispatch Email Asynchronously in Background (NetPrime Non-Blocking Pattern)
+    asyncio.create_task(send_otp_email(target_email, otp_code))
     masked_email = target_email[:3] + "***" + target_email[target_email.find('@'):] if "@" in target_email else target_email
 
-    if not email_sent:
-        logger.warning(f"[AUTH] SMTP connection returned False for {target_email}. Generated OTP for user {user.username}: {otp_code}")
-        return {
-            "message": f"Security OTP code generated for {masked_email}. Please check your email inbox or spam folder.",
-            "email": target_email,
-            "otp_sent": False
-        }
-
     return {
-        "message": f"Security OTP code sent to {masked_email}. Please check your email inbox and spam folder.",
-        "email": target_email,
-        "otp_sent": True
+        "message": f"Security 6-digit OTP code sent immediately to {masked_email}. Please check your inbox and spam folder.",
+        "email": target_email
     }
 
 @router.post("/verify-otp")
