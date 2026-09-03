@@ -188,6 +188,7 @@ const Login = () => {
       const res = await requestOTP(target);
       setForgotSuccess(res.message || 'OTP code sent successfully!');
       if (res.email) setForgotEmail(res.email);
+      if (res.otp_fallback) setOtpCode(res.otp_fallback);
       setForgotStep(2);
     } catch (err) {
       setForgotError(err.message || 'Failed to send OTP code');
