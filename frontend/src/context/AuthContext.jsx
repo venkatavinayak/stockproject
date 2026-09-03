@@ -180,38 +180,6 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const requestOTP = async (email) => {
-    try {
-      return await authAPI.requestOTP(email);
-    } catch (err) {
-      throw new Error(err.response?.data?.detail || 'Failed to send OTP code');
-    }
-  };
-
-  const verifyOTP = async (email, otp) => {
-    try {
-      return await authAPI.verifyOTP(email, otp);
-    } catch (err) {
-      throw new Error(err.response?.data?.detail || 'Invalid or expired OTP code');
-    }
-  };
-
-  const resetPasswordOTP = async (email, otp, newPassword) => {
-    try {
-      return await authAPI.resetPasswordOTP(email, otp, newPassword);
-    } catch (err) {
-      throw new Error(err.response?.data?.detail || 'Failed to reset password');
-    }
-  };
-
-  const resetPasswordDirect = async (email, newPassword) => {
-    try {
-      return await authAPI.resetPasswordDirect(email, newPassword);
-    } catch (err) {
-      throw new Error(err.response?.data?.detail || 'Failed to reset password');
-    }
-  };
-
   const logout = () => {
     localStorage.removeItem('smartstock_token');
     localStorage.removeItem('smartstock_user');
@@ -221,7 +189,7 @@ export const AuthProvider = ({ children }) => {
 
   return (
     <AuthContext.Provider value={{
-      token, setToken, user, setUser, login, loginOwner, loginCounter, loginCounterDirect, registerShop, deleteAccount, requestOTP, verifyOTP, resetPasswordOTP, resetPasswordDirect, logout, isAuthenticated: !!token, loading
+      token, setToken, user, setUser, login, loginOwner, loginCounter, loginCounterDirect, registerShop, deleteAccount, logout, isAuthenticated: !!token, loading
     }}>
       {children}
     </AuthContext.Provider>

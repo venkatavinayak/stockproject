@@ -41,24 +41,7 @@ export const authAPI = {
     const response = await api.get('/auth/check-shop', { params: { email, clerk_id } });
     return response.data;
   },
-  requestOTP: async (email) => {
-    const response = await api.post('/auth/forgot-password', { email });
-    return response.data;
-  },
-  verifyOTP: async (email, otp) => {
-    const response = await api.post('/auth/verify-otp', { email, otp });
-    return response.data;
-  },
-  resetPasswordOTP: async (email, otp, new_password) => {
-    const response = await api.post('/auth/reset-password-otp', { email, otp, new_password });
-    return response.data;
-  },
-  resetPasswordDirect: async (email, new_password) => {
-    const response = await api.post('/auth/reset-password-direct', { email, new_password });
-    return response.data;
-  },
   clerkLogin: async (email, clerk_id, shop_name = null, role = 'admin', password = null, owner_username = null) => {
-
     const response = await api.post('/auth/clerk-login', { email, clerk_id, shop_name, role, password, owner_username });
     return response.data;
   },
