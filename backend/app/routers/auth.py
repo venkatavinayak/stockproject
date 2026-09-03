@@ -722,17 +722,11 @@ async def forgot_password(req: ForgotPasswordRequest):
 
     # Dispatch Email via SMTP / HTTPS API
     email_sent = await send_otp_email(target_email, otp_code)
-    masked_email = target_email[:3] + "***" + target_email[target_email.find('@'):] if "@" in target_email else target_email
-
     if not email_sent:
-        logger.warning(f"[AUTH] Cloud host blocked SMTP dispatch to {target_email}. Using security fallback.")
-        return {
-            "message": f"Cloud network blocked raw SMTP. Use fallback OTP: {otp_code} to reset password.",
-            "email": target_email,
-            "otp_fallback": otp_code,
-            "notice": "To receive real inbox emails on Render, add RESEND_API_KEY (from resend.com) to Render environment variables."
-        }
+        logger.error(f"[AUTH] Failed to dispatch OTP email to {target_email}")
+        raise HTTPException(status_code=500, detail=f"Failed to dispatch OTP email to {target_email}. Please verify your email inbox server or try again.")
 
+    masked_email = target_email[:3] + "***" + target_email[target_email.find('@'):] if "@" in target_email else target_email
     return {
         "message": f"Security OTP code sent successfully to {masked_email}.",
         "email": target_email
