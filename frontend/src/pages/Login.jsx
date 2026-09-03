@@ -214,7 +214,7 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen relative flex flex-col justify-center items-center p-4 sm:p-6 font-sans overflow-hidden">
+    <div className="min-h-screen relative flex flex-col justify-center items-center p-4 sm:p-6 font-sans overflow-hidden bg-slate-950 text-slate-100">
       
       {/* VIBRANT LIGHT MOTION GRAPHICS BACKGROUND */}
       <BackgroundVideo />
@@ -224,15 +224,15 @@ const Login = () => {
 
         {/* Brand Header Badge */}
         <div className="text-center">
-          <div className="inline-flex items-center gap-2.5 px-4 py-2.5 bg-white/90 backdrop-blur-md rounded-2xl border border-slate-200/90 shadow-md shadow-indigo-600/5 transition-transform hover:scale-105">
-            <div className="p-2 bg-indigo-600 text-white rounded-xl shadow-sm">
+          <div className="inline-flex items-center gap-2.5 px-4 py-2.5 bg-slate-900/70 backdrop-blur-xl rounded-2xl border border-white/10 shadow-2xl transition-transform hover:scale-105">
+            <div className="p-2 bg-indigo-600 text-white rounded-xl shadow-md shadow-indigo-600/30">
               <ShoppingBag size={20} />
             </div>
             <div className="text-left">
-              <h1 className="text-base font-extrabold text-slate-900 font-title tracking-tight leading-none">
+              <h1 className="text-base font-extrabold text-white font-title tracking-tight leading-none">
                 SmartStore AI
               </h1>
-              <p className="text-[10px] font-extrabold text-indigo-600 uppercase tracking-wider mt-0.5 font-title">
+              <p className="text-[10px] font-extrabold text-indigo-400 uppercase tracking-wider mt-0.5 font-title">
                 Cloud Multi-Tenant ERP
               </p>
             </div>
@@ -240,14 +240,14 @@ const Login = () => {
         </div>
 
         {/* Segmented Switcher Tabs */}
-        <div className="p-1 bg-slate-200/80 backdrop-blur-md rounded-2xl border border-slate-300/80 grid grid-cols-2 gap-1 shadow-inner">
+        <div className="p-1 bg-slate-900/60 backdrop-blur-xl rounded-2xl border border-white/10 grid grid-cols-2 gap-1 shadow-2xl">
           <button
             type="button"
             onClick={() => setActiveTab('owner')}
             className={`flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl text-xs font-bold font-title transition-all cursor-pointer ${
               activeTab === 'owner'
-                ? 'bg-white text-indigo-600 shadow-sm border border-slate-200/50'
-                : 'text-slate-600 hover:text-slate-900'
+                ? 'bg-indigo-600/90 text-white shadow-lg shadow-indigo-600/30 border border-indigo-400/30 backdrop-blur-md'
+                : 'text-slate-300 hover:text-white hover:bg-white/5'
             }`}
           >
             <ShieldCheck size={16} />
@@ -259,8 +259,8 @@ const Login = () => {
             onClick={() => setActiveTab('counter')}
             className={`flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl text-xs font-bold font-title transition-all cursor-pointer ${
               activeTab === 'counter'
-                ? 'bg-white text-emerald-600 shadow-sm border border-slate-200/50'
-                : 'text-slate-600 hover:text-slate-900'
+                ? 'bg-emerald-600/90 text-white shadow-lg shadow-emerald-600/30 border border-emerald-400/30 backdrop-blur-md'
+                : 'text-slate-300 hover:text-white hover:bg-white/5'
             }`}
           >
             <Monitor size={16} />
@@ -270,21 +270,21 @@ const Login = () => {
 
         {/* Feedback Banner Alerts */}
         {error && (
-          <div className="flex items-center gap-2.5 p-3.5 text-xs rounded-xl bg-rose-500/10 backdrop-blur-md border border-rose-500/20 text-rose-600 font-semibold animate-shake shadow-sm">
+          <div className="flex items-center gap-2.5 p-3.5 text-xs rounded-xl bg-rose-500/20 backdrop-blur-xl border border-rose-500/30 text-rose-300 font-semibold animate-shake shadow-lg">
             <AlertCircle size={16} className="shrink-0" />
             <span>{error}</span>
           </div>
         )}
 
         {successMsg && (
-          <div className="flex items-center gap-2.5 p-3.5 text-xs rounded-xl bg-emerald-500/10 backdrop-blur-md border border-emerald-500/20 text-emerald-600 font-semibold shadow-sm">
+          <div className="flex items-center gap-2.5 p-3.5 text-xs rounded-xl bg-emerald-500/20 backdrop-blur-xl border border-emerald-500/30 text-emerald-300 font-semibold shadow-lg">
             <CheckCircle2 size={16} className="shrink-0" />
             <span>{successMsg}</span>
           </div>
         )}
 
-        {/* COMPACT MAIN LOGIN CARD */}
-        <div className="bg-white rounded-3xl border border-slate-200/90 shadow-xl p-6 sm:p-7 overflow-hidden">
+        {/* COMPACT MAIN LOGIN CARD (Frosted Glass Opacity & Blur) */}
+        <div className="bg-slate-900/75 backdrop-blur-2xl rounded-3xl border border-white/15 shadow-2xl p-6 sm:p-7 overflow-hidden text-slate-100">
 
           {/* TAB 1: STORE OWNER PORTAL */}
           {activeTab === 'owner' && (
