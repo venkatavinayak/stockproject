@@ -157,7 +157,7 @@ const Login = () => {
     }
   };
 
-  // Handler: Counter Staff Login (Fixing Issue 2: Uses loginCounterDirect to resolve Shop Code correctly!)
+  // Handler: Counter Staff Login
   const handleCounterLoginSubmit = async (e) => {
     e.preventDefault();
     setError('');
@@ -263,7 +263,7 @@ const Login = () => {
     setExistingOwnerPassword('');
   };
 
-  // Clerk Appearance with Pure White Footer & Seamless Contrast
+  // Clerk Appearance seamlessly matching Web UI Light Theme
   const clerkAppearance = {
     layout: {
       socialButtonsVariant: 'blockButton',
@@ -304,38 +304,38 @@ const Login = () => {
   return (
     <div className="min-h-screen relative flex flex-col justify-center items-center p-4 sm:p-6 font-sans overflow-hidden">
       
-      {/* VIBRANT DESIGNER MOTION-GRAPHICS BACKGROUND VIDEO / CANVAS */}
+      {/* VIBRANT LIGHT MOTION GRAPHICS BACKGROUND (Matches Web App Palette) */}
       <BackgroundVideo />
 
       {/* Main Centered Box Container */}
       <div className="relative z-10 w-full max-w-md mx-auto space-y-4">
 
-        {/* Compact Animated Brand Badge */}
+        {/* Brand Header Badge */}
         <div className="text-center">
-          <div className="inline-flex items-center gap-2.5 px-4 py-2 bg-white/95 backdrop-blur-md rounded-2xl border border-slate-200/90 shadow-xl shadow-indigo-600/10 transition-transform hover:scale-105">
-            <div className="p-2.5 bg-gradient-to-tr from-indigo-600 via-purple-600 to-emerald-500 text-white rounded-xl shadow-md animate-bounce" style={{ animationDuration: '4s' }}>
-              <ShoppingBag size={22} />
+          <div className="inline-flex items-center gap-2.5 px-4 py-2.5 bg-white/90 backdrop-blur-md rounded-2xl border border-slate-200/90 shadow-md shadow-indigo-600/5 transition-transform hover:scale-105">
+            <div className="p-2 bg-indigo-600 text-white rounded-xl shadow-sm">
+              <ShoppingBag size={20} />
             </div>
             <div className="text-left">
-              <h1 className="text-lg font-extrabold text-slate-900 font-title tracking-tight leading-none">
+              <h1 className="text-base font-extrabold text-slate-900 font-title tracking-tight leading-none">
                 SmartStore AI
               </h1>
-              <p className="text-[10px] font-extrabold bg-gradient-to-r from-indigo-600 via-purple-600 to-emerald-600 bg-clip-text text-transparent uppercase tracking-wider mt-0.5 font-title">
+              <p className="text-[10px] font-extrabold text-indigo-600 uppercase tracking-wider mt-0.5 font-title">
                 Cloud Multi-Tenant ERP
               </p>
             </div>
           </div>
         </div>
 
-        {/* Segmented Switcher Tabs */}
-        <div className="p-1 bg-slate-900/80 backdrop-blur-xl rounded-2xl border border-slate-700/80 grid grid-cols-2 gap-1 shadow-2xl">
+        {/* Segmented Switcher Tabs (Matching Web UI Light Theme) */}
+        <div className="p-1 bg-slate-200/80 backdrop-blur-md rounded-2xl border border-slate-300/80 grid grid-cols-2 gap-1 shadow-inner">
           <button
             type="button"
             onClick={() => setActiveTab('owner')}
             className={`flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl text-xs font-bold font-title transition-all cursor-pointer ${
               activeTab === 'owner'
-                ? 'bg-white text-indigo-600 shadow-md scale-[1.02]'
-                : 'text-slate-300 hover:text-white'
+                ? 'bg-white text-indigo-600 shadow-sm border border-slate-200/50'
+                : 'text-slate-600 hover:text-slate-900'
             }`}
           >
             <ShieldCheck size={16} />
@@ -347,8 +347,8 @@ const Login = () => {
             onClick={() => setActiveTab('counter')}
             className={`flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl text-xs font-bold font-title transition-all cursor-pointer ${
               activeTab === 'counter'
-                ? 'bg-white text-emerald-600 shadow-md scale-[1.02]'
-                : 'text-slate-300 hover:text-white'
+                ? 'bg-white text-emerald-600 shadow-sm border border-slate-200/50'
+                : 'text-slate-600 hover:text-slate-900'
             }`}
           >
             <Monitor size={16} />
@@ -358,21 +358,21 @@ const Login = () => {
 
         {/* Feedback Banner Alerts */}
         {error && (
-          <div className="flex items-center gap-2.5 p-3.5 text-xs rounded-xl bg-rose-500/10 backdrop-blur-md border border-rose-500/20 text-rose-600 font-semibold animate-shake shadow-lg">
+          <div className="flex items-center gap-2.5 p-3.5 text-xs rounded-xl bg-rose-500/10 backdrop-blur-md border border-rose-500/20 text-rose-600 font-semibold animate-shake shadow-sm">
             <AlertCircle size={16} className="shrink-0" />
             <span>{error}</span>
           </div>
         )}
 
         {successMsg && (
-          <div className="flex items-center gap-2.5 p-3.5 text-xs rounded-xl bg-emerald-500/10 backdrop-blur-md border border-emerald-500/20 text-emerald-600 font-semibold shadow-lg">
+          <div className="flex items-center gap-2.5 p-3.5 text-xs rounded-xl bg-emerald-500/10 backdrop-blur-md border border-emerald-500/20 text-emerald-600 font-semibold shadow-sm">
             <CheckCircle2 size={16} className="shrink-0" />
             <span>{successMsg}</span>
           </div>
         )}
 
-        {/* COMPACT MAIN LOGIN CARD */}
-        <div className="bg-white rounded-3xl border border-slate-200/90 shadow-2xl p-6 sm:p-7 overflow-hidden backdrop-blur-xl">
+        {/* COMPACT MAIN LOGIN CARD (Pure White matching Dashboard Cards) */}
+        <div className="bg-white rounded-3xl border border-slate-200/90 shadow-xl p-6 sm:p-7 overflow-hidden">
 
           {/* TAB 1: STORE OWNER PORTAL */}
           {activeTab === 'owner' && (
