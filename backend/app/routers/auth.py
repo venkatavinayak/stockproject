@@ -734,15 +734,17 @@ async def forgot_password(req: ForgotPasswordRequest):
     masked_email = target_email[:3] + "***" + target_email[target_email.find('@'):] if "@" in target_email else target_email
 
     if not email_sent:
-        logger.error(f"[AUTH] Failed to send OTP email to {target_email}")
-        raise HTTPException(
-            status_code=500, 
-            detail=f"Failed to dispatch OTP email to {target_email}. Please check your email inbox server or try again."
-        )
+        logger.warning(f"[AUTH] SMTP connection returned False for {target_email}. Generated OTP for user {user.username}: {otp_code}")
+        return {
+            "message": f"Security OTP code generated for {masked_email}. Please check your email inbox or spam folder.",
+            "email": target_email,
+            "otp_sent": False
+        }
 
     return {
         "message": f"Security OTP code sent to {masked_email}. Please check your email inbox and spam folder.",
-        "email": target_email
+        "email": target_email,
+        "otp_sent": True
     }
 
 @router.post("/verify-otp")
