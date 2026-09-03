@@ -15,3 +15,16 @@ class TokenData(BaseModel):
 class PasswordChangeRequest(BaseModel):
     old_password: str
     new_password: str
+
+class ForgotPasswordRequest(BaseModel):
+    email: str
+
+class VerifyOTPRequest(BaseModel):
+    email: str
+    otp: str
+
+class ResetPasswordOTPRequest(BaseModel):
+    email: str
+    otp: str
+    new_password: str
+

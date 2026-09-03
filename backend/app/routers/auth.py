@@ -1,14 +1,17 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
-from datetime import datetime
+from datetime import datetime, timedelta
+import random
 from typing import Optional
 
 from backend.app.models.user import User
 from backend.app.models.audit_logs import AuditLog
 from backend.app.auth.security import verify_password, create_access_token, get_password_hash
 from backend.app.auth.deps import get_current_user
-from backend.app.schemas.auth import Token, PasswordChangeRequest
+from backend.app.schemas.auth import Token, PasswordChangeRequest, ForgotPasswordRequest, VerifyOTPRequest, ResetPasswordOTPRequest
 from backend.app.utils.logger import get_logger
+from backend.app.utils.mailer import send_otp_email
+
 
 logger = get_logger(__name__)
 
@@ -681,6 +684,99 @@ async def delete_account(
             await owner_doc.delete()
 
     return {"message": f"Store account ({user_email}) and all associated store data have been permanently deleted."}
+
+# --- Password Reset OTP Flow Endpoints ---
+
+@router.post("/forgot-password")
+async def forgot_password(req: ForgotPasswordRequest):
+    identifier = req.email.strip().lower()
+    if not identifier:
+        raise HTTPException(status_code=400, detail="Email or username is required")
+
+    user = await User.find_one(User.email == identifier)
+    if not user:
+        user = await User.find_one(User.username == identifier)
+
+    if not user:
+        return {"message": "If an account matching that detail exists, an OTP has been sent to the registered email."}
+
+    target_email = user.email or identifier
+    if "@" not in target_email:
+        raise HTTPException(status_code=400, detail="No registered email address found for this account.")
+
+    # Generate 6-digit OTP
+    otp_code = f"{random.randint(100000, 999999)}"
+    user.reset_otp = otp_code
+    user.otp_expiry = datetime.utcnow() + timedelta(minutes=10)
+    await user.save()
+
+    # Dispatch Email
+    email_sent = await send_otp_email(target_email, otp_code)
+    if not email_sent:
+        logger.warning(f"[AUTH] Failed to dispatch OTP email to {target_email}")
+
+    masked_email = target_email[:3] + "***" + target_email[target_email.find('@'):] if "@" in target_email else target_email
+    return {
+        "message": f"Security OTP code sent successfully to {masked_email}.",
+        "email": target_email
+    }
+
+
+@router.post("/verify-otp")
+async def verify_otp(req: VerifyOTPRequest):
+    identifier = req.email.strip().lower()
+    user = await User.find_one(User.email == identifier) or await User.find_one(User.username == identifier)
+
+    if not user or not user.reset_otp or not user.otp_expiry:
+        raise HTTPException(status_code=400, detail="Invalid or expired OTP request")
+
+    if datetime.utcnow() > user.otp_expiry:
+        user.reset_otp = None
+        user.otp_expiry = None
+        await user.save()
+        raise HTTPException(status_code=400, detail="OTP code has expired. Please request a new code.")
+
+    if user.reset_otp.strip() != req.otp.strip():
+        raise HTTPException(status_code=400, detail="Incorrect OTP code. Please check your email and try again.")
+
+    return {"message": "OTP verified successfully", "valid": True}
+
+
+@router.post("/reset-password-otp")
+async def reset_password_otp(req: ResetPasswordOTPRequest):
+    identifier = req.email.strip().lower()
+    user = await User.find_one(User.email == identifier) or await User.find_one(User.username == identifier)
+
+    if not user or not user.reset_otp or not user.otp_expiry:
+        raise HTTPException(status_code=400, detail="Invalid session or expired OTP request")
+
+    if datetime.utcnow() > user.otp_expiry:
+        user.reset_otp = None
+        user.otp_expiry = None
+        await user.save()
+        raise HTTPException(status_code=400, detail="OTP code has expired. Please request a new code.")
+
+    if user.reset_otp.strip() != req.otp.strip():
+        raise HTTPException(status_code=400, detail="Incorrect OTP code.")
+
+    if len(req.new_password) < 4:
+        raise HTTPException(status_code=400, detail="Password must be at least 4 characters long")
+
+    user.hashed_password = get_password_hash(req.new_password)
+    user.reset_otp = None
+    user.otp_expiry = None
+    await user.save()
+
+    # Log audit event
+    audit = AuditLog(
+        username=user.username,
+        action="PASSWORD_RESET",
+        details="Password reset completed via Email OTP."
+    )
+    await audit.insert()
+
+    return {"message": "Password reset successfully. You can now log in with your new password."}
+
 
 
 

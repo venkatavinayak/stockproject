@@ -27,7 +27,7 @@ api.interceptors.response.use((response) => {
   if (error.response && error.response.status === 401) {
     const requestUrl = error.config?.url || '';
     // Only perform automatic login redirect for protected data routes, not auth routes
-    if (!requestUrl.includes('/auth/login') && !requestUrl.includes('/auth/clerk-login') && !requestUrl.includes('/auth/check-shop')) {
+    if (!requestUrl.includes('/auth/login') && !requestUrl.includes('/auth/clerk-login') && !requestUrl.includes('/auth/check-shop') && !requestUrl.includes('/auth/forgot-password') && !requestUrl.includes('/auth/verify-otp') && !requestUrl.includes('/auth/reset-password-otp')) {
       localStorage.removeItem('smartstock_token');
       localStorage.removeItem('smartstock_user');
       window.location.href = '/login';
@@ -41,7 +41,20 @@ export const authAPI = {
     const response = await api.get('/auth/check-shop', { params: { email, clerk_id } });
     return response.data;
   },
+  requestOTP: async (email) => {
+    const response = await api.post('/auth/forgot-password', { email });
+    return response.data;
+  },
+  verifyOTP: async (email, otp) => {
+    const response = await api.post('/auth/verify-otp', { email, otp });
+    return response.data;
+  },
+  resetPasswordOTP: async (email, otp, new_password) => {
+    const response = await api.post('/auth/reset-password-otp', { email, otp, new_password });
+    return response.data;
+  },
   clerkLogin: async (email, clerk_id, shop_name = null, role = 'admin', password = null, owner_username = null) => {
+
     const response = await api.post('/auth/clerk-login', { email, clerk_id, shop_name, role, password, owner_username });
     return response.data;
   },
