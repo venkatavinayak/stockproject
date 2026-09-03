@@ -14,11 +14,14 @@ DEFAULT_GMAIL_APP_PASS = os.environ.get("SMTP_PASS", os.environ.get("SMTP_PASSWO
 DEFAULT_SMTP_USER = os.environ.get("SMTP_USER", os.environ.get("SMTP_USERNAME", "mysmartstoreai@gmail.com"))
 DEFAULT_SMTP_HOST = os.environ.get("SMTP_HOST", os.environ.get("SMTP_SERVER", "smtp.gmail.com"))
 DEFAULT_SMTP_PORT = int(os.environ.get("SMTP_PORT", 587))
-RESEND_API_KEY = os.environ.get("RESEND_API_KEY", "")
 
-def _send_via_https_api(to_email: str, subject: str, html_body: str) -> bool:
-    """Dispatches email via HTTPS REST API (Port 443) for 100% cloud deliverability."""
-    if not RESEND_API_KEY:
+RESEND_API_KEY = os.environ.get("RESEND_API_KEY", "")
+BREVO_API_KEY = os.environ.get("BREVO_API_KEY", "")
+
+def _send_via_resend_api(to_email: str, subject: str, html_body: str) -> bool:
+    """Dispatches email via Resend HTTPS REST API (Port 443)."""
+    api_key = RESEND_API_KEY or os.environ.get("RESEND_API_KEY", "")
+    if not api_key:
         return False
     try:
         url = "https://api.resend.com/emails"
@@ -29,26 +32,56 @@ def _send_via_https_api(to_email: str, subject: str, html_body: str) -> bool:
             "html": html_body
         }
         headers = {
-            "Authorization": f"Bearer {RESEND_API_KEY}",
-            "Content-Type": "application/json",
-            "User-Agent": "SmartStoreAI-ERP/2.0"
+            "Authorization": f"Bearer {api_key.strip()}",
+            "Content-Type": "application/json"
         }
         req = urllib.request.Request(url, data=json.dumps(payload).encode("utf-8"), headers=headers, method="POST")
         with urllib.request.urlopen(req, timeout=10) as resp:
             if resp.status in (200, 201, 202):
-                logger.info(f"[MAILER] HTTPS REST API successfully delivered email to {to_email}")
+                logger.info(f"[MAILER] Resend HTTPS API successfully delivered email to {to_email}")
                 return True
     except Exception as e:
-        logger.warning(f"[MAILER] HTTPS REST API dispatch failed: {str(e)}")
+        logger.warning(f"[MAILER] Resend HTTPS API dispatch failed: {str(e)}")
+    return False
+
+def _send_via_brevo_api(to_email: str, subject: str, html_body: str) -> bool:
+    """Dispatches email via Brevo HTTPS REST API (Port 443)."""
+    api_key = BREVO_API_KEY or os.environ.get("BREVO_API_KEY", "")
+    if not api_key:
+        return False
+    try:
+        url = "https://api.brevo.com/v3/smtp/email"
+        payload = {
+            "sender": {"name": "SmartStore AI", "email": "mysmartstoreai@gmail.com"},
+            "to": [{"email": to_email}],
+            "subject": subject,
+            "htmlContent": html_body
+        }
+        headers = {
+            "api-key": api_key.strip(),
+            "Content-Type": "application/json",
+            "Accept": "application/json"
+        }
+        req = urllib.request.Request(url, data=json.dumps(payload).encode("utf-8"), headers=headers, method="POST")
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            if resp.status in (200, 201, 202):
+                logger.info(f"[MAILER] Brevo HTTPS API successfully delivered email to {to_email}")
+                return True
+    except Exception as e:
+        logger.warning(f"[MAILER] Brevo HTTPS API dispatch failed: {str(e)}")
     return False
 
 def _send_sync_email(to_email: str, subject: str, html_body: str, smtp_config: Optional[dict] = None) -> bool:
-    """Synchronous helper function to send email via HTTPS API or Gmail SMTP using system sender."""
-    # 1. Try HTTPS REST API first if API key configured
-    if _send_via_https_api(to_email, subject, html_body):
+    """Synchronous helper function to send email via Resend API, Brevo API, or Gmail SMTP using system sender."""
+    # 1. Try Resend HTTPS API (Port 443) first
+    if _send_via_resend_api(to_email, subject, html_body):
         return True
 
-    # 2. Fallback to Gmail SMTP (Ports 587 & 465)
+    # 2. Try Brevo HTTPS API (Port 443) second
+    if _send_via_brevo_api(to_email, subject, html_body):
+        return True
+
+    # 3. Fallback to Gmail SMTP (Ports 587 & 465)
     cfg = smtp_config or {}
     password = (cfg.get("smtp_password") or DEFAULT_GMAIL_APP_PASS).replace(" ", "")
     auth_user = cfg.get("smtp_user") or DEFAULT_SMTP_USER
@@ -87,7 +120,7 @@ def _send_sync_email(to_email: str, subject: str, html_body: str, smtp_config: O
         except Exception as e:
             logger.warning(f"[MAILER] SMTP dispatch via {host}:{port} ({mode}) failed: {str(e)}")
 
-    logger.error(f"[MAILER] All SMTP dispatch attempts to {to_email} failed.")
+    logger.error(f"[MAILER] All dispatch attempts to {to_email} failed.")
     return False
 
 async def send_otp_email(to_email: str, otp_code: str, smtp_config: Optional[dict] = None) -> bool:
