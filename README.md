@@ -1,6 +1,6 @@
-# 🛍️ SmartStore AI — Intelligent Departmental Store ERP & POS Platform
+# 🛍️ SmartStore AI — Departmental Store ERP & POS Platform
 
-Welcome to **SmartStore AI**, a modern, cloud-native Enterprise Resource Planning (ERP) and Point-of-Sale (POS) management suite built specifically for retail stores, supermarkets, and departmental outlets. Designed with speed, elegance, and multi-tenant security at its core, SmartStore AI turns everyday store operations—from fast counter checkouts to inventory tracking and financial analytics—into an effortless, automated experience.
+Welcome to **SmartStore AI**, a modern, Enterprise Resource Planning (ERP) and Point-of-Sale (POS) management suite built specifically for retail stores, supermarkets, and departmental outlets. Designed with speed, elegance, and multi-tenant security at its core, SmartStore AI turns everyday store operations—from fast counter checkouts to inventory tracking and financial analytics—into an effortless, automated experience.
 
 ---
 
