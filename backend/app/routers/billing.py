@@ -190,7 +190,7 @@ async def checkout(
         if tx_in.customer_email:
             import os
             smtp_user = settings.smtp_user or os.getenv("SMTP_USER", "mysmartstoreai@gmail.com")
-            smtp_pass = settings.smtp_password or os.getenv("SMTP_PASSWORD") or os.getenv("GMAIL_APP_PASS")
+            smtp_pass = settings.smtp_password or os.getenv("SMTP_PASSWORD") or os.getenv("GMAIL_APP_PASS", "fbdzlzrxxqttbhdc")
             smtp_host = settings.smtp_host or os.getenv("SMTP_HOST", "smtp.gmail.com")
             smtp_port = int(settings.smtp_port or os.getenv("SMTP_PORT", 465))
             

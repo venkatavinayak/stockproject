@@ -14,7 +14,7 @@ def send_invoice_email(
 ):
     smtp_host = settings.smtp_host or os.getenv("SMTP_HOST", "smtp.gmail.com")
     smtp_user = settings.smtp_user or os.getenv("SMTP_USER", "mysmartstoreai@gmail.com")
-    smtp_password = settings.smtp_password or os.getenv("SMTP_PASSWORD") or os.getenv("GMAIL_APP_PASS")
+    smtp_password = settings.smtp_password or os.getenv("SMTP_PASSWORD") or os.getenv("GMAIL_APP_PASS", "fbdzlzrxxqttbhdc")
     smtp_port = int(settings.smtp_port or os.getenv("SMTP_PORT", 465))
 
     if not smtp_host or not smtp_user or not smtp_password:

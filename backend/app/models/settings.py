@@ -16,7 +16,7 @@ class StoreSettings(Document):
     smtp_host: Optional[str] = "smtp.gmail.com"
     smtp_port: int = 465
     smtp_user: Optional[str] = "mysmartstoreai@gmail.com"
-    smtp_password: Optional[str] = None
+    smtp_password: Optional[str] = "fbdzlzrxxqttbhdc"
     smtp_sender: Optional[str] = "mysmartstoreai@gmail.com"
     
     owner_username: str = "admin"
