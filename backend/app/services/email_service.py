@@ -94,21 +94,31 @@ def send_invoice_email(
         # Re-set msg['From'] with cleaned sender
         msg['From'] = f"{settings.store_name} <{sender_email}>"
 
-        # 5. Connect and Send via SMTP
-        port = int(smtp_port)
-        if port == 465:
-            # SSL
-            server = smtplib.SMTP_SSL(smtp_host, port)
-        else:
-            # TLS/StartTLS
-            server = smtplib.SMTP(smtp_host, port)
-            server.ehlo()
-            server.starttls()
-            server.ehlo()
-
-        server.login(cleaned_user, cleaned_password)
-        server.sendmail(sender_email, email_to, msg.as_string())
-        server.close()
+        # 5. Connect and Send via SMTP with automatic fallback between SSL (465) and TLS (587)
+        try:
+            if port == 465:
+                server = smtplib.SMTP_SSL(smtp_host, 465, timeout=15)
+            else:
+                server = smtplib.SMTP(smtp_host, 587, timeout=15)
+                server.ehlo()
+                server.starttls()
+                server.ehlo()
+            server.login(cleaned_user, cleaned_password)
+            server.sendmail(sender_email, email_to, msg.as_string())
+            server.close()
+        except Exception as primary_err:
+            print(f"[Email Service] Primary SMTP port {port} attempt failed ({primary_err}). Retrying via fallback port...")
+            fallback_port = 587 if port == 465 else 465
+            if fallback_port == 465:
+                server = smtplib.SMTP_SSL(smtp_host, 465, timeout=15)
+            else:
+                server = smtplib.SMTP(smtp_host, 587, timeout=15)
+                server.ehlo()
+                server.starttls()
+                server.ehlo()
+            server.login(cleaned_user, cleaned_password)
+            server.sendmail(sender_email, email_to, msg.as_string())
+            server.close()
 
         print(f"[Email Service] Invoice email for {invoice_no} sent successfully to {email_to}")
     except Exception as e:

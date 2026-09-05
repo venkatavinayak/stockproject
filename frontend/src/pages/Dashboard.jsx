@@ -676,7 +676,7 @@ const Dashboard = () => {
       {/* 1. Modal: Product History Ledger */}
       {showHistoryModal && historyProduct && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-backdrop-fade">
-          <div className="w-full max-w-2xl p-6 rounded-3xl bg-white border shadow-2xl dark:bg-slate-955 dark:border-slate-800 max-h-[85vh] flex flex-col justify-between animate-modal-pop">
+          <div className="w-full max-w-2xl p-6 rounded-3xl bg-white border shadow-2xl dark:bg-slate-900 dark:border-slate-800 max-h-[85vh] flex flex-col justify-between animate-modal-pop">
             <div className="flex items-center justify-between border-b pb-3 mb-4 dark:border-slate-850">
               <div>
                 <h3 className="text-lg font-bold font-title text-slate-900 dark:text-white">Sales & Stock Audit Ledger</h3>
@@ -770,7 +770,7 @@ const Dashboard = () => {
       {/* 2. Modal: Dead Stock Capital tied-up list */}
       {showDeadStockModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-backdrop-fade">
-          <div className="w-full max-w-3xl p-6 rounded-3xl bg-white border shadow-2xl dark:bg-slate-955 dark:border-slate-800 max-h-[85vh] flex flex-col justify-between animate-modal-pop">
+          <div className="w-full max-w-3xl p-6 rounded-3xl bg-white border shadow-2xl dark:bg-slate-900 dark:border-slate-800 max-h-[85vh] flex flex-col justify-between animate-modal-pop">
             <div className="flex items-center justify-between border-b pb-3 mb-4 dark:border-slate-850">
               <div>
                 <h3 className="text-lg font-bold font-title text-slate-900 dark:text-white">Dead Stock Inventory Analysis</h3>
@@ -841,7 +841,7 @@ const Dashboard = () => {
       {/* 3. Modal: Today's Bills / Transactions List */}
       {showTxsModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-backdrop-fade">
-          <div className="w-full max-w-3xl p-6 rounded-3xl bg-white border shadow-2xl dark:bg-slate-955 dark:border-slate-800 max-h-[85vh] flex flex-col justify-between animate-modal-pop">
+          <div className="w-full max-w-3xl p-6 rounded-3xl bg-white border shadow-2xl dark:bg-slate-900 dark:border-slate-800 max-h-[85vh] flex flex-col justify-between animate-modal-pop">
             <div className="flex items-center justify-between border-b pb-3 mb-4 dark:border-slate-850">
               <div>
                 <h3 className="text-lg font-bold font-title text-slate-900 dark:text-white">Today's Issued Bills</h3>
@@ -904,7 +904,7 @@ const Dashboard = () => {
       {/* 4. Modal: Today's Expenses List */}
       {showExpensesModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-backdrop-fade">
-          <div className="w-full max-w-2xl p-6 rounded-3xl bg-white border shadow-2xl dark:bg-slate-955 dark:border-slate-800 max-h-[85vh] flex flex-col justify-between animate-modal-pop">
+          <div className="w-full max-w-2xl p-6 rounded-3xl bg-white border shadow-2xl dark:bg-slate-900 dark:border-slate-800 max-h-[85vh] flex flex-col justify-between animate-modal-pop">
             <div className="flex items-center justify-between border-b pb-3 mb-4 dark:border-slate-850">
               <div>
                 <h3 className="text-lg font-bold font-title text-slate-900 dark:text-white">Today's Logged Expenses</h3>

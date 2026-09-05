@@ -306,13 +306,13 @@ const Billing = () => {
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Scan Barcode or Search Product by name (Press F2 to focus)..."
-                  className="w-full pl-11 pr-4 py-3 rounded-2xl border border-slate-200 bg-slate-50/50 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 dark:border-slate-800 dark:bg-slate-955 transition-all text-sm font-semibold"
+                  className="w-full pl-11 pr-4 py-3 rounded-2xl border border-slate-200 bg-slate-50/50 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 dark:border-slate-800 dark:bg-slate-900 transition-all text-sm font-semibold text-slate-900 dark:text-white"
                 />
               </div>
 
               {/* Manual Quantity Input */}
-              <div className="flex items-center gap-2 px-4 py-2.5 rounded-2xl border border-slate-200 bg-slate-50/50 dark:border-slate-800 dark:bg-slate-955 transition-all shadow-sm">
-                <span className="text-[10px] font-black text-slate-400 dark:text-slate-550 uppercase tracking-wider select-none pl-1">Qty</span>
+              <div className="flex items-center gap-2 px-4 py-2.5 rounded-2xl border border-slate-200 bg-slate-50/50 dark:border-slate-800 dark:bg-slate-900 transition-all shadow-sm">
+                <span className="text-[10px] font-black text-slate-400 dark:text-slate-400 uppercase tracking-wider select-none pl-1">Qty</span>
                 <input
                   type="number"
                   min="1"
@@ -321,7 +321,7 @@ const Billing = () => {
                     const val = parseInt(e.target.value);
                     setManualInputQty(isNaN(val) || val <= 0 ? 1 : val);
                   }}
-                  className="w-12 text-center bg-transparent border-none p-0 focus:ring-0 focus:outline-none text-xs font-black font-mono text-slate-850 dark:text-slate-150"
+                  className="w-12 text-center bg-transparent border-none p-0 focus:ring-0 focus:outline-none text-xs font-black font-mono text-slate-900 dark:text-white"
                 />
               </div>
 
@@ -332,7 +332,7 @@ const Billing = () => {
 
             {/* Quick search suggestions popup */}
             {searchResults.length > 0 && (
-              <div className="absolute left-0 right-0 z-50 mt-2 mx-6 rounded-2xl border border-slate-100 bg-white shadow-2xl max-h-60 overflow-y-auto dark:bg-slate-955 dark:border-slate-800 animate-fade-in">
+              <div className="absolute left-0 right-0 z-50 mt-2 mx-6 rounded-2xl border border-slate-100 bg-white shadow-2xl max-h-60 overflow-y-auto dark:bg-slate-900 dark:border-slate-800 animate-fade-in">
                 {searchResults.map((prod) => (
                   <button
                     key={prod.id}
@@ -611,45 +611,45 @@ const Billing = () => {
           <div className="flex-1 overflow-y-auto pt-4 space-y-4 scrollbar-none pr-1">
             
             {/* Customer Details Form */}
-            <div className="p-4 rounded-2xl border border-slate-100 dark:border-slate-850/80 bg-slate-50/50 dark:bg-slate-955/20 space-y-3.5">
-              <div className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400">
-                <UserCheck size={14} className="text-indigo-600" />
+            <div className="p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-900/60 space-y-3.5">
+              <div className="flex items-center gap-1.5 text-slate-700 dark:text-slate-300">
+                <UserCheck size={14} className="text-indigo-600 dark:text-indigo-400" />
                 <span className="text-[10px] font-black uppercase tracking-wider">Customer Contact (Mandatory)</span>
               </div>
               <div>
-                <label className="block text-[9px] font-bold text-slate-400 mb-1 uppercase tracking-wider">Customer Name *</label>
+                <label className="block text-[9px] font-bold text-slate-500 dark:text-slate-400 mb-1 uppercase tracking-wider">Customer Name *</label>
                 <input
                   type="text"
                   value={customerName}
                   onChange={(e) => setCustomerName(e.target.value)}
                   placeholder="Enter customer name..."
-                  className="w-full px-3 py-2 text-xs font-semibold rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 dark:border-slate-800 dark:bg-slate-950 transition-all"
+                  className="w-full px-3 py-2 text-xs font-semibold rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
                   required
                 />
               </div>
               <div className="grid grid-cols-2 gap-2.5">
                 <div>
-                  <label className="block text-[9px] font-bold text-slate-400 mb-1 uppercase tracking-wider">Mobile Number *</label>
+                  <label className="block text-[9px] font-bold text-slate-500 dark:text-slate-400 mb-1 uppercase tracking-wider">Mobile Number *</label>
                   <input
                     type="text"
                     value={customerPhone}
                     onChange={(e) => setCustomerPhone(e.target.value)}
                     placeholder="e.g. 9876543210"
-                    className="w-full px-3 py-2 text-xs font-semibold rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 dark:border-slate-800 dark:bg-slate-950 transition-all"
+                    className="w-full px-3 py-2 text-xs font-semibold rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
                   />
                 </div>
                 <div>
-                  <label className="block text-[9px] font-bold text-slate-400 mb-1 uppercase tracking-wider">Email Address *</label>
+                  <label className="block text-[9px] font-bold text-slate-500 dark:text-slate-400 mb-1 uppercase tracking-wider">Email Address *</label>
                   <input
                     type="email"
                     value={customerEmail}
                     onChange={(e) => setCustomerEmail(e.target.value)}
                     placeholder="customer@email.com"
-                    className="w-full px-3 py-2 text-xs font-semibold rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 dark:border-slate-800 dark:bg-slate-950 transition-all"
+                    className="w-full px-3 py-2 text-xs font-semibold rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
                   />
                 </div>
               </div>
-              <span className="block text-[8px] text-slate-400 font-semibold italic text-center">
+              <span className="block text-[8px] text-slate-500 dark:text-slate-400 font-semibold italic text-center">
                 * Note: Either Mobile Number or Email is required.
               </span>
             </div>
@@ -660,18 +660,18 @@ const Billing = () => {
 
       {/* Simplified Cash Pay Modal */}
       {showPayModal && (
-        <div className="no-print fixed inset-0 z-50 flex items-center justify-center p-4 animate-backdrop-fade">
-          <div className="w-full max-w-sm p-6 rounded-3xl bg-white border shadow-2xl dark:bg-slate-955 dark:border-slate-800 animate-modal-pop">
-            <h3 className="text-md font-bold font-title border-b pb-3 mb-4">Complete Cash Transaction</h3>
+        <div className="no-print fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm animate-backdrop-fade">
+          <div className="w-full max-w-sm p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl text-slate-900 dark:text-white animate-modal-pop">
+            <h3 className="text-md font-bold font-title border-b border-slate-200 dark:border-slate-800 pb-3 mb-4 text-slate-900 dark:text-white">Complete Cash Transaction</h3>
             
             <div className="space-y-4">
-              <div className="flex justify-between font-bold text-sm bg-slate-50 dark:bg-slate-900 p-3 rounded-xl">
-                <span>Grand Total:</span>
-                <span className="text-indigo-600 dark:text-indigo-400 font-mono">{settings.currency_symbol}{getGrandTotal().toFixed(2)}</span>
+              <div className="flex justify-between items-center font-bold text-sm bg-slate-100 dark:bg-slate-800/80 p-3.5 rounded-2xl border border-slate-200 dark:border-slate-700/60">
+                <span className="text-slate-700 dark:text-slate-300">Grand Total:</span>
+                <span className="text-indigo-600 dark:text-indigo-400 font-mono text-base">{settings.currency_symbol}{getGrandTotal().toFixed(2)}</span>
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-400 mb-2">CASH RECEIVED</label>
+                <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1.5 uppercase tracking-wider">CASH RECEIVED</label>
                 <input
                   type="number"
                   value={cashReceived}
@@ -682,13 +682,13 @@ const Billing = () => {
                   }}
                   step="0.01"
                   placeholder="0.00"
-                  className="w-full px-4 py-3 rounded-2xl border bg-slate-50/50 dark:border-slate-800 dark:bg-slate-900/50 text-md font-mono font-bold focus:outline-none focus:border-indigo-500"
+                  className="w-full px-4 py-3 rounded-2xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white text-md font-mono font-bold focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
                   autoFocus
                 />
               </div>
-              <div className="flex justify-between text-xs">
-                <span className="text-slate-400">Change Due:</span>
-                <span className="font-bold text-emerald-600 font-mono text-sm">{settings.currency_symbol}{changeDue.toFixed(2)}</span>
+              <div className="flex justify-between items-center text-xs">
+                <span className="text-slate-500 dark:text-slate-400 font-semibold">Change Due:</span>
+                <span className="font-bold text-emerald-600 dark:text-emerald-400 font-mono text-sm">{settings.currency_symbol}{changeDue.toFixed(2)}</span>
               </div>
 
               <button
@@ -697,7 +697,7 @@ const Billing = () => {
                   setShowPayModal(false);
                 }}
                 disabled={Number(cashReceived.toFixed(2)) < Number(getGrandTotal().toFixed(2))}
-                className="w-full py-3 rounded-2xl bg-emerald-600 disabled:bg-emerald-850 text-white font-bold"
+                className="w-full py-3.5 rounded-2xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white font-extrabold shadow-lg transition-all"
               >
                 Confirm Paid & Print Bill
               </button>
@@ -705,7 +705,7 @@ const Billing = () => {
 
             <button 
               onClick={() => setShowPayModal(false)}
-              className="w-full mt-3 py-2 text-xs border rounded-xl hover:bg-slate-50 dark:border-slate-800"
+              className="w-full mt-3 py-2.5 text-xs font-bold border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-all"
             >
               Cancel
             </button>
@@ -715,12 +715,12 @@ const Billing = () => {
 
       {/* Checkout Success Printable Receipt Overlay */}
       {completedTx && (
-        <div className="print-only-container fixed inset-0 z-50 flex items-center justify-center p-4 animate-backdrop-fade">
-          <div className="no-print-card w-full max-w-sm p-6 rounded-3xl bg-white border shadow-2xl dark:bg-slate-955 dark:border-slate-800 max-h-[85vh] flex flex-col justify-between animate-modal-pop">
+        <div className="print-only-container fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm animate-backdrop-fade">
+          <div className="no-print-card w-full max-w-sm p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl max-h-[85vh] flex flex-col justify-between text-slate-900 dark:text-white animate-modal-pop">
             <div className="text-center mb-4 no-print">
               <CheckCircle2 className="mx-auto text-emerald-500 mb-2" size={36} />
               <h3 className="text-lg font-bold font-title text-slate-900 dark:text-white">Transaction Completed</h3>
-              <span className="text-xs text-slate-400">{completedTx.invoice_number}</span>
+              <span className="text-xs font-mono text-slate-500 dark:text-slate-400">{completedTx.invoice_number}</span>
               {showReceiptSentBanner && (
                 <div className="mt-3 text-xs font-semibold text-emerald-600 bg-emerald-50 dark:bg-emerald-950/30 p-2.5 rounded-xl border border-emerald-100/20 animate-bounce">
                   ✨ PDF Receipt has been successfully sent to {completedTx.customer_email || completedTx.customer_phone}!
@@ -854,7 +854,7 @@ const Billing = () => {
               </button>
               <button
                 onClick={() => setCompletedTx(null)}
-                className="w-full py-2 text-xs border rounded-xl hover:bg-slate-50 dark:border-slate-800"
+                className="w-full py-2.5 text-xs font-bold border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-all"
               >
                 New Transaction
               </button>
