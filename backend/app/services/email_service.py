@@ -94,32 +94,29 @@ def send_invoice_email(
         # Re-set msg['From'] with cleaned sender
         msg['From'] = f"{settings.store_name} <{sender_email}>"
 
-        # 5. Connect and Send via SMTP with automatic fallback between SSL (465) and TLS (587)
+        # 5. Connect and Send via SMTP (Default Port 587 TLS with Port 465 SSL fallback)
         try:
-            if port == 465:
-                server = smtplib.SMTP_SSL(smtp_host, 465, timeout=15)
-            else:
-                server = smtplib.SMTP(smtp_host, 587, timeout=15)
-                server.ehlo()
-                server.starttls()
-                server.ehlo()
+            print(f"[Email Service] Connecting to {smtp_host}:587 (TLS)...")
+            server = smtplib.SMTP(smtp_host, 587, timeout=20)
+            server.ehlo()
+            server.starttls()
+            server.ehlo()
             server.login(cleaned_user, cleaned_password)
-            server.sendmail(sender_email, email_to, msg.as_string())
-            server.close()
-        except Exception as primary_err:
-            print(f"[Email Service] Primary SMTP port {port} attempt failed ({primary_err}). Retrying via fallback port...")
-            fallback_port = 587 if port == 465 else 465
-            if fallback_port == 465:
-                server = smtplib.SMTP_SSL(smtp_host, 465, timeout=15)
-            else:
-                server = smtplib.SMTP(smtp_host, 587, timeout=15)
-                server.ehlo()
-                server.starttls()
-                server.ehlo()
-            server.login(cleaned_user, cleaned_password)
-            server.sendmail(sender_email, email_to, msg.as_string())
-            server.close()
-
-        print(f"[Email Service] Invoice email for {invoice_no} sent successfully to {email_to}")
+            server.sendmail(cleaned_user, email_to, msg.as_string())
+            server.quit()
+            print(f"[Email Service] Invoice email for {invoice_no} sent successfully to {email_to} via port 587 TLS!")
+            return
+        except Exception as err587:
+            print(f"[Email Service] Primary port 587 TLS failed: {err587}. Retrying via port 465 SSL...")
+            try:
+                server = smtplib.SMTP_SSL(smtp_host, 465, timeout=20)
+                server.login(cleaned_user, cleaned_password)
+                server.sendmail(cleaned_user, email_to, msg.as_string())
+                server.quit()
+                print(f"[Email Service] Invoice email for {invoice_no} sent successfully to {email_to} via port 465 SSL!")
+                return
+            except Exception as err465:
+                print(f"[Email Service] Both Port 587 and Port 465 attempts failed: {err465}")
+                raise err465
     except Exception as e:
         print(f"[Email Service] Failed to send email to {email_to}: {str(e)}")
