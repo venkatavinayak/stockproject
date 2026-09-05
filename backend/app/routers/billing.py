@@ -152,7 +152,7 @@ async def checkout(
         customer_email=tx_in.customer_email,
         total_savings=total_savings,
         pdf_path="",
-        cashier_username=current_user.username,
+        cashier_username=current_user.username.split(":")[-1] if ":" in current_user.username else current_user.username,
         owner_username=current_user.owner
     )
     
@@ -161,7 +161,7 @@ async def checkout(
 
     # Simulate immediate dispatch of PDF to customer
     if tx_in.customer_email:
-        print(f"[Receipt Dispatch] Sending Invoice {invoice_no} PDF successfully to customer email: {tx_in.customer_email}")
+        print(f"[Receipt Dispatch] Preparing Invoice {invoice_no} PDF email for customer: {tx_in.customer_email}")
     if tx_in.customer_phone:
         print(f"[Receipt Dispatch] Sending Invoice {invoice_no} SMS link successfully to customer phone: {tx_in.customer_phone}")
     
@@ -187,12 +187,25 @@ async def checkout(
         transaction.pdf_path = pdf_path
         await transaction.save()
         
-        if tx_in.customer_email and settings.email_enable:
-            if not settings.smtp_host or not settings.smtp_user or not settings.smtp_password:
+        if tx_in.customer_email:
+            import os
+            smtp_user = settings.smtp_user or os.getenv("SMTP_USER", "mysmartstoreai@gmail.com")
+            smtp_pass = settings.smtp_password or os.getenv("SMTP_PASSWORD") or os.getenv("GMAIL_APP_PASS")
+            smtp_host = settings.smtp_host or os.getenv("SMTP_HOST", "smtp.gmail.com")
+            smtp_port = int(settings.smtp_port or os.getenv("SMTP_PORT", 465))
+            
+            settings.smtp_user = smtp_user
+            settings.smtp_host = smtp_host
+            settings.smtp_port = smtp_port
+            if smtp_pass:
+                settings.smtp_password = smtp_pass
+            settings.email_enable = True
+
+            if not smtp_user or not smtp_pass:
                 from backend.app.models.notification import Notification
                 notif = Notification(
                     type="System",
-                    message=f"Invoice {invoice_no} email skipped: SMTP configuration is incomplete in Store Settings.",
+                    message=f"Invoice {invoice_no} email skipped: Gmail App Password is missing. Please configure your App Password in Store Settings.",
                     timestamp=datetime.utcnow(),
                     owner_username=current_user.owner
                 )

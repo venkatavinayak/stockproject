@@ -419,13 +419,18 @@ async def export_pdf_report(
         "owner_username": owner_username
     }
     if cashier_username:
-        tx_filters["cashier_username"] = cashier_username
+        short_c = cashier_username.split(":")[-1] if ":" in cashier_username else cashier_username
+        tx_filters["cashier_username"] = {"$in": [cashier_username, short_c, f"{owner_username}:{short_c}"]}
         
     transactions = await Transaction.find(tx_filters).sort(Transaction.timestamp).to_list()
     
     # 2. Fetch Returns
     if cashier_username:
-        txs = await Transaction.find({"cashier_username": cashier_username, "owner_username": owner_username}).to_list()
+        short_c = cashier_username.split(":")[-1] if ":" in cashier_username else cashier_username
+        txs = await Transaction.find({
+            "cashier_username": {"$in": [cashier_username, short_c, f"{owner_username}:{short_c}"]},
+            "owner_username": owner_username
+        }).to_list()
         tx_ids = [str(tx.id) for tx in txs]
         returns_raw = await Return.find(
             Return.timestamp >= start_dt,

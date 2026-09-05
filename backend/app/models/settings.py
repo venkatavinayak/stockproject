@@ -12,12 +12,12 @@ class StoreSettings(Document):
     invoice_footer: str = "Thank you for shopping with us!"
 
     # SMTP Email Configuration
-    email_enable: bool = False
-    smtp_host: Optional[str] = None
-    smtp_port: int = 587
-    smtp_user: Optional[str] = None
+    email_enable: bool = True
+    smtp_host: Optional[str] = "smtp.gmail.com"
+    smtp_port: int = 465
+    smtp_user: Optional[str] = "mysmartstoreai@gmail.com"
     smtp_password: Optional[str] = None
-    smtp_sender: Optional[str] = None
+    smtp_sender: Optional[str] = "mysmartstoreai@gmail.com"
     
     owner_username: str = "admin"
     shop_code: Optional[str] = None

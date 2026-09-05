@@ -281,6 +281,50 @@ const SettingsPage = () => {
               </div>
             </div>
 
+            {/* Email & PDF Invoice Dispatch Settings */}
+            <div className="border-t pt-4 dark:border-slate-850 space-y-3">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h4 className="font-bold text-slate-900 dark:text-white text-xs">Auto PDF Invoice Email Dispatch</h4>
+                  <p className="text-[10px] text-slate-500 dark:text-slate-400">Send PDF tax invoice emails directly to customer emails upon checkout.</p>
+                </div>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input 
+                    type="checkbox" 
+                    checked={formData.email_enable !== false}
+                    onChange={(e) => setFormData({...formData, email_enable: e.target.checked})}
+                    className="sr-only peer"
+                  />
+                  <div className="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-indigo-600"></div>
+                </label>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+                <div>
+                  <label className="block font-bold text-slate-400 mb-1.5 uppercase tracking-wider text-[9px]">Sender Gmail Account</label>
+                  <input
+                    type="email"
+                    value={formData.smtp_user || 'mysmartstoreai@gmail.com'}
+                    onChange={(e) => setFormData({...formData, smtp_user: e.target.value, smtp_sender: e.target.value})}
+                    placeholder="mysmartstoreai@gmail.com"
+                    className="w-full p-2.5 rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 dark:border-slate-850 dark:bg-slate-900 transition-all font-semibold text-slate-800 dark:text-slate-200"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-bold text-slate-400 mb-1.5 uppercase tracking-wider text-[9px]">Gmail App Password</label>
+                  <input
+                    type="password"
+                    value={formData.smtp_password || ''}
+                    onChange={(e) => setFormData({...formData, smtp_password: e.target.value})}
+                    placeholder="Enter 16-character App Password"
+                    className="w-full p-2.5 rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 dark:border-slate-850 dark:bg-slate-900 transition-all font-semibold text-slate-800 dark:text-slate-200"
+                  />
+                  <span className="block text-[9px] text-slate-400 mt-1">Generate via Google Account &gt; Security &gt; App Passwords</span>
+                </div>
+              </div>
+            </div>
+
 
 
             <button

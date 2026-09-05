@@ -47,9 +47,12 @@ async def get_transactions(
             filters["profit"] = {}
         filters["profit"]["$lte"] = max_profit
     if getattr(current_user, "role", "admin") != "admin":
-        filters["cashier_username"] = current_user.username
+        c_name = current_user.username
+        short_c = c_name.split(":")[-1] if ":" in c_name else c_name
+        filters["cashier_username"] = {"$in": [c_name, short_c, f"{current_user.owner}:{short_c}"]}
     elif cashier_username:
-        filters["cashier_username"] = cashier_username
+        short_c = cashier_username.split(":")[-1] if ":" in cashier_username else cashier_username
+        filters["cashier_username"] = {"$in": [cashier_username, short_c, f"{current_user.owner}:{short_c}"]}
         
     query = Transaction.find(filters).sort(-Transaction.timestamp)
     if limit:
@@ -122,9 +125,12 @@ async def get_my_summary(current_user: User = Depends(get_current_user)):
     start_date = datetime.combine(today, datetime.min.time())
     end_date = datetime.combine(today, datetime.max.time())
     
+    c_name = current_user.username
+    short_c = c_name.split(":")[-1] if ":" in c_name else c_name
+    
     # Query transactions processed by this user today
     txs = await Transaction.find(
-        Transaction.cashier_username == current_user.username,
+        {"cashier_username": {"$in": [c_name, short_c, f"{current_user.owner}:{short_c}"]}},
         Transaction.owner_username == current_user.owner,
         Transaction.timestamp >= start_date,
         Transaction.timestamp <= end_date

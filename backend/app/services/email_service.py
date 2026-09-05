@@ -12,8 +12,13 @@ def send_invoice_email(
     pdf_path: str,
     settings: StoreSettings
 ):
-    if not settings.email_enable or not settings.smtp_host or not settings.smtp_user or not settings.smtp_password:
-        print("[Email Service] Email delivery skipped: SMTP not fully configured or disabled.")
+    smtp_host = settings.smtp_host or os.getenv("SMTP_HOST", "smtp.gmail.com")
+    smtp_user = settings.smtp_user or os.getenv("SMTP_USER", "mysmartstoreai@gmail.com")
+    smtp_password = settings.smtp_password or os.getenv("SMTP_PASSWORD") or os.getenv("GMAIL_APP_PASS")
+    smtp_port = int(settings.smtp_port or os.getenv("SMTP_PORT", 465))
+
+    if not smtp_host or not smtp_user or not smtp_password:
+        print("[Email Service] Email delivery skipped: SMTP credentials (smtp_user / smtp_password) missing.")
         return
 
     # Check if PDF file exists
@@ -22,7 +27,7 @@ def send_invoice_email(
         return
 
     try:
-        sender_email = settings.smtp_sender or settings.smtp_user
+        sender_email = settings.smtp_sender or smtp_user
         
         # 1. Create message container
         msg = MIMEMultipart()
@@ -75,8 +80,8 @@ def send_invoice_email(
             msg.attach(pdf_attachment)
 
         # 4. Clean sender email and password
-        cleaned_user = settings.smtp_user.strip()
-        cleaned_password = settings.smtp_password.replace(" ", "").strip()
+        cleaned_user = smtp_user.strip()
+        cleaned_password = smtp_password.replace(" ", "").strip()
         
         import re
         email_regex = r'^[\w\.-]+@[\w\.-]+\.\w+$'
@@ -90,13 +95,13 @@ def send_invoice_email(
         msg['From'] = f"{settings.store_name} <{sender_email}>"
 
         # 5. Connect and Send via SMTP
-        port = int(settings.smtp_port)
+        port = int(smtp_port)
         if port == 465:
             # SSL
-            server = smtplib.SMTP_SSL(settings.smtp_host, port)
+            server = smtplib.SMTP_SSL(smtp_host, port)
         else:
             # TLS/StartTLS
-            server = smtplib.SMTP(settings.smtp_host, port)
+            server = smtplib.SMTP(smtp_host, port)
             server.ehlo()
             server.starttls()
             server.ehlo()
