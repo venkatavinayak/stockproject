@@ -41,6 +41,27 @@ const AdminRoute = () => {
   return isAdmin ? <Outlet /> : <Navigate to="/billing" replace />;
 };
 
+// Stock Management Route Helper
+const StockRoute = () => {
+  const { user } = useAuth();
+  const hasAccess = user?.role === 'admin' || !!user?.can_manage_stock;
+  return hasAccess ? <Outlet /> : <Navigate to="/billing" replace />;
+};
+
+// Expenses Access Route Helper
+const ExpensesRoute = () => {
+  const { user } = useAuth();
+  const hasAccess = user?.role === 'admin' || !!user?.can_view_expenses;
+  return hasAccess ? <Outlet /> : <Navigate to="/billing" replace />;
+};
+
+// Analytics Access Route Helper
+const AnalyticsRoute = () => {
+  const { user } = useAuth();
+  const hasAccess = user?.role === 'admin' || !!user?.can_view_analytics;
+  return hasAccess ? <Outlet /> : <Navigate to="/billing" replace />;
+};
+
 const MainLayout = () => {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
@@ -96,24 +117,36 @@ function App() {
             {/* Protected Store ERP Pages */}
             <Route element={<PrivateRoute />}>
               <Route element={<MainLayout />}>
-                {/* Admin Only Routes */}
+                {/* Admin Only Management Routes */}
                 <Route element={<AdminRoute />}>
-                  <Route path="/" element={<Dashboard />} />
-                  <Route path="/expenses" element={<Expenses />} />
-                  <Route path="/analytics" element={<Analytics />} />
                   <Route path="/settings" element={<Settings />} />
                   <Route path="/users" element={<Users />} />
                 </Route>
-                
-                {/* Shareable Routes */}
+
+                {/* Expenses Access Guard */}
+                <Route element={<ExpensesRoute />}>
+                  <Route path="/expenses" element={<Expenses />} />
+                </Route>
+
+                {/* Analytics Access Guard */}
+                <Route element={<AnalyticsRoute />}>
+                  <Route path="/" element={<Dashboard />} />
+                  <Route path="/analytics" element={<Analytics />} />
+                </Route>
+
+                {/* Stock Management Guard */}
+                <Route element={<StockRoute />}>
+                  <Route path="/inventory" element={<Inventory />} />
+                </Route>
+
+                {/* General POS & Sales History Routes */}
                 <Route path="/billing" element={<Billing />} />
-                <Route path="/inventory" element={<Inventory />} />
                 <Route path="/transactions" element={<Transactions />} />
               </Route>
             </Route>
 
             {/* Catch-all Redirect */}
-            <Route path="*" element={<Navigate to="/" replace />} />
+            <Route path="*" element={<Navigate to="/billing" replace />} />
           </Routes>
         </ThemeProvider>
       </AuthProvider>

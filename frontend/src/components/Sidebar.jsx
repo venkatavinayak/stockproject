@@ -12,17 +12,22 @@ const Sidebar = ({ isCollapsed, isMobileOpen, closeMobile }) => {
   const isAdmin = user?.role === 'admin';
 
   const menuItems = [
-    { name: 'Dashboard', path: '/', icon: LayoutDashboard, adminOnly: true },
+    { name: 'Dashboard', path: '/', icon: LayoutDashboard, permission: 'can_view_analytics' },
     { name: 'Billing (POS)', path: '/billing', icon: ShoppingCart },
-    { name: 'Inventory Catalog', path: '/inventory', icon: Package },
+    { name: 'Inventory Catalog', path: '/inventory', icon: Package, permission: 'can_manage_stock' },
     { name: 'Sales History', path: '/transactions', icon: History },
-    { name: 'Store Expenses', path: '/expenses', icon: DollarSign, adminOnly: true },
-    { name: 'Advanced Analytics', path: '/analytics', icon: BarChart3, adminOnly: true },
+    { name: 'Store Expenses', path: '/expenses', icon: DollarSign, permission: 'can_view_expenses' },
+    { name: 'Advanced Analytics', path: '/analytics', icon: BarChart3, permission: 'can_view_analytics' },
     { name: 'User Accounts', path: '/users', icon: UsersIcon, adminOnly: true },
     { name: 'Store Settings', path: '/settings', icon: Settings, adminOnly: true },
   ];
 
-  const filteredItems = menuItems.filter(item => !item.adminOnly || isAdmin);
+  const filteredItems = menuItems.filter(item => {
+    if (isAdmin) return true;
+    if (item.adminOnly) return false;
+    if (item.permission) return !!user?.[item.permission];
+    return true;
+  });
 
   return (
     <aside 
