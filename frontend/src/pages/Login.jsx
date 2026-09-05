@@ -174,7 +174,7 @@ const Login = () => {
     setExistingOwnerPassword('');
   };
 
-  // Clerk Appearance seamlessly matching Web UI Light Theme
+  // Translucent Clerk Appearance matching low opacity frosted glass
   const clerkAppearance = {
     layout: {
       socialButtonsVariant: 'blockButton',
@@ -185,29 +185,29 @@ const Login = () => {
     variables: {
       colorPrimary: '#4f46e5',
       colorText: '#0f172a',
-      colorBackground: '#ffffff',
-      colorInputBackground: '#f8fafc',
+      colorBackground: 'transparent',
+      colorInputBackground: 'rgba(255, 255, 255, 0.55)',
       colorInputText: '#0f172a',
       borderRadius: '0.75rem',
       fontFamily: '"Plus Jakarta Sans", sans-serif'
     },
     elements: {
       rootBox: "w-full flex justify-center",
-      cardBox: "w-full max-w-md shadow-none bg-white rounded-2xl border-0 p-0 overflow-hidden",
-      card: "shadow-none bg-white p-0 w-full",
+      cardBox: "w-full max-w-md shadow-none bg-white/30 backdrop-blur-xl rounded-2xl border border-white/40 p-0 overflow-hidden",
+      card: "shadow-none bg-transparent p-0 w-full",
       headerTitle: "text-lg font-extrabold text-slate-900 font-title text-center tracking-tight",
-      headerSubtitle: "text-xs font-medium text-slate-500 text-center mt-1",
-      socialButtonsBlockButton: "w-full rounded-xl border border-slate-200 bg-white text-slate-900 hover:bg-slate-50 font-bold py-3 transition-all cursor-pointer shadow-sm flex items-center justify-center gap-3 hover:border-indigo-400",
+      headerSubtitle: "text-xs font-medium text-slate-600 text-center mt-1",
+      socialButtonsBlockButton: "w-full rounded-xl border border-white/60 bg-white/50 backdrop-blur-md text-slate-900 hover:bg-white/80 font-bold py-3 transition-all cursor-pointer shadow-sm flex items-center justify-center gap-3 hover:border-indigo-400",
       socialButtonsBlockButtonText: "font-bold text-sm text-slate-800 font-sans whitespace-nowrap",
-      dividerLine: "bg-slate-200",
-      dividerText: "text-[10px] font-extrabold text-slate-400 uppercase tracking-widest bg-white px-3 font-title",
-      formFieldLabel: "text-[10px] font-extrabold uppercase tracking-widest text-slate-500 mb-1 font-title",
-      formFieldInput: "w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 focus:outline-none focus:border-indigo-600 focus:ring-2 focus:ring-indigo-600/20 font-semibold text-sm transition-all",
+      dividerLine: "bg-slate-300/60",
+      dividerText: "text-[10px] font-extrabold text-slate-500 uppercase tracking-widest bg-white/40 backdrop-blur-md px-3 font-title rounded-md",
+      formFieldLabel: "text-[10px] font-extrabold uppercase tracking-widest text-slate-600 mb-1 font-title",
+      formFieldInput: "w-full px-4 py-3 rounded-xl border border-white/60 bg-white/50 text-slate-900 focus:outline-none focus:border-indigo-600 focus:ring-2 focus:ring-indigo-600/20 font-semibold text-sm transition-all backdrop-blur-sm",
       formButtonPrimary: "w-full py-3.5 rounded-xl font-extrabold text-white bg-indigo-600 hover:bg-indigo-500 shadow-md shadow-indigo-600/20 text-sm transition-all cursor-pointer border-0 font-title",
       footerActionLink: "font-extrabold text-indigo-600 hover:underline",
       footerActionText: "text-slate-600 font-medium text-xs",
-      footer: "bg-white border-t border-slate-100 p-3 text-center rounded-b-2xl",
-      identityPreviewText: "text-slate-700 font-semibold",
+      footer: "bg-white/30 backdrop-blur-md border-t border-white/30 p-3 text-center rounded-b-2xl",
+      identityPreviewText: "text-slate-800 font-semibold",
       identityPreviewEditButton: "text-indigo-600 font-bold"
     }
   };
@@ -225,14 +225,13 @@ const Login = () => {
       >
         <source src="/login-bg.mp4" type="video/mp4" />
       </video>
-      <div className="fixed inset-0 bg-slate-950/20 backdrop-blur-[2px] z-0 pointer-events-none" />
 
       {/* Main Centered Box Container */}
       <div className="relative z-10 w-full max-w-md mx-auto space-y-4">
 
         {/* Brand Header Badge */}
         <div className="text-center">
-          <div className="inline-flex items-center gap-2.5 px-5 py-2.5 bg-white/90 backdrop-blur-md rounded-2xl border border-slate-200/90 shadow-md shadow-indigo-600/5 transition-transform hover:scale-105">
+          <div className="inline-flex items-center gap-2.5 px-5 py-2.5 bg-white/40 backdrop-blur-xl rounded-2xl border border-white/50 shadow-lg transition-transform hover:scale-105">
             <div className="p-2 bg-indigo-600 text-white rounded-xl shadow-sm">
               <ShoppingBag size={20} />
             </div>
@@ -245,14 +244,14 @@ const Login = () => {
         </div>
 
         {/* Segmented Switcher Tabs */}
-        <div className="p-1 bg-slate-200/80 backdrop-blur-md rounded-2xl border border-slate-300/80 grid grid-cols-2 gap-1 shadow-inner">
+        <div className="p-1 bg-slate-950/20 backdrop-blur-md rounded-2xl border border-white/30 grid grid-cols-2 gap-1 shadow-inner">
           <button
             type="button"
             onClick={() => setActiveTab('owner')}
             className={`flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl text-xs font-bold font-title transition-all cursor-pointer ${
               activeTab === 'owner'
-                ? 'bg-white text-indigo-600 shadow-sm border border-slate-200/50'
-                : 'text-slate-600 hover:text-slate-900'
+                ? 'bg-white/85 text-indigo-600 shadow-md border border-white/60'
+                : 'text-slate-800 hover:text-slate-950'
             }`}
           >
             <ShieldCheck size={16} />
@@ -264,8 +263,8 @@ const Login = () => {
             onClick={() => setActiveTab('counter')}
             className={`flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl text-xs font-bold font-title transition-all cursor-pointer ${
               activeTab === 'counter'
-                ? 'bg-white text-emerald-600 shadow-sm border border-slate-200/50'
-                : 'text-slate-600 hover:text-slate-900'
+                ? 'bg-white/85 text-emerald-600 shadow-md border border-white/60'
+                : 'text-slate-800 hover:text-slate-950'
             }`}
           >
             <Monitor size={16} />
@@ -275,21 +274,21 @@ const Login = () => {
 
         {/* Feedback Banner Alerts */}
         {error && (
-          <div className="flex items-center gap-2.5 p-3.5 text-xs rounded-xl bg-rose-500/10 backdrop-blur-md border border-rose-500/20 text-rose-600 font-semibold animate-shake shadow-sm">
+          <div className="flex items-center gap-2.5 p-3.5 text-xs rounded-xl bg-rose-500/20 backdrop-blur-md border border-rose-500/30 text-rose-700 font-semibold animate-shake shadow-sm">
             <AlertCircle size={16} className="shrink-0" />
             <span>{error}</span>
           </div>
         )}
 
         {successMsg && (
-          <div className="flex items-center gap-2.5 p-3.5 text-xs rounded-xl bg-emerald-500/10 backdrop-blur-md border border-emerald-500/20 text-emerald-600 font-semibold shadow-sm">
+          <div className="flex items-center gap-2.5 p-3.5 text-xs rounded-xl bg-emerald-500/20 backdrop-blur-md border border-emerald-500/30 text-emerald-800 font-semibold shadow-sm">
             <CheckCircle2 size={16} className="shrink-0" />
             <span>{successMsg}</span>
           </div>
         )}
 
-        {/* COMPACT MAIN LOGIN CARD */}
-        <div className="bg-white/95 backdrop-blur-xl rounded-3xl border border-slate-200/90 shadow-2xl p-6 sm:p-7 overflow-hidden">
+        {/* TRANSLUCENT FROSTED GLASS LOGIN CARD */}
+        <div className="bg-white/35 backdrop-blur-2xl rounded-3xl border border-white/50 shadow-2xl p-6 sm:p-7 overflow-hidden">
 
           {/* TAB 1: STORE OWNER PORTAL */}
           {activeTab === 'owner' && (
@@ -318,7 +317,7 @@ const Login = () => {
               {isSignedIn && checkingShop && (
                 <div className="flex flex-col items-center justify-center py-8 space-y-3">
                   <div className="w-8 h-8 border-3 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
-                  <p className="text-xs font-bold text-slate-600">
+                  <p className="text-xs font-bold text-slate-700">
                     Verifying store records for {clerkUser?.primaryEmailAddress?.emailAddress}...
                   </p>
                 </div>
@@ -329,13 +328,13 @@ const Login = () => {
                 <div className="space-y-4">
                   
                   {/* Verified Gmail Banner */}
-                  <div className="p-3 rounded-2xl bg-indigo-50 border border-indigo-200 flex items-center justify-between">
+                  <div className="p-3 rounded-2xl bg-indigo-50/60 backdrop-blur-md border border-indigo-200/60 flex items-center justify-between">
                     <div className="flex items-center gap-2.5 overflow-hidden">
                       <div className="p-1.5 text-white bg-indigo-600 rounded-xl shrink-0">
                         <User size={16} />
                       </div>
                       <div className="overflow-hidden">
-                        <span className="block text-[9px] font-extrabold text-slate-400 uppercase tracking-wider">
+                        <span className="block text-[9px] font-extrabold text-slate-500 uppercase tracking-wider">
                           GMAIL VERIFIED
                         </span>
                         <span className="text-xs font-bold text-indigo-950 truncate block">
@@ -347,7 +346,7 @@ const Login = () => {
                     <button
                       type="button"
                       onClick={handleClerkSignOut}
-                      className="px-2.5 py-1 text-[10px] font-bold text-rose-600 bg-rose-100 hover:bg-rose-200 rounded-xl transition-colors cursor-pointer shrink-0"
+                      className="px-2.5 py-1 text-[10px] font-bold text-rose-600 bg-rose-100/80 hover:bg-rose-200/80 rounded-xl transition-colors cursor-pointer shrink-0"
                     >
                       Sign Out
                     </button>
@@ -358,20 +357,20 @@ const Login = () => {
                     <div className="space-y-4">
                       
                       {/* Prominent Shop Code Badge */}
-                      <div className="p-3.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 space-y-2">
+                      <div className="p-3.5 rounded-2xl bg-emerald-500/15 backdrop-blur-md border border-emerald-500/30 space-y-2">
                         <div className="flex items-center justify-between">
-                          <span className="text-xs font-bold text-emerald-900 flex items-center gap-1">
+                          <span className="text-xs font-bold text-emerald-950 flex items-center gap-1">
                             <Store size={15} />
                             {shopStatus.shop_name}
                           </span>
-                          <span className="px-2 py-0.5 text-[9px] font-extrabold text-emerald-700 bg-emerald-100 rounded-md uppercase">
+                          <span className="px-2 py-0.5 text-[9px] font-extrabold text-emerald-800 bg-emerald-100/80 rounded-md uppercase">
                             Registered
                           </span>
                         </div>
 
-                        <div className="flex items-center justify-between p-2.5 rounded-xl bg-white border border-emerald-500/30">
+                        <div className="flex items-center justify-between p-2.5 rounded-xl bg-white/70 backdrop-blur-md border border-emerald-500/40">
                           <div>
-                            <span className="block text-[8px] font-extrabold text-slate-400 uppercase tracking-wider">
+                            <span className="block text-[8px] font-extrabold text-slate-500 uppercase tracking-wider">
                               YOUR SHOP CODE
                             </span>
                             <span className="text-base font-extrabold text-indigo-600 font-mono tracking-widest">
@@ -381,7 +380,7 @@ const Login = () => {
                           <button
                             type="button"
                             onClick={() => copyShopCode(shopStatus.shop_code || shopStatus.owner_username)}
-                            className="flex items-center gap-1 px-2.5 py-1 text-[11px] font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-xl transition-colors cursor-pointer"
+                            className="flex items-center gap-1 px-2.5 py-1 text-[11px] font-bold text-slate-700 bg-white/80 hover:bg-white rounded-xl transition-colors cursor-pointer shadow-sm"
                           >
                             {copiedCode ? <Check size={12} className="text-emerald-500" /> : <Copy size={12} />}
                             <span>{copiedCode ? 'Copied' : 'Copy'}</span>
@@ -392,11 +391,11 @@ const Login = () => {
                       {/* Owner Password Form */}
                       <form onSubmit={handleOwnerLogin} className="space-y-3.5">
                         <div>
-                          <label className="block text-[10px] font-extrabold uppercase tracking-wider text-slate-400 mb-1 font-title">
+                          <label className="block text-[10px] font-extrabold uppercase tracking-wider text-slate-600 mb-1 font-title">
                             Owner Username
                           </label>
                           <div className="relative">
-                            <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                            <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-500">
                               <User size={15} />
                             </span>
                             <input
@@ -404,18 +403,18 @@ const Login = () => {
                               value={existingOwnerUsername}
                               onChange={(e) => setExistingOwnerUsername(e.target.value)}
                               required
-                              className="w-full pl-9 pr-3 py-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 focus:outline-none focus:border-indigo-500 font-semibold text-xs"
+                              className="w-full pl-9 pr-3 py-3 rounded-xl border border-white/60 bg-white/50 text-slate-900 focus:outline-none focus:border-indigo-500 font-semibold text-xs backdrop-blur-sm"
                               placeholder="Enter owner username"
                             />
                           </div>
                         </div>
 
                         <div>
-                          <label className="block text-[10px] font-extrabold uppercase tracking-wider text-slate-400 mb-1 font-title">
+                          <label className="block text-[10px] font-extrabold uppercase tracking-wider text-slate-600 mb-1 font-title">
                             Owner Password
                           </label>
                           <div className="relative">
-                            <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                            <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-500">
                               <KeyRound size={15} />
                             </span>
                             <input
@@ -423,7 +422,7 @@ const Login = () => {
                               value={existingOwnerPassword}
                               onChange={(e) => setExistingOwnerPassword(e.target.value)}
                               required
-                              className="w-full pl-9 pr-3 py-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 focus:outline-none focus:border-indigo-500 font-semibold text-xs"
+                              className="w-full pl-9 pr-3 py-3 rounded-xl border border-white/60 bg-white/50 text-slate-900 focus:outline-none focus:border-indigo-500 font-semibold text-xs backdrop-blur-sm"
                               placeholder="Enter your password"
                             />
                           </div>
@@ -444,13 +443,13 @@ const Login = () => {
                   {/* CASE 2: NEW STORE -> CREATE STORE FORM */}
                   {shopStatus && !shopStatus.exists && (
                     <div className="space-y-3.5">
-                      <div className="p-3 rounded-2xl bg-indigo-50 border border-indigo-200 flex items-center gap-2.5">
+                      <div className="p-3 rounded-2xl bg-indigo-50/70 backdrop-blur-md border border-indigo-200/70 flex items-center gap-2.5">
                         <Sparkles className="text-indigo-600 shrink-0" size={18} />
                         <div>
                           <h4 className="text-xs font-bold text-indigo-950">
                             Create Your New Store
                           </h4>
-                          <p className="text-[10px] text-indigo-700">
+                          <p className="text-[10px] text-indigo-800">
                             Set up your store below to generate your 6-character Shop Code!
                           </p>
                         </div>
@@ -458,11 +457,11 @@ const Login = () => {
 
                       <form onSubmit={handleCreateShop} className="space-y-3.5">
                         <div>
-                          <label className="block text-[10px] font-extrabold uppercase tracking-wider text-slate-400 mb-1 font-title">
+                          <label className="block text-[10px] font-extrabold uppercase tracking-wider text-slate-600 mb-1 font-title">
                             Shop Name
                           </label>
                           <div className="relative">
-                            <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                            <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-500">
                               <Store size={15} />
                             </span>
                             <input
@@ -471,17 +470,17 @@ const Login = () => {
                               onChange={(e) => setShopName(e.target.value)}
                               required
                               placeholder="e.g. Grand Supermarket"
-                              className="w-full pl-9 pr-3 py-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 focus:outline-none focus:border-indigo-500 font-semibold text-xs"
+                              className="w-full pl-9 pr-3 py-3 rounded-xl border border-white/60 bg-white/50 text-slate-900 focus:outline-none focus:border-indigo-500 font-semibold text-xs backdrop-blur-sm"
                             />
                           </div>
                         </div>
 
                         <div>
-                          <label className="block text-[10px] font-extrabold uppercase tracking-wider text-slate-400 mb-1 font-title">
+                          <label className="block text-[10px] font-extrabold uppercase tracking-wider text-slate-600 mb-1 font-title">
                             Owner Username
                           </label>
                           <div className="relative">
-                            <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                            <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-500">
                               <UserCheck size={15} />
                             </span>
                             <input
@@ -490,17 +489,17 @@ const Login = () => {
                               onChange={(e) => setOwnerUsername(e.target.value)}
                               required
                               placeholder="Choose owner username"
-                              className="w-full pl-9 pr-3 py-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 focus:outline-none focus:border-indigo-500 font-semibold text-xs"
+                              className="w-full pl-9 pr-3 py-3 rounded-xl border border-white/60 bg-white/50 text-slate-900 focus:outline-none focus:border-indigo-500 font-semibold text-xs backdrop-blur-sm"
                             />
                           </div>
                         </div>
 
                         <div>
-                          <label className="block text-[10px] font-extrabold uppercase tracking-wider text-slate-400 mb-1 font-title">
+                          <label className="block text-[10px] font-extrabold uppercase tracking-wider text-slate-600 mb-1 font-title">
                             Owner Password
                           </label>
                           <div className="relative">
-                            <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                            <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-500">
                               <KeyRound size={15} />
                             </span>
                             <input
@@ -509,7 +508,7 @@ const Login = () => {
                               onChange={(e) => setOwnerPassword(e.target.value)}
                               required
                               placeholder="Choose a password"
-                              className="w-full pl-9 pr-3 py-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 focus:outline-none focus:border-indigo-500 font-semibold text-xs"
+                              className="w-full pl-9 pr-3 py-3 rounded-xl border border-white/60 bg-white/50 text-slate-900 focus:outline-none focus:border-indigo-500 font-semibold text-xs backdrop-blur-sm"
                             />
                           </div>
                         </div>
@@ -533,8 +532,8 @@ const Login = () => {
           {/* TAB 2: COUNTER CASHIER POS PORTAL */}
           {activeTab === 'counter' && (
             <div className="space-y-4 sm:space-y-5">
-              <div className="text-center pb-2.5 border-b border-slate-100">
-                <span className="px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 text-[10px] font-extrabold uppercase tracking-wider font-title border border-emerald-200/60">
+              <div className="text-center pb-2.5 border-b border-slate-200/50">
+                <span className="px-3 py-1 rounded-full bg-emerald-50/80 backdrop-blur-md text-emerald-800 text-[10px] font-extrabold uppercase tracking-wider font-title border border-emerald-200/60">
                   Cashier POS Terminal
                 </span>
                 <h2 className="text-lg font-extrabold text-slate-900 font-title mt-2">
@@ -544,11 +543,11 @@ const Login = () => {
 
               <form onSubmit={handleCounterLoginSubmit} className="space-y-3.5 pt-1">
                 <div>
-                  <label className="block text-[10px] font-extrabold uppercase tracking-wider text-slate-400 mb-1 font-title">
+                  <label className="block text-[10px] font-extrabold uppercase tracking-wider text-slate-600 mb-1 font-title">
                     6-Character Shop Code
                   </label>
                   <div className="relative">
-                    <span className="absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400">
+                    <span className="absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-500">
                       <Store size={16} />
                     </span>
                     <input
@@ -556,17 +555,17 @@ const Login = () => {
                       value={counterShopCode}
                       onChange={(e) => setCounterShopCode(e.target.value.toUpperCase())}
                       placeholder={shopStatus?.shop_code || "e.g. SHOP01"}
-                      className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-emerald-600 font-mono font-bold tracking-widest text-sm focus:outline-none focus:border-emerald-500"
+                      className="w-full pl-10 pr-4 py-3 rounded-xl border border-white/60 bg-white/50 text-emerald-700 font-mono font-bold tracking-widest text-sm focus:outline-none focus:border-emerald-500 backdrop-blur-sm"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-[10px] font-extrabold uppercase tracking-wider text-slate-400 mb-1 font-title">
+                  <label className="block text-[10px] font-extrabold uppercase tracking-wider text-slate-600 mb-1 font-title">
                     Counter Staff Username
                   </label>
                   <div className="relative">
-                    <span className="absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400">
+                    <span className="absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-500">
                       <User size={16} />
                     </span>
                     <input
@@ -575,17 +574,17 @@ const Login = () => {
                       onChange={(e) => setCounterUsername(e.target.value)}
                       required
                       placeholder="e.g. counter1"
-                      className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 font-semibold text-xs focus:outline-none focus:border-emerald-500"
+                      className="w-full pl-10 pr-4 py-3 rounded-xl border border-white/60 bg-white/50 text-slate-900 font-semibold text-xs focus:outline-none focus:border-emerald-500 backdrop-blur-sm"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-[10px] font-extrabold uppercase tracking-wider text-slate-400 mb-1 font-title">
+                  <label className="block text-[10px] font-extrabold uppercase tracking-wider text-slate-600 mb-1 font-title">
                     Counter Staff Password
                   </label>
                   <div className="relative">
-                    <span className="absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400">
+                    <span className="absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-500">
                       <KeyRound size={16} />
                     </span>
                     <input
@@ -594,7 +593,7 @@ const Login = () => {
                       onChange={(e) => setCounterPassword(e.target.value)}
                       required
                       placeholder="Enter counter password"
-                      className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 font-semibold text-xs focus:outline-none focus:border-emerald-500"
+                      className="w-full pl-10 pr-4 py-3 rounded-xl border border-white/60 bg-white/50 text-slate-900 font-semibold text-xs focus:outline-none focus:border-emerald-500 backdrop-blur-sm"
                     />
                   </div>
                 </div>
@@ -612,7 +611,7 @@ const Login = () => {
               <div className="text-center pt-2">
                 <Link
                   to="/pos"
-                  className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-600 hover:underline"
+                  className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-700 hover:underline"
                 >
                   <span>Go to Standalone POS Page (/pos)</span>
                   <ArrowRight size={14} />
