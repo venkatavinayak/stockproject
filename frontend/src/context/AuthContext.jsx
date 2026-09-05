@@ -11,23 +11,26 @@ export const AuthProvider = ({ children }) => {
   });
   const [loading, setLoading] = useState(true);
 
+  // Helper to format user profile data with permanent shop_code & owner_username
+  const formatUserData = (profile) => ({
+    username: profile.username.includes(':') ? profile.username.split(':').slice(1).join(':') : profile.username,
+    full_username: profile.username,
+    owner_username: profile.owner_username || profile.owner || profile.username,
+    shop_code: profile.shop_code || profile.owner_username || profile.username,
+    role: profile.role,
+    can_manage_stock: profile.can_manage_stock,
+    can_view_expenses: profile.can_view_expenses,
+    can_view_analytics: profile.can_view_analytics,
+    full_name: profile.full_name,
+    email: profile.email
+  });
+
   useEffect(() => {
     const syncProfile = async () => {
       if (token) {
         try {
           const profile = await authAPI.getMe();
-          const userData = {
-            username: profile.username.includes(':') ? profile.username.split(':').slice(1).join(':') : profile.username,
-            full_username: profile.username,
-            owner_username: profile.owner_username,
-            shop_code: profile.shop_code,
-            role: profile.role,
-            can_manage_stock: profile.can_manage_stock,
-            can_view_expenses: profile.can_view_expenses,
-            can_view_analytics: profile.can_view_analytics,
-            full_name: profile.full_name,
-            email: profile.email
-          };
+          const userData = formatUserData(profile);
           localStorage.setItem('smartstock_user', JSON.stringify(userData));
           setUser(userData);
         } catch (err) {
@@ -50,16 +53,7 @@ export const AuthProvider = ({ children }) => {
       setToken(data.access_token);
       
       const profile = await authAPI.getMe();
-      const userData = { 
-        username: profile.username.includes(':') ? profile.username.split(':').slice(1).join(':') : profile.username, 
-        full_username: profile.username,
-        role: profile.role,
-        can_manage_stock: profile.can_manage_stock,
-        can_view_expenses: profile.can_view_expenses,
-        can_view_analytics: profile.can_view_analytics,
-        full_name: profile.full_name,
-        email: profile.email
-      };
+      const userData = formatUserData(profile);
       localStorage.setItem('smartstock_user', JSON.stringify(userData));
       setUser(userData);
       return true;
@@ -75,16 +69,7 @@ export const AuthProvider = ({ children }) => {
       setToken(data.access_token);
 
       const profile = await authAPI.getMe();
-      const userData = {
-        username: profile.username.includes(':') ? profile.username.split(':').slice(1).join(':') : profile.username,
-        full_username: profile.username,
-        role: profile.role,
-        can_manage_stock: profile.can_manage_stock,
-        can_view_expenses: profile.can_view_expenses,
-        can_view_analytics: profile.can_view_analytics,
-        full_name: profile.full_name,
-        email: profile.email
-      };
+      const userData = formatUserData(profile);
       localStorage.setItem('smartstock_user', JSON.stringify(userData));
       setUser(userData);
       return true;
@@ -101,16 +86,7 @@ export const AuthProvider = ({ children }) => {
       setToken(data.access_token);
 
       const profile = await authAPI.getMe();
-      const userData = {
-        username: counter_username,
-        full_username: profile.username,
-        role: profile.role,
-        can_manage_stock: profile.can_manage_stock,
-        can_view_expenses: profile.can_view_expenses,
-        can_view_analytics: profile.can_view_analytics,
-        full_name: profile.full_name,
-        email: profile.email
-      };
+      const userData = formatUserData(profile);
       localStorage.setItem('smartstock_user', JSON.stringify(userData));
       setUser(userData);
       return true;
@@ -126,16 +102,7 @@ export const AuthProvider = ({ children }) => {
       setToken(data.access_token);
 
       const profile = await authAPI.getMe();
-      const userData = {
-        username: counter_username,
-        full_username: profile.username,
-        role: profile.role,
-        can_manage_stock: profile.can_manage_stock,
-        can_view_expenses: profile.can_view_expenses,
-        can_view_analytics: profile.can_view_analytics,
-        full_name: profile.full_name,
-        email: profile.email
-      };
+      const userData = formatUserData(profile);
       localStorage.setItem('smartstock_user', JSON.stringify(userData));
       setUser(userData);
       return true;
@@ -151,16 +118,7 @@ export const AuthProvider = ({ children }) => {
         localStorage.setItem('smartstock_token', data.access_token);
         setToken(data.access_token);
         const profile = await authAPI.getMe();
-        const userData = {
-          username: profile.username.includes(':') ? profile.username.split(':').slice(1).join(':') : profile.username,
-          full_username: profile.username,
-          role: profile.role,
-          can_manage_stock: profile.can_manage_stock,
-          can_view_expenses: profile.can_view_expenses,
-          can_view_analytics: profile.can_view_analytics,
-          full_name: profile.full_name,
-          email: profile.email
-        };
+        const userData = formatUserData(profile);
         localStorage.setItem('smartstock_user', JSON.stringify(userData));
         setUser(userData);
       }
@@ -221,14 +179,31 @@ export const AuthProvider = ({ children }) => {
 
   return (
     <AuthContext.Provider value={{
-      token, setToken, user, setUser, login, loginOwner, loginCounter, loginCounterDirect, registerShop, deleteAccount, requestOTP, verifyOTP, resetPasswordOTP, resetPasswordDirect, logout, isAuthenticated: !!token, loading
+      token,
+      user,
+      loading,
+      login,
+      loginOwner,
+      loginCounter,
+      loginCounterDirect,
+      registerShop,
+      deleteAccount,
+      requestOTP,
+      verifyOTP,
+      resetPasswordOTP,
+      resetPasswordDirect,
+      logout,
+      isAuthenticated: !!token
     }}>
       {children}
     </AuthContext.Provider>
   );
 };
 
-
-export const useAuth = () => useContext(AuthContext);
-
-
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+};

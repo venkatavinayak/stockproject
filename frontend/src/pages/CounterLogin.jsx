@@ -86,7 +86,7 @@ const CounterLogin = () => {
                   value={shopCode}
                   onChange={(e) => setShopCode(e.target.value)}
                   required
-                  placeholder="e.g. STK849 or admin"
+                  placeholder="e.g. SHOP01 or admin"
                   className="w-full pl-11 pr-4 py-3 rounded-xl border border-slate-800 bg-slate-900 text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 font-semibold text-sm uppercase tracking-wider"
                 />
               </div>

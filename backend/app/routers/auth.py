@@ -101,20 +101,20 @@ class UserCreate(BaseModel):
 @router.get("/me")
 async def get_me(current_user: User = Depends(get_current_user)):
     role = getattr(current_user, "role", "admin")
-    
-    shop_code = getattr(current_user, "shop_code", None)
-    if not shop_code:
-        owner = await User.find_one({"$or": [{"username": current_user.owner}, {"owner_username": current_user.owner}]})
-        if owner:
-            if not owner.shop_code:
-                owner.shop_code = generate_shop_code()
-                await owner.save()
-            shop_code = owner.shop_code
+    owner_uname = current_user.owner
+
+    owner = await User.find_one({"$or": [{"username": owner_uname}, {"owner_username": owner_uname}]})
+    shop_code = getattr(current_user, "shop_code", None) or (owner.shop_code if owner else None)
+
+    if not shop_code and owner:
+        shop_code = await generate_unique_shop_code()
+        owner.shop_code = shop_code
+        await owner.save()
 
     return {
         "username": current_user.username,
-        "owner_username": current_user.owner,
-        "shop_code": shop_code or current_user.owner,
+        "owner_username": owner_uname,
+        "shop_code": shop_code or owner_uname,
         "role": role,
         "is_active": current_user.is_active,
         "full_name": getattr(current_user, "full_name", None) or "",

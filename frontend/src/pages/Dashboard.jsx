@@ -429,12 +429,12 @@ const Dashboard = () => {
                 YOUR 6-CHARACTER SHOP CODE
               </span>
               <span className="text-3xl font-extrabold font-mono tracking-widest text-white drop-shadow-md">
-                {user?.shop_code || user?.owner_username || 'STK849'}
+                {user?.shop_code || user?.owner_username}
               </span>
             </div>
             <button
               onClick={() => {
-                navigator.clipboard.writeText(user?.shop_code || user?.owner_username || 'STK849');
+                navigator.clipboard.writeText(user?.shop_code || user?.owner_username || '');
                 setCopiedCode(true);
                 setTimeout(() => setCopiedCode(false), 2000);
               }}
