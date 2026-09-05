@@ -174,7 +174,7 @@ const Login = () => {
     setExistingOwnerPassword('');
   };
 
-  // Completely Transparent Clerk Appearance (0 Background fill, 0 Dark footer)
+  // Solid Light Clerk Appearance (Matching upper body with 0 black bottom footer)
   const clerkAppearance = {
     layout: {
       socialButtonsVariant: 'blockButton',
@@ -183,39 +183,39 @@ const Login = () => {
       unsafe_disableDevelopmentModeWarnings: true
     },
     variables: {
-      colorPrimary: '#4f46e5',
+      colorPrimary: '#7c3aed',
       colorText: '#0f172a',
-      colorBackground: 'transparent',
-      colorInputBackground: '#ffffff',
+      colorBackground: '#ffffff',
+      colorInputBackground: '#f8fafc',
       colorInputText: '#0f172a',
       borderRadius: '0.75rem',
       fontFamily: '"Plus Jakarta Sans", sans-serif'
     },
     elements: {
       rootBox: "w-full flex justify-center",
-      cardBox: "w-full max-w-md shadow-none bg-transparent rounded-2xl border-0 p-0 overflow-hidden",
-      card: "shadow-none bg-transparent p-0 w-full",
+      cardBox: "w-full max-w-md shadow-2xl bg-white rounded-3xl border-2 border-violet-500/80 p-0 overflow-hidden",
+      card: "shadow-none bg-white p-0 w-full",
       headerTitle: "text-lg font-extrabold text-slate-900 font-title text-center tracking-tight",
-      headerSubtitle: "text-xs font-medium text-slate-600 text-center mt-1",
-      socialButtonsBlockButton: "w-full rounded-xl border border-slate-200 bg-white text-slate-900 hover:bg-slate-50 font-bold py-3 transition-all cursor-pointer shadow-sm flex items-center justify-center gap-3 hover:border-indigo-400",
+      headerSubtitle: "text-xs font-semibold text-slate-500 text-center mt-1",
+      socialButtonsBlockButton: "w-full rounded-xl border border-slate-200 bg-white text-slate-900 hover:bg-slate-50 font-bold py-3 transition-all cursor-pointer shadow-sm flex items-center justify-center gap-3 hover:border-violet-500",
       socialButtonsBlockButtonText: "font-bold text-sm text-slate-800 font-sans whitespace-nowrap",
-      dividerLine: "bg-slate-300",
-      dividerText: "text-[10px] font-extrabold text-slate-500 uppercase tracking-widest bg-white/80 backdrop-blur-md px-3 font-title rounded-md shadow-sm",
-      formFieldLabel: "text-[10px] font-extrabold uppercase tracking-widest text-slate-600 mb-1 font-title",
-      formFieldInput: "w-full px-4 py-3 rounded-xl border border-slate-200 bg-white text-slate-900 focus:outline-none focus:border-indigo-600 focus:ring-2 focus:ring-indigo-600/20 font-semibold text-sm transition-all shadow-sm",
-      formButtonPrimary: "w-full py-3.5 rounded-xl font-extrabold text-white bg-indigo-600 hover:bg-indigo-500 shadow-md shadow-indigo-600/20 text-sm transition-all cursor-pointer border-0 font-title",
-      footerActionLink: "font-extrabold text-indigo-600 hover:underline",
-      footerActionText: "text-slate-600 font-medium text-xs",
-      footer: "bg-transparent border-t border-slate-200/40 p-3 text-center rounded-b-2xl",
+      dividerLine: "bg-slate-200",
+      dividerText: "text-[10px] font-extrabold text-slate-400 uppercase tracking-widest bg-white px-3 font-title rounded-md",
+      formFieldLabel: "text-[10px] font-extrabold uppercase tracking-widest text-slate-500 mb-1 font-title",
+      formFieldInput: "w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 focus:outline-none focus:border-violet-600 focus:ring-2 focus:ring-violet-600/20 font-semibold text-sm transition-all",
+      formButtonPrimary: "w-full py-3.5 rounded-xl font-extrabold text-white bg-violet-600 hover:bg-violet-500 shadow-lg shadow-violet-600/30 text-sm transition-all cursor-pointer border-0 font-title",
+      footerActionLink: "font-extrabold text-violet-700 hover:underline",
+      footerActionText: "text-slate-600 font-bold text-xs",
+      footer: "bg-white border-t border-slate-100 p-4 text-center rounded-b-3xl text-slate-600",
       identityPreviewText: "text-slate-900 font-bold",
-      identityPreviewEditButton: "text-indigo-600 font-bold"
+      identityPreviewEditButton: "text-violet-700 font-extrabold"
     }
   };
 
   return (
     <div className="min-h-screen relative flex flex-col justify-center items-center p-4 sm:p-6 font-sans overflow-x-hidden overflow-y-auto">
       
-      {/* BACKGROUND MP4 VIDEO (login-bg.mp4) - 100% CLEAR UNBLURRED VIEW */}
+      {/* BACKGROUND MP4 VIDEO (login-bg.mp4) - CLEAR VIEW */}
       <video
         autoPlay
         loop
@@ -231,12 +231,12 @@ const Login = () => {
 
         {/* Brand Header Badge */}
         <div className="text-center">
-          <div className="inline-flex items-center gap-2.5 px-5 py-2.5 bg-white/90 backdrop-blur-md rounded-2xl border border-slate-200/90 shadow-md transition-transform hover:scale-105">
-            <div className="p-2 bg-indigo-600 text-white rounded-xl shadow-sm">
+          <div className="inline-flex items-center gap-2.5 px-5 py-2.5 bg-white rounded-2xl border-2 border-violet-500/80 shadow-lg transition-transform hover:scale-105">
+            <div className="p-2 bg-violet-600 text-white rounded-xl shadow-sm">
               <ShoppingBag size={20} />
             </div>
             <div className="text-left">
-              <h1 className="text-lg font-extrabold text-slate-900 font-title tracking-tight leading-none">
+              <h1 className="text-lg font-extrabold text-slate-950 font-title tracking-tight leading-none">
                 SmartStore AI
               </h1>
             </div>
@@ -244,14 +244,14 @@ const Login = () => {
         </div>
 
         {/* Segmented Switcher Tabs */}
-        <div className="p-1 bg-white/80 backdrop-blur-md rounded-2xl border border-slate-300/80 grid grid-cols-2 gap-1 shadow-sm">
+        <div className="p-1 bg-white/80 backdrop-blur-md rounded-2xl border-2 border-violet-500/80 grid grid-cols-2 gap-1 shadow-md">
           <button
             type="button"
             onClick={() => setActiveTab('owner')}
             className={`flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl text-xs font-bold font-title transition-all cursor-pointer ${
               activeTab === 'owner'
-                ? 'bg-indigo-600 text-white shadow-md'
-                : 'text-slate-700 hover:text-slate-950 font-extrabold'
+                ? 'bg-violet-600 text-white shadow-md border border-violet-500'
+                : 'bg-white text-slate-800 hover:text-slate-950 font-extrabold'
             }`}
           >
             <ShieldCheck size={16} />
@@ -263,8 +263,8 @@ const Login = () => {
             onClick={() => setActiveTab('counter')}
             className={`flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl text-xs font-bold font-title transition-all cursor-pointer ${
               activeTab === 'counter'
-                ? 'bg-emerald-600 text-white shadow-md'
-                : 'text-slate-700 hover:text-slate-950 font-extrabold'
+                ? 'bg-emerald-600 text-white shadow-md border border-emerald-500'
+                : 'bg-white text-slate-800 hover:text-emerald-950 font-extrabold'
             }`}
           >
             <Monitor size={16} />
@@ -274,21 +274,21 @@ const Login = () => {
 
         {/* Feedback Banner Alerts */}
         {error && (
-          <div className="flex items-center gap-2.5 p-3.5 text-xs rounded-xl bg-rose-500/20 backdrop-blur-md border border-rose-500/40 text-rose-900 font-bold animate-shake shadow-sm">
+          <div className="flex items-center gap-2.5 p-3.5 text-xs rounded-xl bg-rose-50 border-2 border-rose-400 text-rose-900 font-bold animate-shake shadow-sm">
             <AlertCircle size={16} className="shrink-0" />
             <span>{error}</span>
           </div>
         )}
 
         {successMsg && (
-          <div className="flex items-center gap-2.5 p-3.5 text-xs rounded-xl bg-emerald-500/20 backdrop-blur-md border border-emerald-500/40 text-emerald-900 font-bold shadow-sm">
+          <div className="flex items-center gap-2.5 p-3.5 text-xs rounded-xl bg-emerald-50 border-2 border-emerald-400 text-emerald-900 font-bold shadow-sm">
             <CheckCircle2 size={16} className="shrink-0" />
             <span>{successMsg}</span>
           </div>
         )}
 
-        {/* 100% FULLY TRANSPARENT FRAME WITH VIOLET OUTLINE BORDER */}
-        <div className="bg-transparent rounded-3xl border-2 border-indigo-500/90 shadow-[0_0_30px_rgba(99,102,241,0.35)] p-6 sm:p-7 overflow-hidden">
+        {/* TRANSLUCENT CONTAINER WITH VIOLET OUTLINE FRAME */}
+        <div className="bg-white/40 backdrop-blur-xl rounded-3xl border-2 border-violet-500/90 shadow-[0_0_30px_rgba(124,58,237,0.35)] p-6 sm:p-7 overflow-hidden">
 
           {/* TAB 1: STORE OWNER PORTAL */}
           {activeTab === 'owner' && (
@@ -316,7 +316,7 @@ const Login = () => {
               {/* CHECKING SHOP RECORDS */}
               {isSignedIn && checkingShop && (
                 <div className="flex flex-col items-center justify-center py-8 space-y-3">
-                  <div className="w-8 h-8 border-3 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
+                  <div className="w-8 h-8 border-3 border-violet-600 border-t-transparent rounded-full animate-spin"></div>
                   <p className="text-xs font-bold text-slate-900">
                     Verifying store records for {clerkUser?.primaryEmailAddress?.emailAddress}...
                   </p>
@@ -327,17 +327,17 @@ const Login = () => {
               {isSignedIn && !checkingShop && (
                 <div className="space-y-4">
                   
-                  {/* Verified Gmail Banner - SOLID WHITE */}
-                  <div className="p-3 rounded-2xl bg-white border border-slate-200 shadow-sm flex items-center justify-between">
+                  {/* Verified Gmail Banner - SOLID WHITE FILL */}
+                  <div className="p-3 rounded-2xl bg-white border-2 border-violet-300 flex items-center justify-between shadow-sm">
                     <div className="flex items-center gap-2.5 overflow-hidden">
-                      <div className="p-1.5 text-white bg-indigo-600 rounded-xl shrink-0">
+                      <div className="p-1.5 text-white bg-violet-600 rounded-xl shrink-0">
                         <User size={16} />
                       </div>
                       <div className="overflow-hidden">
-                        <span className="block text-[9px] font-extrabold text-slate-400 uppercase tracking-wider">
+                        <span className="block text-[9px] font-extrabold text-slate-500 uppercase tracking-wider">
                           GMAIL VERIFIED
                         </span>
-                        <span className="text-xs font-bold text-slate-900 truncate block">
+                        <span className="text-xs font-bold text-slate-950 truncate block">
                           {clerkUser?.primaryEmailAddress?.emailAddress}
                         </span>
                       </div>
@@ -356,31 +356,31 @@ const Login = () => {
                   {shopStatus && shopStatus.exists && (
                     <div className="space-y-4">
                       
-                      {/* Prominent Shop Code Badge - SOLID WHITE INNER BOXES */}
-                      <div className="p-3.5 rounded-2xl bg-white border border-emerald-300 shadow-sm space-y-2">
+                      {/* Prominent Shop Code Badge - SOLID WHITE FILL */}
+                      <div className="p-3.5 rounded-2xl bg-white border-2 border-emerald-400 space-y-2 shadow-sm">
                         <div className="flex items-center justify-between">
-                          <span className="text-xs font-bold text-slate-900 flex items-center gap-1">
+                          <span className="text-xs font-bold text-slate-950 flex items-center gap-1">
                             <Store size={15} />
                             {shopStatus.shop_name}
                           </span>
-                          <span className="px-2 py-0.5 text-[9px] font-extrabold text-emerald-700 bg-emerald-50 rounded-md uppercase border border-emerald-200">
+                          <span className="px-2 py-0.5 text-[9px] font-extrabold text-emerald-900 bg-emerald-100 rounded-md uppercase">
                             Registered
                           </span>
                         </div>
 
-                        <div className="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 border border-slate-200">
+                        <div className="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 border border-emerald-300">
                           <div>
-                            <span className="block text-[8px] font-extrabold text-slate-400 uppercase tracking-wider">
+                            <span className="block text-[8px] font-extrabold text-slate-500 uppercase tracking-wider">
                               YOUR SHOP CODE
                             </span>
-                            <span className="text-base font-extrabold text-indigo-600 font-mono tracking-widest">
+                            <span className="text-base font-extrabold text-violet-700 font-mono tracking-widest">
                               {shopStatus.shop_code || shopStatus.owner_username}
                             </span>
                           </div>
                           <button
                             type="button"
                             onClick={() => copyShopCode(shopStatus.shop_code || shopStatus.owner_username)}
-                            className="flex items-center gap-1 px-2.5 py-1 text-[11px] font-bold text-slate-700 bg-white hover:bg-slate-100 rounded-xl transition-colors cursor-pointer shadow-sm border border-slate-200"
+                            className="flex items-center gap-1 px-2.5 py-1 text-[11px] font-bold text-slate-900 bg-white hover:bg-slate-100 rounded-xl transition-colors cursor-pointer shadow-sm border border-slate-200"
                           >
                             {copiedCode ? <Check size={12} className="text-emerald-500" /> : <Copy size={12} />}
                             <span>{copiedCode ? 'Copied' : 'Copy'}</span>
@@ -388,7 +388,7 @@ const Login = () => {
                         </div>
                       </div>
 
-                      {/* Owner Password Form - SOLID WHITE INPUT BOXES */}
+                      {/* Owner Password Form - SOLID WHITE FILL INPUTS */}
                       <form onSubmit={handleOwnerLogin} className="space-y-3.5">
                         <div>
                           <label className="block text-[10px] font-extrabold uppercase tracking-wider text-slate-900 mb-1 font-title">
@@ -403,7 +403,7 @@ const Login = () => {
                               value={existingOwnerUsername}
                               onChange={(e) => setExistingOwnerUsername(e.target.value)}
                               required
-                              className="w-full pl-9 pr-3 py-3 rounded-xl border border-slate-200 bg-white text-slate-900 focus:outline-none focus:border-indigo-600 font-semibold text-xs shadow-sm"
+                              className="w-full pl-9 pr-3 py-3 rounded-xl border border-slate-300 bg-white text-slate-900 focus:outline-none focus:border-violet-600 font-semibold text-xs shadow-sm"
                               placeholder="Enter owner username"
                             />
                           </div>
@@ -422,7 +422,7 @@ const Login = () => {
                               value={existingOwnerPassword}
                               onChange={(e) => setExistingOwnerPassword(e.target.value)}
                               required
-                              className="w-full pl-9 pr-3 py-3 rounded-xl border border-slate-200 bg-white text-slate-900 focus:outline-none focus:border-indigo-600 font-semibold text-xs shadow-sm"
+                              className="w-full pl-9 pr-3 py-3 rounded-xl border border-slate-300 bg-white text-slate-900 focus:outline-none focus:border-violet-600 font-semibold text-xs shadow-sm"
                               placeholder="Enter your password"
                             />
                           </div>
@@ -431,7 +431,7 @@ const Login = () => {
                         <button
                           type="submit"
                           disabled={loading}
-                          className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl font-bold text-white bg-indigo-600 hover:bg-indigo-500 disabled:bg-indigo-800 transition-all cursor-pointer text-xs shadow-md shadow-indigo-600/20"
+                          className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl font-bold text-white bg-violet-600 hover:bg-violet-500 disabled:bg-violet-800 transition-all cursor-pointer text-xs shadow-lg shadow-violet-600/30"
                         >
                           {loading ? 'Authenticating...' : 'Sign In to Store Dashboard'}
                           <ArrowRight size={15} />
@@ -443,10 +443,10 @@ const Login = () => {
                   {/* CASE 2: NEW STORE -> CREATE STORE FORM */}
                   {shopStatus && !shopStatus.exists && (
                     <div className="space-y-3.5">
-                      <div className="p-3 rounded-2xl bg-white border border-indigo-200 shadow-sm flex items-center gap-2.5">
-                        <Sparkles className="text-indigo-600 shrink-0" size={18} />
+                      <div className="p-3 rounded-2xl bg-white border-2 border-violet-300 flex items-center gap-2.5 shadow-sm">
+                        <Sparkles className="text-violet-600 shrink-0" size={18} />
                         <div>
-                          <h4 className="text-xs font-bold text-slate-900">
+                          <h4 className="text-xs font-bold text-slate-950">
                             Create Your New Store
                           </h4>
                           <p className="text-[10px] text-slate-600 font-semibold">
@@ -470,7 +470,7 @@ const Login = () => {
                               onChange={(e) => setShopName(e.target.value)}
                               required
                               placeholder="e.g. Grand Supermarket"
-                              className="w-full pl-9 pr-3 py-3 rounded-xl border border-slate-200 bg-white text-slate-900 focus:outline-none focus:border-indigo-600 font-semibold text-xs shadow-sm"
+                              className="w-full pl-9 pr-3 py-3 rounded-xl border border-slate-300 bg-white text-slate-900 focus:outline-none focus:border-violet-600 font-semibold text-xs shadow-sm"
                             />
                           </div>
                         </div>
@@ -489,7 +489,7 @@ const Login = () => {
                               onChange={(e) => setOwnerUsername(e.target.value)}
                               required
                               placeholder="Choose owner username"
-                              className="w-full pl-9 pr-3 py-3 rounded-xl border border-slate-200 bg-white text-slate-900 focus:outline-none focus:border-indigo-600 font-semibold text-xs shadow-sm"
+                              className="w-full pl-9 pr-3 py-3 rounded-xl border border-slate-300 bg-white text-slate-900 focus:outline-none focus:border-violet-600 font-semibold text-xs shadow-sm"
                             />
                           </div>
                         </div>
@@ -508,7 +508,7 @@ const Login = () => {
                               onChange={(e) => setOwnerPassword(e.target.value)}
                               required
                               placeholder="Choose a password"
-                              className="w-full pl-9 pr-3 py-3 rounded-xl border border-slate-200 bg-white text-slate-900 focus:outline-none focus:border-indigo-600 font-semibold text-xs shadow-sm"
+                              className="w-full pl-9 pr-3 py-3 rounded-xl border border-slate-300 bg-white text-slate-900 focus:outline-none focus:border-violet-600 font-semibold text-xs shadow-sm"
                             />
                           </div>
                         </div>
@@ -516,7 +516,7 @@ const Login = () => {
                         <button
                           type="submit"
                           disabled={loading}
-                          className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl font-bold text-white bg-indigo-600 hover:bg-indigo-500 disabled:bg-indigo-800 transition-all cursor-pointer text-xs shadow-md shadow-indigo-600/20"
+                          className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl font-bold text-white bg-violet-600 hover:bg-violet-500 disabled:bg-violet-800 transition-all cursor-pointer text-xs shadow-lg shadow-violet-600/30"
                         >
                           {loading ? 'Creating Store...' : 'Create Store & Generate Code'}
                           <ArrowRight size={15} />
@@ -532,11 +532,11 @@ const Login = () => {
           {/* TAB 2: COUNTER CASHIER POS PORTAL */}
           {activeTab === 'counter' && (
             <div className="space-y-4 sm:space-y-5">
-              <div className="text-center pb-2.5 border-b border-slate-200/60">
-                <span className="px-3 py-1 rounded-full bg-white text-emerald-700 text-[10px] font-extrabold uppercase tracking-wider font-title border border-emerald-300 shadow-sm">
+              <div className="text-center pb-2.5 border-b border-slate-200">
+                <span className="px-3 py-1 rounded-full bg-emerald-50 text-emerald-800 text-[10px] font-extrabold uppercase tracking-wider font-title border border-emerald-300">
                   Cashier POS Terminal
                 </span>
-                <h2 className="text-lg font-extrabold text-slate-900 font-title mt-2">
+                <h2 className="text-lg font-extrabold text-slate-950 font-title mt-2">
                   Counter Staff Access
                 </h2>
               </div>
@@ -555,7 +555,7 @@ const Login = () => {
                       value={counterShopCode}
                       onChange={(e) => setCounterShopCode(e.target.value.toUpperCase())}
                       placeholder={shopStatus?.shop_code || "e.g. SHOP01"}
-                      className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 bg-white text-emerald-600 font-mono font-bold tracking-widest text-sm focus:outline-none focus:border-emerald-500 shadow-sm"
+                      className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-300 bg-white text-emerald-700 font-mono font-bold tracking-widest text-sm focus:outline-none focus:border-emerald-500 shadow-sm"
                     />
                   </div>
                 </div>
@@ -574,7 +574,7 @@ const Login = () => {
                       onChange={(e) => setCounterUsername(e.target.value)}
                       required
                       placeholder="e.g. counter1"
-                      className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 bg-white text-slate-900 font-semibold text-xs focus:outline-none focus:border-emerald-500 shadow-sm"
+                      className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-300 bg-white text-slate-900 font-semibold text-xs focus:outline-none focus:border-emerald-500 shadow-sm"
                     />
                   </div>
                 </div>
@@ -593,7 +593,7 @@ const Login = () => {
                       onChange={(e) => setCounterPassword(e.target.value)}
                       required
                       placeholder="Enter counter password"
-                      className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 bg-white text-slate-900 font-semibold text-xs focus:outline-none focus:border-emerald-500 shadow-sm"
+                      className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-300 bg-white text-slate-900 font-semibold text-xs focus:outline-none focus:border-emerald-500 shadow-sm"
                     />
                   </div>
                 </div>
@@ -601,7 +601,7 @@ const Login = () => {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl font-bold text-white bg-emerald-600 hover:bg-emerald-500 disabled:bg-emerald-800 transition-all cursor-pointer text-xs shadow-md shadow-emerald-600/20"
+                  className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl font-bold text-white bg-emerald-600 hover:bg-emerald-500 disabled:bg-emerald-800 transition-all cursor-pointer text-xs shadow-lg shadow-emerald-600/30"
                 >
                   {loading ? 'Authenticating...' : 'Sign In to Counter POS'}
                   <ArrowRight size={16} />
@@ -611,7 +611,7 @@ const Login = () => {
               <div className="text-center pt-2">
                 <Link
                   to="/pos"
-                  className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-600 hover:underline"
+                  className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-800 hover:underline"
                 >
                   <span>Go to Standalone POS Page (/pos)</span>
                   <ArrowRight size={14} />
