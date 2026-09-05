@@ -3,7 +3,6 @@ import { useAuth } from '../context/AuthContext';
 import { useNavigate, Link } from 'react-router-dom';
 import { useUser, useClerk, SignIn, SignUp } from '@clerk/clerk-react';
 import { authAPI } from '../services/api';
-import BackgroundVideo from '../components/BackgroundVideo';
 import { 
   KeyRound, User, AlertCircle, ShoppingBag, ArrowRight, Store, 
   UserCheck, ShieldCheck, Monitor, CheckCircle2, Sparkles, Copy, Check
@@ -214,27 +213,33 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen relative flex flex-col justify-center items-center p-4 sm:p-6 font-sans overflow-hidden">
+    <div className="min-h-screen relative flex flex-col justify-center items-center p-4 sm:p-6 font-sans overflow-x-hidden overflow-y-auto">
       
-      {/* VIBRANT LIGHT MOTION GRAPHICS BACKGROUND */}
-      <BackgroundVideo />
+      {/* BACKGROUND MP4 VIDEO (login-bg.mp4) */}
+      <video
+        autoPlay
+        loop
+        muted
+        playsInline
+        className="fixed inset-0 w-full h-full object-cover z-0 filter brightness-95"
+      >
+        <source src="/login-bg.mp4" type="video/mp4" />
+      </video>
+      <div className="fixed inset-0 bg-slate-950/20 backdrop-blur-[2px] z-0 pointer-events-none" />
 
       {/* Main Centered Box Container */}
       <div className="relative z-10 w-full max-w-md mx-auto space-y-4">
 
         {/* Brand Header Badge */}
         <div className="text-center">
-          <div className="inline-flex items-center gap-2.5 px-4 py-2.5 bg-white/90 backdrop-blur-md rounded-2xl border border-slate-200/90 shadow-md shadow-indigo-600/5 transition-transform hover:scale-105">
+          <div className="inline-flex items-center gap-2.5 px-5 py-2.5 bg-white/90 backdrop-blur-md rounded-2xl border border-slate-200/90 shadow-md shadow-indigo-600/5 transition-transform hover:scale-105">
             <div className="p-2 bg-indigo-600 text-white rounded-xl shadow-sm">
               <ShoppingBag size={20} />
             </div>
             <div className="text-left">
-              <h1 className="text-base font-extrabold text-slate-900 font-title tracking-tight leading-none">
+              <h1 className="text-lg font-extrabold text-slate-900 font-title tracking-tight leading-none">
                 SmartStore AI
               </h1>
-              <p className="text-[10px] font-extrabold text-indigo-600 uppercase tracking-wider mt-0.5 font-title">
-                Cloud Multi-Tenant ERP
-              </p>
             </div>
           </div>
         </div>
@@ -284,7 +289,7 @@ const Login = () => {
         )}
 
         {/* COMPACT MAIN LOGIN CARD */}
-        <div className="bg-white rounded-3xl border border-slate-200/90 shadow-xl p-6 sm:p-7 overflow-hidden">
+        <div className="bg-white/95 backdrop-blur-xl rounded-3xl border border-slate-200/90 shadow-2xl p-6 sm:p-7 overflow-hidden">
 
           {/* TAB 1: STORE OWNER PORTAL */}
           {activeTab === 'owner' && (

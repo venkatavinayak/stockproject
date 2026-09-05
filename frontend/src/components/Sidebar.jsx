@@ -74,8 +74,8 @@ const Sidebar = ({ isCollapsed, isMobileOpen, closeMobile }) => {
         {!isCollapsed && (
           <div className="p-4 border-t border-slate-200 dark:border-slate-800">
             <div className="p-3 text-center rounded-xl bg-slate-50 dark:bg-slate-900/50">
-              <span className="block text-xs font-semibold text-indigo-600 dark:text-indigo-400">Retail ERP v1.0</span>
-              <span className="block text-[10px] text-slate-400">Smart Store Engine</span>
+              <span className="block text-xs font-semibold text-indigo-600 dark:text-indigo-400">SmartStore AI</span>
+              <span className="block text-[10px] text-slate-400">Store Management Engine</span>
             </div>
           </div>
         )}
