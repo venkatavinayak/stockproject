@@ -149,8 +149,4 @@ deptstore/
 
 ---
 
-## 🤝 Contributing & License
 
-SmartStore AI is open for enhancements and contributions! Feel free to fork the repository, open issues, or submit pull requests.
-
-Made with ❤️ by the **SmartStore AI Team**.
