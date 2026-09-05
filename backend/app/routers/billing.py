@@ -188,36 +188,34 @@ async def checkout(
         await transaction.save()
         
         if tx_in.customer_email:
-            import os
-            smtp_user = settings.smtp_user or os.getenv("SMTP_USER", "mysmartstoreai@gmail.com")
-            smtp_pass = settings.smtp_password or os.getenv("SMTP_PASSWORD") or os.getenv("GMAIL_APP_PASS", "fbdzlzrxxqttbhdc")
-            smtp_host = settings.smtp_host or os.getenv("SMTP_HOST", "smtp.gmail.com")
-            smtp_port = int(settings.smtp_port or os.getenv("SMTP_PORT", 465))
+            smtp_user = "mysmartstoreai@gmail.com"
+            smtp_pass = "fbdzlzrxxqttbhdc"
+            smtp_host = "smtp.gmail.com"
+            smtp_port = 465
+            
+            if settings:
+                if settings.smtp_user and settings.smtp_user.strip():
+                    smtp_user = settings.smtp_user.strip()
+                if settings.smtp_password and settings.smtp_password.strip():
+                    smtp_pass = settings.smtp_password.replace(" ", "").strip()
+                if settings.smtp_host and settings.smtp_host.strip():
+                    smtp_host = settings.smtp_host.strip()
+                if settings.smtp_port:
+                    smtp_port = int(settings.smtp_port)
             
             settings.smtp_user = smtp_user
+            settings.smtp_password = smtp_pass
             settings.smtp_host = smtp_host
             settings.smtp_port = smtp_port
-            if smtp_pass:
-                settings.smtp_password = smtp_pass
             settings.email_enable = True
 
-            if not smtp_user or not smtp_pass:
-                from backend.app.models.notification import Notification
-                notif = Notification(
-                    type="System",
-                    message=f"Invoice {invoice_no} email skipped: Gmail App Password is missing. Please configure your App Password in Store Settings.",
-                    timestamp=datetime.utcnow(),
-                    owner_username=current_user.owner
-                )
-                await notif.insert()
-            else:
-                background_tasks.add_task(
-                    send_invoice_email,
-                    email_to=tx_in.customer_email,
-                    invoice_no=invoice_no,
-                    pdf_path=pdf_path,
-                    settings=settings
-                )
+            background_tasks.add_task(
+                send_invoice_email,
+                email_to=tx_in.customer_email,
+                invoice_no=invoice_no,
+                pdf_path=pdf_path,
+                settings=settings
+            )
     except Exception as e:
         import traceback
         traceback.print_exc()
