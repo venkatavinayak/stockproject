@@ -174,7 +174,7 @@ const Login = () => {
     setExistingOwnerPassword('');
   };
 
-  // Solid Light Clerk Appearance (Matching upper body with 0 black bottom footer)
+  // Solid White Clerk Appearance matching upper card & footer cleanly (Image 3 fix)
   const clerkAppearance = {
     layout: {
       socialButtonsVariant: 'blockButton',
@@ -193,20 +193,20 @@ const Login = () => {
     },
     elements: {
       rootBox: "w-full flex justify-center",
-      cardBox: "w-full max-w-md shadow-2xl bg-white rounded-3xl border-2 border-violet-500/80 p-0 overflow-hidden",
+      cardBox: "w-full max-w-md shadow-xl bg-white rounded-3xl border border-violet-200 p-0 overflow-hidden",
       card: "shadow-none bg-white p-0 w-full",
       headerTitle: "text-lg font-extrabold text-slate-900 font-title text-center tracking-tight",
-      headerSubtitle: "text-xs font-semibold text-slate-500 text-center mt-1",
+      headerSubtitle: "text-xs font-medium text-slate-500 text-center mt-1",
       socialButtonsBlockButton: "w-full rounded-xl border border-slate-200 bg-white text-slate-900 hover:bg-slate-50 font-bold py-3 transition-all cursor-pointer shadow-sm flex items-center justify-center gap-3 hover:border-violet-500",
       socialButtonsBlockButtonText: "font-bold text-sm text-slate-800 font-sans whitespace-nowrap",
       dividerLine: "bg-slate-200",
       dividerText: "text-[10px] font-extrabold text-slate-400 uppercase tracking-widest bg-white px-3 font-title rounded-md",
-      formFieldLabel: "text-[10px] font-extrabold uppercase tracking-widest text-slate-500 mb-1 font-title",
+      formFieldLabel: "text-[10px] font-extrabold uppercase tracking-widest text-slate-600 mb-1 font-title",
       formFieldInput: "w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 focus:outline-none focus:border-violet-600 focus:ring-2 focus:ring-violet-600/20 font-semibold text-sm transition-all",
       formButtonPrimary: "w-full py-3.5 rounded-xl font-extrabold text-white bg-violet-600 hover:bg-violet-500 shadow-lg shadow-violet-600/30 text-sm transition-all cursor-pointer border-0 font-title",
-      footerActionLink: "font-extrabold text-violet-700 hover:underline",
-      footerActionText: "text-slate-600 font-bold text-xs",
-      footer: "bg-white border-t border-slate-100 p-4 text-center rounded-b-3xl text-slate-600",
+      footerActionLink: "font-extrabold text-violet-600 hover:underline",
+      footerActionText: "text-slate-600 font-medium text-xs",
+      footer: "bg-white border-t border-slate-100 p-4 text-center rounded-b-3xl text-slate-600 font-medium text-xs",
       identityPreviewText: "text-slate-900 font-bold",
       identityPreviewEditButton: "text-violet-700 font-extrabold"
     }
@@ -215,7 +215,7 @@ const Login = () => {
   return (
     <div className="min-h-screen relative flex flex-col justify-center items-center p-4 sm:p-6 font-sans overflow-x-hidden overflow-y-auto">
       
-      {/* BACKGROUND MP4 VIDEO (login-bg.mp4) - CLEAR VIEW */}
+      {/* BACKGROUND MP4 VIDEO (login-bg.mp4) - 100% CLEAR UNBLURRED VIEW */}
       <video
         autoPlay
         loop
@@ -231,7 +231,7 @@ const Login = () => {
 
         {/* Brand Header Badge */}
         <div className="text-center">
-          <div className="inline-flex items-center gap-2.5 px-5 py-2.5 bg-white rounded-2xl border-2 border-violet-500/80 shadow-lg transition-transform hover:scale-105">
+          <div className="inline-flex items-center gap-2.5 px-5 py-2.5 bg-white/90 backdrop-blur-md rounded-2xl border-2 border-violet-500/80 shadow-lg transition-transform hover:scale-105">
             <div className="p-2 bg-violet-600 text-white rounded-xl shadow-sm">
               <ShoppingBag size={20} />
             </div>
@@ -244,14 +244,14 @@ const Login = () => {
         </div>
 
         {/* Segmented Switcher Tabs */}
-        <div className="p-1 bg-white/80 backdrop-blur-md rounded-2xl border-2 border-violet-500/80 grid grid-cols-2 gap-1 shadow-md">
+        <div className="p-1 bg-white/40 backdrop-blur-md rounded-2xl border-2 border-violet-500/80 grid grid-cols-2 gap-1 shadow-md">
           <button
             type="button"
             onClick={() => setActiveTab('owner')}
             className={`flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl text-xs font-bold font-title transition-all cursor-pointer ${
               activeTab === 'owner'
                 ? 'bg-violet-600 text-white shadow-md border border-violet-500'
-                : 'bg-white text-slate-800 hover:text-slate-950 font-extrabold'
+                : 'text-slate-900 hover:text-violet-950 font-extrabold'
             }`}
           >
             <ShieldCheck size={16} />
@@ -264,7 +264,7 @@ const Login = () => {
             className={`flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl text-xs font-bold font-title transition-all cursor-pointer ${
               activeTab === 'counter'
                 ? 'bg-emerald-600 text-white shadow-md border border-emerald-500'
-                : 'bg-white text-slate-800 hover:text-emerald-950 font-extrabold'
+                : 'text-slate-900 hover:text-emerald-950 font-extrabold'
             }`}
           >
             <Monitor size={16} />
@@ -287,8 +287,8 @@ const Login = () => {
           </div>
         )}
 
-        {/* TRANSLUCENT CONTAINER WITH VIOLET OUTLINE FRAME */}
-        <div className="bg-white/40 backdrop-blur-xl rounded-3xl border-2 border-violet-500/90 shadow-[0_0_30px_rgba(124,58,237,0.35)] p-6 sm:p-7 overflow-hidden">
+        {/* TRANSPARENT FRAME BOX WITH SOLID WHITE FILL INPUTS (Images 1 & 2 fix) */}
+        <div className="bg-transparent rounded-3xl border-2 border-violet-500/90 shadow-[0_0_30px_rgba(124,58,237,0.35)] p-6 sm:p-7 overflow-hidden">
 
           {/* TAB 1: STORE OWNER PORTAL */}
           {activeTab === 'owner' && (
@@ -315,7 +315,7 @@ const Login = () => {
 
               {/* CHECKING SHOP RECORDS */}
               {isSignedIn && checkingShop && (
-                <div className="flex flex-col items-center justify-center py-8 space-y-3">
+                <div className="flex flex-col items-center justify-center py-8 space-y-3 bg-white/90 backdrop-blur-md rounded-2xl border border-violet-200">
                   <div className="w-8 h-8 border-3 border-violet-600 border-t-transparent rounded-full animate-spin"></div>
                   <p className="text-xs font-bold text-slate-900">
                     Verifying store records for {clerkUser?.primaryEmailAddress?.emailAddress}...
@@ -328,7 +328,7 @@ const Login = () => {
                 <div className="space-y-4">
                   
                   {/* Verified Gmail Banner - SOLID WHITE FILL */}
-                  <div className="p-3 rounded-2xl bg-white border-2 border-violet-300 flex items-center justify-between shadow-sm">
+                  <div className="p-3 rounded-2xl bg-white border-2 border-indigo-200 shadow-sm flex items-center justify-between">
                     <div className="flex items-center gap-2.5 overflow-hidden">
                       <div className="p-1.5 text-white bg-violet-600 rounded-xl shrink-0">
                         <User size={16} />
@@ -346,7 +346,7 @@ const Login = () => {
                     <button
                       type="button"
                       onClick={handleClerkSignOut}
-                      className="px-2.5 py-1 text-[10px] font-bold text-rose-600 bg-rose-50 hover:bg-rose-100 rounded-xl transition-colors cursor-pointer shrink-0 border border-rose-200"
+                      className="px-2.5 py-1 text-[10px] font-bold text-rose-600 bg-rose-100 hover:bg-rose-200 rounded-xl transition-colors cursor-pointer shrink-0 border border-rose-300"
                     >
                       Sign Out
                     </button>
@@ -356,10 +356,10 @@ const Login = () => {
                   {shopStatus && shopStatus.exists && (
                     <div className="space-y-4">
                       
-                      {/* Prominent Shop Code Badge - SOLID WHITE FILL */}
-                      <div className="p-3.5 rounded-2xl bg-white border-2 border-emerald-400 space-y-2 shadow-sm">
+                      {/* Prominent Shop Code Badge - SOLID WHITE INNER FILL BOX */}
+                      <div className="p-3.5 rounded-2xl bg-white border-2 border-emerald-400 shadow-sm space-y-2">
                         <div className="flex items-center justify-between">
-                          <span className="text-xs font-bold text-slate-950 flex items-center gap-1">
+                          <span className="text-xs font-bold text-emerald-950 flex items-center gap-1">
                             <Store size={15} />
                             {shopStatus.shop_name}
                           </span>
@@ -395,7 +395,7 @@ const Login = () => {
                             Owner Username
                           </label>
                           <div className="relative">
-                            <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                            <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-500">
                               <User size={15} />
                             </span>
                             <input
@@ -403,7 +403,7 @@ const Login = () => {
                               value={existingOwnerUsername}
                               onChange={(e) => setExistingOwnerUsername(e.target.value)}
                               required
-                              className="w-full pl-9 pr-3 py-3 rounded-xl border border-slate-300 bg-white text-slate-900 focus:outline-none focus:border-violet-600 font-semibold text-xs shadow-sm"
+                              className="w-full pl-9 pr-3 py-3 rounded-xl border-2 border-slate-200 bg-white text-slate-950 focus:outline-none focus:border-violet-600 font-semibold text-xs shadow-sm"
                               placeholder="Enter owner username"
                             />
                           </div>
@@ -414,7 +414,7 @@ const Login = () => {
                             Owner Password
                           </label>
                           <div className="relative">
-                            <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                            <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-500">
                               <KeyRound size={15} />
                             </span>
                             <input
@@ -422,7 +422,7 @@ const Login = () => {
                               value={existingOwnerPassword}
                               onChange={(e) => setExistingOwnerPassword(e.target.value)}
                               required
-                              className="w-full pl-9 pr-3 py-3 rounded-xl border border-slate-300 bg-white text-slate-900 focus:outline-none focus:border-violet-600 font-semibold text-xs shadow-sm"
+                              className="w-full pl-9 pr-3 py-3 rounded-xl border-2 border-slate-200 bg-white text-slate-950 focus:outline-none focus:border-violet-600 font-semibold text-xs shadow-sm"
                               placeholder="Enter your password"
                             />
                           </div>
@@ -440,11 +440,11 @@ const Login = () => {
                     </div>
                   )}
 
-                  {/* CASE 2: NEW STORE -> CREATE STORE FORM */}
+                  {/* CASE 2: NEW STORE -> CREATE STORE FORM - SOLID WHITE FILL INPUTS */}
                   {shopStatus && !shopStatus.exists && (
                     <div className="space-y-3.5">
                       <div className="p-3 rounded-2xl bg-white border-2 border-violet-300 flex items-center gap-2.5 shadow-sm">
-                        <Sparkles className="text-violet-600 shrink-0" size={18} />
+                        <Sparkles className="text-violet-700 shrink-0" size={18} />
                         <div>
                           <h4 className="text-xs font-bold text-slate-950">
                             Create Your New Store
@@ -461,7 +461,7 @@ const Login = () => {
                             Shop Name
                           </label>
                           <div className="relative">
-                            <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                            <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-500">
                               <Store size={15} />
                             </span>
                             <input
@@ -470,7 +470,7 @@ const Login = () => {
                               onChange={(e) => setShopName(e.target.value)}
                               required
                               placeholder="e.g. Grand Supermarket"
-                              className="w-full pl-9 pr-3 py-3 rounded-xl border border-slate-300 bg-white text-slate-900 focus:outline-none focus:border-violet-600 font-semibold text-xs shadow-sm"
+                              className="w-full pl-9 pr-3 py-3 rounded-xl border-2 border-slate-200 bg-white text-slate-950 focus:outline-none focus:border-violet-600 font-semibold text-xs shadow-sm"
                             />
                           </div>
                         </div>
@@ -480,7 +480,7 @@ const Login = () => {
                             Owner Username
                           </label>
                           <div className="relative">
-                            <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                            <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-500">
                               <UserCheck size={15} />
                             </span>
                             <input
@@ -489,7 +489,7 @@ const Login = () => {
                               onChange={(e) => setOwnerUsername(e.target.value)}
                               required
                               placeholder="Choose owner username"
-                              className="w-full pl-9 pr-3 py-3 rounded-xl border border-slate-300 bg-white text-slate-900 focus:outline-none focus:border-violet-600 font-semibold text-xs shadow-sm"
+                              className="w-full pl-9 pr-3 py-3 rounded-xl border-2 border-slate-200 bg-white text-slate-950 focus:outline-none focus:border-violet-600 font-semibold text-xs shadow-sm"
                             />
                           </div>
                         </div>
@@ -499,7 +499,7 @@ const Login = () => {
                             Owner Password
                           </label>
                           <div className="relative">
-                            <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                            <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-500">
                               <KeyRound size={15} />
                             </span>
                             <input
@@ -508,7 +508,7 @@ const Login = () => {
                               onChange={(e) => setOwnerPassword(e.target.value)}
                               required
                               placeholder="Choose a password"
-                              className="w-full pl-9 pr-3 py-3 rounded-xl border border-slate-300 bg-white text-slate-900 focus:outline-none focus:border-violet-600 font-semibold text-xs shadow-sm"
+                              className="w-full pl-9 pr-3 py-3 rounded-xl border-2 border-slate-200 bg-white text-slate-950 focus:outline-none focus:border-violet-600 font-semibold text-xs shadow-sm"
                             />
                           </div>
                         </div>
@@ -529,11 +529,11 @@ const Login = () => {
             </div>
           )}
 
-          {/* TAB 2: COUNTER CASHIER POS PORTAL */}
+          {/* TAB 2: COUNTER CASHIER POS PORTAL - SOLID WHITE FILL INPUTS */}
           {activeTab === 'counter' && (
             <div className="space-y-4 sm:space-y-5">
-              <div className="text-center pb-2.5 border-b border-slate-200">
-                <span className="px-3 py-1 rounded-full bg-emerald-50 text-emerald-800 text-[10px] font-extrabold uppercase tracking-wider font-title border border-emerald-300">
+              <div className="text-center pb-2.5 border-b border-emerald-300">
+                <span className="px-3 py-1 rounded-full bg-emerald-100 text-emerald-900 text-[10px] font-extrabold uppercase tracking-wider font-title border border-emerald-300">
                   Cashier POS Terminal
                 </span>
                 <h2 className="text-lg font-extrabold text-slate-950 font-title mt-2">
@@ -547,7 +547,7 @@ const Login = () => {
                     6-Character Shop Code
                   </label>
                   <div className="relative">
-                    <span className="absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400">
+                    <span className="absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-500">
                       <Store size={16} />
                     </span>
                     <input
@@ -555,7 +555,7 @@ const Login = () => {
                       value={counterShopCode}
                       onChange={(e) => setCounterShopCode(e.target.value.toUpperCase())}
                       placeholder={shopStatus?.shop_code || "e.g. SHOP01"}
-                      className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-300 bg-white text-emerald-700 font-mono font-bold tracking-widest text-sm focus:outline-none focus:border-emerald-500 shadow-sm"
+                      className="w-full pl-10 pr-4 py-3 rounded-xl border-2 border-slate-200 bg-white text-emerald-700 font-mono font-bold tracking-widest text-sm focus:outline-none focus:border-emerald-500 shadow-sm"
                     />
                   </div>
                 </div>
@@ -565,7 +565,7 @@ const Login = () => {
                     Counter Staff Username
                   </label>
                   <div className="relative">
-                    <span className="absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400">
+                    <span className="absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-500">
                       <User size={16} />
                     </span>
                     <input
@@ -574,7 +574,7 @@ const Login = () => {
                       onChange={(e) => setCounterUsername(e.target.value)}
                       required
                       placeholder="e.g. counter1"
-                      className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-300 bg-white text-slate-900 font-semibold text-xs focus:outline-none focus:border-emerald-500 shadow-sm"
+                      className="w-full pl-10 pr-4 py-3 rounded-xl border-2 border-slate-200 bg-white text-slate-950 font-semibold text-xs focus:outline-none focus:border-emerald-500 shadow-sm"
                     />
                   </div>
                 </div>
@@ -584,7 +584,7 @@ const Login = () => {
                     Counter Staff Password
                   </label>
                   <div className="relative">
-                    <span className="absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400">
+                    <span className="absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-500">
                       <KeyRound size={16} />
                     </span>
                     <input
@@ -593,7 +593,7 @@ const Login = () => {
                       onChange={(e) => setCounterPassword(e.target.value)}
                       required
                       placeholder="Enter counter password"
-                      className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-300 bg-white text-slate-900 font-semibold text-xs focus:outline-none focus:border-emerald-500 shadow-sm"
+                      className="w-full pl-10 pr-4 py-3 rounded-xl border-2 border-slate-200 bg-white text-slate-950 font-semibold text-xs focus:outline-none focus:border-emerald-500 shadow-sm"
                     />
                   </div>
                 </div>
