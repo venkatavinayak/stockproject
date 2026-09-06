@@ -9,6 +9,7 @@ class Return(Document):
     quantity: int
     refund_amount: float
     reason: str
+    processed_by: Optional[str] = "Admin"
     timestamp: datetime = Field(default_factory=datetime.utcnow)
     product: Optional[dict] = Field(default=None, exclude=True)
     owner_username: str = "admin"

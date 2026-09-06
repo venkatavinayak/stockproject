@@ -238,6 +238,7 @@ async def refund_item(
         quantity=quantity,
         refund_amount=deduct_total,
         reason=reason,
+        processed_by=current_user.username,
         owner_username=current_user.owner
     )
     await ret.insert()
@@ -296,6 +297,7 @@ async def refund_item(
     if prod_obj:
         ret.product = await populate_product_relations(prod_obj)
         
+    ret.invoice_number = tx.invoice_number
     return ret
 
 @router.get("/returns/list", response_model=List[ReturnResponse])
@@ -305,12 +307,20 @@ async def list_returns(
     owner_username = current_user.owner
     if getattr(current_user, "role", "admin") != "admin":
         txs = await Transaction.find(Transaction.cashier_username == current_user.username, Transaction.owner_username == owner_username).to_list()
-        tx_ids = [str(tx.id) for tx in txs]
+        tx_ids = [tx.id for tx in txs]
         returns_list = await Return.find({"transaction_id": {"$in": tx_ids}, "owner_username": owner_username}).sort(-Return.timestamp).to_list()
     else:
         returns_list = await Return.find(Return.owner_username == owner_username).sort(-Return.timestamp).to_list()
         
+    # Batch lookup transactions to retrieve readable invoice numbers
+    tx_ids = list(set([r.transaction_id for r in returns_list]))
+    all_txs = await Transaction.find({"_id": {"$in": tx_ids}}).to_list()
+    tx_map = {t.id: t.invoice_number for t in all_txs}
+
     for r in returns_list:
+        r.invoice_number = tx_map.get(r.transaction_id, "N/A")
+        if not getattr(r, "processed_by", None):
+            r.processed_by = "Admin"
         if r.product_id:
             p = await Product.get(r.product_id)
             if p:

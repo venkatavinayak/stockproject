@@ -369,22 +369,28 @@ const Transactions = () => {
                   <th className="p-4">Returned Qty</th>
                   <th className="p-4">Refunded Cash</th>
                   <th className="p-4">Reason</th>
+                  <th className="p-4">Refunded By</th>
                 </tr>
               </thead>
               <tbody className="divide-y dark:divide-slate-900">
                 {returnsList.length === 0 ? (
                   <tr>
-                    <td colSpan="6" className="p-8 text-center text-slate-400">No product returns logged</td>
+                    <td colSpan="7" className="p-8 text-center text-slate-400">No product returns logged</td>
                   </tr>
                 ) : (
                   returnsList.map((ret) => (
                     <tr key={ret.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-900/30">
                       <td className="p-4">{formatDateTime(ret.timestamp)}</td>
-                      <td className="p-4 font-mono">{ret.transaction_id}</td>
+                      <td className="p-4 font-mono font-bold text-slate-800 dark:text-slate-200">{ret.invoice_number || ret.transaction_id}</td>
                       <td className="p-4 font-bold">{ret.product?.name || 'Deleted Product'}</td>
                       <td className="p-4">{ret.quantity} units</td>
                       <td className="p-4 font-mono font-bold text-rose-600">₹{ret.refund_amount.toFixed(2)}</td>
                       <td className="p-4 text-slate-500 italic">{ret.reason}</td>
+                      <td className="p-4">
+                        <span className="px-2 py-1 bg-indigo-50 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300 font-bold rounded-lg uppercase tracking-wider text-[10px]">
+                          {ret.processed_by || 'Admin'}
+                        </span>
+                      </td>
                     </tr>
                   ))
                 )}

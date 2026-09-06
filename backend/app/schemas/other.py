@@ -14,6 +14,8 @@ class ReturnCreate(BaseModel):
 class ReturnResponse(ReturnCreate):
     id: PydanticObjectId
     timestamp: datetime
+    processed_by: Optional[str] = "Admin"
+    invoice_number: Optional[str] = None
     product: Optional[ProductResponse] = None
 
     class Config:
