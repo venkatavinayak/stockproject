@@ -58,31 +58,51 @@ const Transactions = () => {
         cashier_username: selectedCashier || undefined
       };
       
-      const promises = [
-        transactionsAPI.getAll(params),
-        transactionsAPI.getReturns(),
-        settingsAPI.get()
-      ];
-      
+      let txData = [];
+      let returnsData = [];
+      let settingsData = { currency_symbol: '₹' };
+      let summaryData = null;
+      let cashiersData = [];
+
+      try {
+        txData = await transactionsAPI.getAll(params);
+      } catch (err) {
+        console.error("Error fetching sales transactions:", err);
+      }
+
+      try {
+        returnsData = await transactionsAPI.getReturns();
+      } catch (err) {
+        console.error("Error fetching returns list:", err);
+      }
+
+      try {
+        settingsData = await settingsAPI.get();
+      } catch (err) {
+        console.error("Error fetching settings:", err);
+      }
+
       if (user?.role === 'worker') {
-        promises.push(transactionsAPI.getMySummary());
+        try {
+          summaryData = await transactionsAPI.getMySummary();
+        } catch (err) {
+          console.error("Error fetching cashier summary:", err);
+        }
       } else if (user?.role === 'admin') {
-        promises.push(authAPI.listUsers());
+        try {
+          cashiersData = await authAPI.listUsers();
+        } catch (err) {
+          console.error("Error fetching cashiers list:", err);
+        }
       }
       
-      const results = await Promise.all(promises);
-      
-      setTransactions(results[0]);
-      setReturnsList(results[1]);
-      setSettings(results[2]);
-      
-      if (user?.role === 'worker' && results[3]) {
-        setCashierSummary(results[3]);
-      } else if (user?.role === 'admin' && results[3]) {
-        setCashiers(results[3]);
-      }
+      setTransactions(Array.isArray(txData) ? txData : []);
+      setReturnsList(Array.isArray(returnsData) ? returnsData : []);
+      if (settingsData) setSettings(settingsData);
+      if (summaryData) setCashierSummary(summaryData);
+      if (Array.isArray(cashiersData)) setCashiers(cashiersData);
     } catch (err) {
-      console.error(err);
+      console.error("Fetch transactions data error:", err);
     } finally {
       setLoading(false);
     }

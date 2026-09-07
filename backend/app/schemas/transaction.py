@@ -25,16 +25,16 @@ class TransactionItemResponse(BaseModel):
     product_id: Optional[PydanticObjectId] = None
     product_name: Optional[str] = None
     product_barcode: Optional[str] = None
-    quantity: int
-    unit_buying_price: float
-    unit_selling_price: float
-    gst_rate: float
-    discount_rate: float
-    subtotal: float
-    gst_amount: float
-    discount_amount: float
-    total_amount: float
-    profit: float
+    quantity: int = 1
+    unit_buying_price: float = 0.0
+    unit_selling_price: float = 0.0
+    gst_rate: float = 0.0
+    discount_rate: float = 0.0
+    subtotal: float = 0.0
+    gst_amount: float = 0.0
+    discount_amount: float = 0.0
+    total_amount: float = 0.0
+    profit: float = 0.0
     product: Optional[ProductResponse] = None
 
     class Config:
@@ -44,16 +44,16 @@ class TransactionResponse(BaseModel):
     id: PydanticObjectId
     invoice_number: str
     timestamp: datetime
-    payment_method: str
-    items_count: int
-    subtotal: float
-    gst_amount: float
-    discount_amount: float
-    grand_total: float
-    buying_cost: float
-    profit: float
+    payment_method: Optional[str] = "Cash"
+    items_count: int = 0
+    subtotal: float = 0.0
+    gst_amount: float = 0.0
+    discount_amount: float = 0.0
+    grand_total: float = 0.0
+    buying_cost: float = 0.0
+    profit: float = 0.0
     pdf_path: Optional[str] = None
-    items: List[TransactionItemResponse]
+    items: List[TransactionItemResponse] = []
     customer_name: Optional[str] = None
     customer_phone: Optional[str] = None
     customer_email: Optional[str] = None

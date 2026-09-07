@@ -29,33 +29,34 @@ async def get_transactions(
     current_user: User = Depends(get_current_user)
 ):
     filters = {"owner_username": current_user.owner}
-    if invoice_number:
+    if invoice_number and invoice_number.strip():
         # Case-insensitive substring match
-        filters["invoice_number"] = re.compile(re.escape(invoice_number), re.IGNORECASE)
+        filters["invoice_number"] = re.compile(re.escape(invoice_number.strip()), re.IGNORECASE)
     if start_date:
         filters["timestamp"] = {"$gte": datetime.combine(start_date, datetime.min.time())}
     if end_date:
         if "timestamp" not in filters:
             filters["timestamp"] = {}
         filters["timestamp"]["$lte"] = datetime.combine(end_date, datetime.max.time())
-    if payment_method:
-        filters["payment_method"] = payment_method
+    if payment_method and payment_method.strip():
+        filters["payment_method"] = payment_method.strip()
     if min_profit is not None:
         filters["profit"] = {"$gte": min_profit}
     if max_profit is not None:
         if "profit" not in filters:
             filters["profit"] = {}
         filters["profit"]["$lte"] = max_profit
+
     if getattr(current_user, "role", "admin") != "admin":
         c_name = current_user.username
         short_c = c_name.split(":")[-1] if ":" in c_name else c_name
         filters["cashier_username"] = {"$in": [c_name, short_c, f"{current_user.owner}:{short_c}"]}
-    elif cashier_username:
-        short_c = cashier_username.split(":")[-1] if ":" in cashier_username else cashier_username
-        filters["cashier_username"] = {"$in": [cashier_username, short_c, f"{current_user.owner}:{short_c}"]}
+    elif cashier_username and cashier_username.strip():
+        short_c = cashier_username.strip().split(":")[-1] if ":" in cashier_username else cashier_username.strip()
+        filters["cashier_username"] = {"$in": [cashier_username.strip(), short_c, f"{current_user.owner}:{short_c}"]}
         
     query = Transaction.find(filters).sort(-Transaction.timestamp)
-    if limit:
+    if limit and limit > 0:
         query = query.limit(limit)
     txs = await query.to_list()
     
@@ -71,45 +72,61 @@ async def get_transactions(
         from backend.app.models.category import Category
         from backend.app.models.supplier import Supplier
         from backend.app.schemas.product import ProductResponse
+        from backend.app.schemas.category import CategoryResponse
+        from backend.app.schemas.supplier import SupplierResponse
         
-        products = await Product.find({"_id": {"$in": list(product_ids)}}).to_list()
-        
-        # Batch query related categories and suppliers
-        category_ids = {p.category_id for p in products if p.category_id}
-        supplier_ids = {p.supplier_id for p in products if p.supplier_id}
-        
-        categories_map = {}
-        if category_ids:
-            categories = await Category.find({"_id": {"$in": list(category_ids)}}).to_list()
-            categories_map = {c.id: c for c in categories}
+        try:
+            products = await Product.find({"_id": {"$in": list(product_ids)}}).to_list()
             
-        suppliers_map = {}
-        if supplier_ids:
-            suppliers = await Supplier.find({"_id": {"$in": list(supplier_ids)}}).to_list()
-            suppliers_map = {s.id: s for s in suppliers}
+            # Batch query related categories and suppliers
+            category_ids = {p.category_id for p in products if p.category_id}
+            supplier_ids = {p.supplier_id for p in products if p.supplier_id}
             
-        for p in products:
-            products_map[p.id] = ProductResponse(
-                id=p.id,
-                barcode=p.barcode,
-                name=p.name,
-                brand=p.brand,
-                category_id=p.category_id,
-                supplier_id=p.supplier_id,
-                buying_price=p.buying_price,
-                selling_price=p.selling_price,
-                gst=p.gst,
-                discount=p.discount,
-                current_stock=p.current_stock,
-                minimum_stock=p.minimum_stock,
-                expiry_date=p.expiry_date,
-                manufacturing_date=p.manufacturing_date,
-                batch_number=p.batch_number,
-                status=p.status,
-                image_path=p.image_path,
-                category=categories_map.get(p.category_id),
-                supplier=suppliers_map.get(p.supplier_id)
-            )
+            categories_map = {}
+            if category_ids:
+                categories = await Category.find({"_id": {"$in": list(category_ids)}}).to_list()
+                for c in categories:
+                    try:
+                        categories_map[c.id] = CategoryResponse.model_validate(c)
+                    except Exception:
+                        pass
+                
+            suppliers_map = {}
+            if supplier_ids:
+                suppliers = await Supplier.find({"_id": {"$in": list(supplier_ids)}}).to_list()
+                for s in suppliers:
+                    try:
+                        suppliers_map[s.id] = SupplierResponse.model_validate(s)
+                    except Exception:
+                        pass
+                
+            for p in products:
+                try:
+                    products_map[p.id] = ProductResponse(
+                        id=p.id,
+                        barcode=p.barcode,
+                        name=p.name,
+                        brand=p.brand,
+                        category_id=p.category_id,
+                        supplier_id=p.supplier_id,
+                        buying_price=p.buying_price or 0.0,
+                        selling_price=p.selling_price or 0.0,
+                        gst=p.gst or 0.0,
+                        discount=p.discount or 0.0,
+                        current_stock=p.current_stock or 0,
+                        minimum_stock=p.minimum_stock or 0,
+                        expiry_date=p.expiry_date,
+                        manufacturing_date=p.manufacturing_date,
+                        batch_number=p.batch_number,
+                        status=p.status or "Available",
+                        image_path=p.image_path,
+                        category=categories_map.get(p.category_id) if p.category_id else None,
+                        supplier=suppliers_map.get(p.supplier_id) if p.supplier_id else None
+                    )
+                except Exception as pe:
+                    print(f"Error populating product response {p.id}: {pe}")
+        except Exception as e:
+            print(f"Error batch fetching transaction products: {e}")
             
     # Assign populated products to transactions in-memory
     for tx in txs:
